@@ -4,37 +4,25 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
+interface BaseStackProps extends StackProps {
+  vpc: ec2.IVpc;
+  dbSecret: secretsmanager.ISecret;
+}
+
 export class BaseStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props: BaseStackProps) {
     super(scope, id, props);
 
-    // 🔹 1. VPC with 2 AZs
-    const vpc = new ec2.Vpc(this, 'PlatformVPC', {
-      maxAzs: 2,
-      natGateways: 1,
-    });
+    const { vpc, dbSecret } = props;
 
-    // 🔹 2. S3 Bucket for comic uploads
+    // ✅ Only create S3 here — VPC and Secret come from props
     const storageBucket = new s3.Bucket(this, 'ComicMediaBucket', {
       versioned: true,
-      removalPolicy: RemovalPolicy.DESTROY, // 🔥 change in prod
-      autoDeleteObjects: true, // 🔥 change in prod
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     });
 
-    // 🔹 3. Secrets Manager for DB credentials or API keys
-    const dbSecret = new secretsmanager.Secret(this, 'DatabaseSecret', {
-      secretName: 'nerdwork-db-secret',
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({
-          username: 'nerdwork_admin',
-        }),
-        excludePunctuation: true,
-        includeSpace: false,
-        generateStringKey: 'password',
-      },
-    });
-
-    // Output (optional for testing)
+    // ✅ Outputs
     this.exportValue(vpc.vpcId, { name: 'VPCId' });
     this.exportValue(storageBucket.bucketName, { name: 'S3ComicBucket' });
     this.exportValue(dbSecret.secretArn, { name: 'DBSecretArn' });
