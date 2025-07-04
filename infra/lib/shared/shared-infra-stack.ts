@@ -1,18 +1,29 @@
-// lib/shared/shared-infra-stack.ts
+// shared-infra-stack.ts
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { PlatformInfra } from './platform-infra';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 export class SharedInfraStack extends Stack {
-  public readonly vpc;
-  public readonly dbSecret;
+  public readonly vpc: ec2.Vpc;
+  public readonly dbSecret: secretsmanager.Secret;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const infra = new PlatformInfra(this, 'PlatformInfra');
+    this.vpc = new ec2.Vpc(this, 'PlatformVPC', {
+      maxAzs: 2,
+      natGateways: 1,
+    });
 
-    this.vpc = infra.vpc;
-    this.dbSecret = infra.dbSecret;
+    this.dbSecret = new secretsmanager.Secret(this, 'PlatformDBSecret', {
+      secretName: 'nerdwork-db-secret',
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({ username: 'admin' }),
+        excludePunctuation: true,
+        includeSpace: false,
+        generateStringKey: 'password',
+      },
+    });
   }
 }

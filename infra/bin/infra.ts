@@ -12,16 +12,25 @@ const env = {
 
 const sharedInfra = new SharedInfraStack(app, 'SharedInfraStack', { env });
 
-new BaseStack(app, 'BaseStack', {
+const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   env,
   vpc: sharedInfra.vpc,
   dbSecret: sharedInfra.dbSecret,
 });
 
-new DatabaseStack(app, 'DatabaseStack', {
+const baseStack = new BaseStack(app, 'BaseStack', {
   env,
   vpc: sharedInfra.vpc,
   dbSecret: sharedInfra.dbSecret,
+  dbCluster: databaseStack.dbCluster,
 });
 
-new AuthStack(app, 'AuthStack', { env });
+const authStack = new AuthStack(app, 'AuthStack', {
+  env,
+  dbCluster: databaseStack.dbCluster,
+});
+
+// Explicit dependencies
+databaseStack.addDependency(sharedInfra); // DatabaseStack depends on SharedInfraStack
+baseStack.addDependency(databaseStack);   // BaseStack depends on DatabaseStack
+authStack.addDependency(databaseStack);   // AuthStack depends on DatabaseStack

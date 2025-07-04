@@ -3,6 +3,9 @@ import { Construct } from 'constructs';
 import { RemovalPolicy } from 'aws-cdk-lib';
 
 export class DatabaseStack extends Stack {
+
+  public readonly dbCluster: rds.IDatabaseCluster;
+  
   constructor(scope: Construct, id: string, props: StackProps & { vpc: ec2.IVpc, dbSecret: secretsmanager.ISecret }) {
     super(scope, id, props);
 
@@ -17,7 +20,7 @@ export class DatabaseStack extends Stack {
     dbSecurityGroup.addIngressRule(ec2.Peer.ipv4(props.vpc.vpcCidrBlock), ec2.Port.tcp(5432));
 
     // 🧠 Aurora PostgreSQL cluster
-    const dbCluster = new rds.DatabaseCluster(this, 'NerdworkDBCluster', {
+    this.dbCluster = new rds.DatabaseCluster(this, 'NerdworkDBCluster', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_15_2,
       }),
@@ -36,6 +39,6 @@ export class DatabaseStack extends Stack {
     });
 
     // Outputs
-    this.exportValue(dbCluster.clusterEndpoint.hostname, { name: 'RDSClusterEndpoint' });
+    this.exportValue(this.dbCluster.clusterEndpoint.hostname, { name: 'RDSClusterEndpoint' });
   }
 }
