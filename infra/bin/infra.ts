@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
-import { SharedInfraStack } from '../lib/shared/shared-infra-stack';
+import { SharedInfraStack } from '../lib/shared/shared-infra';
 import { BaseStack } from '../lib/base-stack';
 import { DatabaseStack } from '../lib/database-stack';
-import { AuthStack } from '../lib/auth-stack';
+// import { AuthStack } from '../lib/auth-stack';
 
 const app = new cdk.App();
 const env = {
@@ -25,12 +25,14 @@ const baseStack = new BaseStack(app, 'BaseStack', {
   dbCluster: databaseStack.dbCluster,
 });
 
-const authStack = new AuthStack(app, 'AuthStack', {
-  env,
-  dbCluster: databaseStack.dbCluster,
-});
+// const authStack = new AuthStack(app, 'AuthStack', {
+//   env,
+//   vpc: sharedInfra.vpc, // Pass if needed
+//   dbSecret: sharedInfra.dbSecret, // Pass if needed
+//   dbCluster: databaseStack.dbCluster,
+// });
 
 // Explicit dependencies
-databaseStack.addDependency(sharedInfra); // DatabaseStack depends on SharedInfraStack
-baseStack.addDependency(databaseStack);   // BaseStack depends on DatabaseStack
-authStack.addDependency(databaseStack);   // AuthStack depends on DatabaseStack
+databaseStack.addDependency(sharedInfra);
+baseStack.addDependency(databaseStack);
+// authStack.addDependency(databaseStack);

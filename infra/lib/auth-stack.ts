@@ -3,16 +3,20 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as rds from 'aws-cdk-lib/aws-rds'
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 
 interface AuthStackProps extends StackProps{
-  dbCluster?: rds.IDatabaseCluster;
+  vpc: ec2.IVpc;
+  dbSecret?: secretsmanager.ISecret; // Optional, only if needed
+  dbCluster?: rds.IDatabaseCluster; // Optional
 }
 
 export class AuthStack extends Stack {
   constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
 
-    const {dbCluster} = props;
+    const {vpc, dbSecret, dbCluster} = props;
 
     // Lambda function definition
     const authLambda = new lambda.Function(this, 'AuthHandler', {
@@ -26,9 +30,9 @@ export class AuthStack extends Stack {
 
 
     // Use dbCluster if needed
-    if (dbCluster) {
-      // Example: Access dbCluster.clusterEndpoint.hostname
-      console.log(`AuthStack using database endpoint: ${dbCluster.clusterEndpoint.hostname}`);
-    }
+    // if (dbCluster) {
+    //   // Example: Access dbCluster.clusterEndpoint.hostname
+    //   console.log(`AuthStack using database endpoint: ${dbCluster.clusterEndpoint.hostname}`);
+    // }
   }
 }
