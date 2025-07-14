@@ -2,19 +2,35 @@ import { Stack, StackProps, aws_rds as rds, aws_ec2 as ec2, aws_secretsmanager a
 import { Construct } from 'constructs';
 import { RemovalPolicy } from 'aws-cdk-lib';
 
+
+interface DatabaseStackProps extends StackProps {
+  vpcId: string;
+  privateSubnetIds: string[];
+  availabilityZones: string[];
+  dbSecret: secretsmanager.ISecret;
+}
+
 export class DatabaseStack extends Stack {
   public readonly dbCluster: rds.IDatabaseCluster;
 
-  constructor(scope: Construct, id: string, props: StackProps & { vpc: ec2.IVpc, dbSecret: secretsmanager.ISecret }) {
+  constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
+    // Import the VPC by attributes to break the direct dependency
+    const vpc = ec2.Vpc.fromVpcAttributes(this, 'ImportedVPC', {
+      vpcId: props.vpcId,
+      availabilityZones: props.availabilityZones,
+      privateSubnetIds: props.privateSubnetIds,
+    });
+
     const dbSecurityGroup = new ec2.SecurityGroup(this, 'DBSecurityGroup', {
-      vpc: props.vpc,
+      vpc,
       description: 'Allow internal access to RDS Postgres',
       allowAllOutbound: true,
     });
 
-    dbSecurityGroup.addIngressRule(ec2.Peer.ipv4(props.vpc.vpcCidrBlock), ec2.Port.tcp(5432));
+    // You may need to pass the VPC CIDR as a prop if you want to keep this rule
+    // dbSecurityGroup.addIngressRule(ec2.Peer.ipv4(props.vpcCidr), ec2.Port.tcp(5432));
 
     this.dbCluster = new rds.DatabaseCluster(this, 'NerdworkDBCluster', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
@@ -22,9 +38,9 @@ export class DatabaseStack extends Stack {
       }),
       credentials: rds.Credentials.fromSecret(props.dbSecret),
       defaultDatabaseName: 'nerdwork',
-      vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      securityGroups: [dbSecurityGroup], 
+      vpc,
+      vpcSubnets: { subnets: vpc.privateSubnets },
+      securityGroups: [dbSecurityGroup],
       writer: rds.ClusterInstance.provisioned('Instance1', {
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
       }),

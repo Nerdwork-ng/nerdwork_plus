@@ -10,27 +10,32 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
+
+// Create shared infra stack (VPC, secrets, etc.)
 const sharedInfra = new SharedInfraStack(app, 'SharedInfraStack', { env });
 
-// const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
-//   env,
-//   vpc: sharedInfra.vpc,
-//   dbSecret: sharedInfra.dbSecret,
-// });
+// Create database stack, which depends on shared infra
+const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
+  env,
+  vpc: sharedInfra.vpc,
+  dbSecret: sharedInfra.dbSecret,
+});
 
-// const baseStack = new BaseStack(app, 'BaseStack', {
-//   env,
-//   vpc: sharedInfra.vpc,
-//   dbSecret: sharedInfra.dbSecret,
-//   dbCluster: databaseStack.dbCluster,
-// });
+// Create base stack, which depends on shared infra only (no dbCluster to avoid cycles)
+const baseStack = new BaseStack(app, 'BaseStack', {
+  env,
+  vpc: sharedInfra.vpc,
+  dbSecret: sharedInfra.dbSecret,
+});
 
+// Create auth stack, which depends on shared infra (and optionally dbSecret)
 const authStack = new AuthStack(app, 'AuthStack', {
   env,
-  vpc: sharedInfra.vpc, // Pass if needed
-  dbSecret: sharedInfra.dbSecret, // Pass if needed
-  // dbCluster: databaseStack.dbCluster,
+  vpc: sharedInfra.vpc,
+  dbSecret: sharedInfra.dbSecret,
 });
+
+// If you need to use dbCluster in baseStack or authStack, consider passing only minimal info (like endpoint/ARN) after deployment, or refactor your stack design to avoid direct resource references.
 
 // Explicit dependencies
 // databaseStack.addDependency(sharedInfra);

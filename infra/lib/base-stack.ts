@@ -15,7 +15,7 @@ export class BaseStack extends Stack {
   constructor(scope: Construct, id: string, props: BaseStackProps) {
     super(scope, id, props);
 
-    const { vpc, dbSecret, dbCluster } = props;
+    // const { vpc, dbSecret, dbCluster } = props;
 
     const storageBucket = new s3.Bucket(this, 'ComicMediaBucket', {
       versioned: true,

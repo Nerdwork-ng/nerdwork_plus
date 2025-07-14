@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 // import { AuthStack } from './services/auth-stack';
 // import { WalletStack } from './services/wallet-stack';
@@ -17,4 +16,3 @@ console.log('CDK app initialized');
 // });
 
 // Add more stacks as needed
-

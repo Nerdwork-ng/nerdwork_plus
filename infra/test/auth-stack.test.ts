@@ -1,10 +1,16 @@
 import * as cdk from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Template } from 'aws-cdk-lib/assertions';
 import { AuthStack } from '../lib/auth-stack';
 
 test('AuthStack creates a Lambda function and IAM role', () => {
   const app = new cdk.App();
-  const stack = new AuthStack(app, 'TestAuthStack');
+  const vpc = ec2.Vpc.fromVpcAttributes(app, 'MockVpc', {
+    vpcId: 'vpc-12345',
+    availabilityZones: ['us-east-1a'],
+    publicSubnetIds: ['subnet-12345'],
+  });
+  const stack = new AuthStack(app, 'TestAuthStack', { vpc });
 
   const template = Template.fromStack(stack);
 

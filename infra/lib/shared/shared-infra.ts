@@ -4,7 +4,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 export class SharedInfraStack extends Stack {
-  public readonly vpc: ec2.Vpc;
+  public readonly vpc: ec2.IVpc;
   public readonly dbSecret: secretsmanager.Secret;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
