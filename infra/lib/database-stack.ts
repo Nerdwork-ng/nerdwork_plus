@@ -1,55 +1,42 @@
-import { Stack, StackProps, aws_rds as rds, aws_ec2 as ec2, aws_secretsmanager as secretsmanager } from 'aws-cdk-lib';
+// lib/database-stack.ts
+import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { RemovalPolicy } from 'aws-cdk-lib';
-
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 interface DatabaseStackProps extends StackProps {
-  vpcId: string;
-  privateSubnetIds: string[];
-  availabilityZones: string[];
-  dbSecret: secretsmanager.ISecret;
+  vpc: ec2.Vpc;
+  dbSecret: secretsmanager.Secret;
 }
 
-export class DatabaseStack extends Stack {
-  public readonly dbCluster: rds.IDatabaseCluster;
+// This stack is to create the RDS database cluster
 
+export class DatabaseStack extends Stack {
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
-    // Import the VPC by attributes to break the direct dependency
-    const vpc = ec2.Vpc.fromVpcAttributes(this, 'ImportedVPC', {
-      vpcId: props.vpcId,
-      availabilityZones: props.availabilityZones,
-      privateSubnetIds: props.privateSubnetIds,
-    });
-
     const dbSecurityGroup = new ec2.SecurityGroup(this, 'DBSecurityGroup', {
-      vpc,
-      description: 'Allow internal access to RDS Postgres',
+      vpc: props.vpc,
+      description: 'Allow internal RDS access',
       allowAllOutbound: true,
     });
 
-    // You may need to pass the VPC CIDR as a prop if you want to keep this rule
-    // dbSecurityGroup.addIngressRule(ec2.Peer.ipv4(props.vpcCidr), ec2.Port.tcp(5432));
+    dbSecurityGroup.addIngressRule(ec2.Peer.ipv4(props.vpc.vpcCidrBlock), ec2.Port.tcp(5432));
 
-    this.dbCluster = new rds.DatabaseCluster(this, 'NerdworkDBCluster', {
+    new rds.DatabaseCluster(this, 'AppDBCluster', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_15_2,
       }),
       credentials: rds.Credentials.fromSecret(props.dbSecret),
       defaultDatabaseName: 'nerdwork',
-      vpc,
-      vpcSubnets: { subnets: vpc.privateSubnets },
-      securityGroups: [dbSecurityGroup],
-      writer: rds.ClusterInstance.provisioned('Instance1', {
+      instances: 2,
+      instanceProps: {
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
-      }),
-      readers: [
-        rds.ClusterInstance.provisioned('Instance2', {
-          instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
-        }),
-      ],
-      removalPolicy: this.node.tryGetContext('env') === 'prod' ? undefined : RemovalPolicy.DESTROY,
+        vpc: props.vpc,
+        vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+        securityGroups: [dbSecurityGroup],
+      },
     });
   }
 }
