@@ -29,7 +29,7 @@ export class DatabaseStack extends Stack {
         version: rds.AuroraPostgresEngineVersion.VER_15_2,
       }),
       credentials: rds.Credentials.fromSecret(props.dbSecret),
-      defaultDatabaseName: 'nerdwork',
+      // defaultDatabaseName: 'nerdwork', this ot be the name of the database 
       instances: 2,
       instanceProps: {
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),
