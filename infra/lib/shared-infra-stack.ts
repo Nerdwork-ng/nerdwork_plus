@@ -3,6 +3,9 @@ import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import { createPlatformVpc } from './shared/network';
+import { createDatabaseSecret } from './shared/secrets';
+
 
 // this is to create the vpc and the database secret
 export class SharedInfraStack extends Stack {
@@ -12,19 +15,7 @@ export class SharedInfraStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    this.vpc = new ec2.Vpc(this, 'AppVPC', {
-      maxAzs: 2,
-      natGateways: 1,
-    });
-
-    this.dbSecret = new secretsmanager.Secret(this, 'AppDBSecret', {
-      secretName: 'nerdwork-db-secret',
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({ username: 'admin' }),
-        excludePunctuation: true,
-        includeSpace: false,
-        generateStringKey: 'password',
-      },
-    });
+    this.vpc = createPlatformVpc(this);
+    this.dbSecret = createDatabaseSecret(this);
   }
 }

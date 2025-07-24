@@ -28,7 +28,6 @@ export class AuthStack extends Stack {
       description: 'Handles basic auth logic (MVP placeholder)',
     });
 
-
     // Use dbCluster if needed
     // if (dbCluster) {
     //   // Example: Access dbCluster.clusterEndpoint.hostname
