@@ -4,6 +4,7 @@ import { SharedInfraStack } from '../lib/shared-infra-stack';
 import { BaseStack } from '../lib/base-stack';
 // import { DatabaseStack } from '../lib/database-stack';
 import { AuthStack } from '../lib/auth-stack';
+import { AppStack } from '../lib/app-stack';
 
 const app = new cdk.App();
 
@@ -27,3 +28,7 @@ const auth = new AuthStack(app, 'AuthStack', {
 });
 
 const base = new BaseStack(app, 'BaseStack', { env });
+const appStack = new AppStack(app, 'AppStack', {
+  vpc: sharedInfra.vpc,
+  env,
+});
