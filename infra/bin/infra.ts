@@ -29,6 +29,7 @@ const auth = new AuthStack(app, 'AuthStack', {
 
 const base = new BaseStack(app, 'BaseStack', { env });
 const appStack = new AppStack(app, 'AppStack', {
-  vpc: sharedInfra.vpc,
   env,
+  vpc: sharedInfra.vpc,
+  dbSecret: sharedInfra.dbSecret,
 });
