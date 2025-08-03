@@ -20,7 +20,7 @@ export class AppStack extends Stack {
 
     // ECS Cluster
     const cluster = new ecs.Cluster(this, 'NerdworkCluster', {
-      vpc: props.vpc,
+      vpc: props.vpc, 
     });
 
     // Log group

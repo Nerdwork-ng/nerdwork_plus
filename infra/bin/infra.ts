@@ -1,4 +1,4 @@
-// bin/infra.ts
+
 import * as cdk from 'aws-cdk-lib';
 import { SharedInfraStack } from '../lib/shared-infra-stack';
 import { BaseStack } from '../lib/base-stack';
