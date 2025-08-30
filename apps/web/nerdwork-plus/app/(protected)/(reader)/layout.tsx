@@ -12,9 +12,8 @@ export default function CreatorLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="bg-[#171719] text-white min-h-screen">
+    <main className="bg-[#151515] font-inter text-white min-h-screen">
       <ReaderNav />
-
       {children}
     </main>
   );

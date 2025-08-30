@@ -11,7 +11,7 @@ const RComics = ({ data }: { data: Comic[] }) => {
         {data.map((comic) => (
           <div
             key={comic.id}
-            className="relative group rounded flex flex-col justify-between border border-transparent hover:border-[#9D9D9F] hover:bg-[#FFFFFF05] transition duration-300 hover:ease-in-out overflow-hidden"
+            className="relative group rounded flex flex-col border border-transparent hover:border-[#9D9D9F] hover:bg-[#FFFFFF05] transition duration-300 hover:ease-in-out overflow-hidden"
           >
             <Image
               src={comic.image}
@@ -26,7 +26,7 @@ const RComics = ({ data }: { data: Comic[] }) => {
               </Badge>
             </div> */}
             <div className="p-2">
-              <Link href={""} className="hover:underline">
+              <Link href={`/r/comics/${comic.id}`} className="hover:underline">
                 <p className="mb-2 font-semibold">{comic.title}</p>
               </Link>
               <p className="flex items-center text-sm text-nerd-muted gap-3">

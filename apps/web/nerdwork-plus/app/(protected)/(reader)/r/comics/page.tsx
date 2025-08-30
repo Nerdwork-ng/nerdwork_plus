@@ -24,12 +24,12 @@ const ReaderComics = () => {
   const filteredComics = comics.filter((comic) => comic.genres?.includes(tab));
 
   return (
-    <>
+    <div className="pt-20">
       <section className="border-t border-[#292A2E]">
         <Tabs
           value={tab}
           onValueChange={setTab}
-          defaultValue="all"
+          defaultValue="adventure"
           className="bg-transparent mt-5"
         >
           <div className="flex flex-col items-start w-full max-w-[1200px] mx-auto">
@@ -60,7 +60,7 @@ const ReaderComics = () => {
           <hr className="!text-[#292A2E] h-0 mb-10 border-t border-[#292A2E]" />
         </Tabs>
       </section>
-    </>
+    </div>
   );
 };
 

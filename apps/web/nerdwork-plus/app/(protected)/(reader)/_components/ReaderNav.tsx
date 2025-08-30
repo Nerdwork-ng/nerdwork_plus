@@ -29,38 +29,40 @@ import { Input } from "@/components/ui/input";
 const ReaderNav = () => {
   return (
     <>
-      <nav className="max-md:hidden max-w-[1300px] mx-auto font-inter flex gap-2 justify-between items-center h-[76px] max-2xl:px-5">
-        <div className="flex justify-between items-center gap-10">
-          <Link href={"/"}>
-            <Image src={Logo} width={146} height={40} alt="Nerdwork logo" />
-          </Link>
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transform text-gray-500" />
-              <Input
-                placeholder="Search"
-                className="h-[40px] max-w-[400px] pl-5 border border-[#292A2E] rounded-md bg-[#1D1E21]"
-              />
+      <nav className="max-md:hidden z-30 bg-[#151515] border-b border-nerd-default fixed right-0 left-0 w-full font-inter max-2xl:px-5">
+        <section className="max-w-[1600px] mx-auto flex gap-2 justify-between items-center h-[76px]">
+          <div className="flex justify-between items-center gap-10">
+            <Link href={"/"}>
+              <Image src={Logo} width={146} height={40} alt="Nerdwork logo" />
+            </Link>
+            <div className="flex items-center justify-between gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transform text-gray-500" />
+                <Input
+                  placeholder="Search"
+                  className="h-[40px] max-w-[400px] pl-5 border border-[#292A2E] rounded-md bg-[#1D1E21]"
+                />
+              </div>
             </div>
+            <ul className="flex gap-4 text-sm text-nerd-muted">
+              <Link href={"/r/comics"}>Comics</Link>
+              <Link href={"/r/marketplace"}>Marketplace</Link>
+              <Link href={"/r/library"}>Library</Link>
+              <Link href={"/onboarding"}>Create</Link>
+            </ul>
           </div>
-          <ul className="flex gap-4 text-sm text-nerd-muted">
-            <Link href={""}>Comics</Link>
-            <Link href={""}>Marketplace</Link>
-            <Link href={""}>Library</Link>
-            <Link href={""}>Create</Link>
-          </ul>
-        </div>
 
-        <div className="flex justify-between items-stretch gap-3 text-sm">
-          <button className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-2">
-            <CreditCard size={16} /> 100{" "}
-            <Image src={NWT} width={16} height={16} alt="nwt" />
-          </button>
-          <button className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-1">
-            <span className="h-7 w-7 rounded-full bg-blue-400"></span>{" "}
-            0xDEAF...fB8B
-          </button>
-        </div>
+          <div className="flex justify-between items-stretch gap-3 text-sm">
+            <button className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-2">
+              <CreditCard size={16} /> 100{" "}
+              <Image src={NWT} width={16} height={16} alt="nwt" />
+            </button>
+            <button className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-1">
+              <span className="h-7 w-7 rounded-full bg-blue-400"></span>{" "}
+              0xDEAF...fB8B
+            </button>
+          </div>
+        </section>
       </nav>
 
       <nav className="md:hidden font-inter flex justify-between items-center h-[68px] mx-5">

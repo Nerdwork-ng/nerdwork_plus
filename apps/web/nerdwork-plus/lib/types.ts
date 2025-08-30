@@ -7,6 +7,7 @@ export type Comic = {
   chapters: number;
   last_updated: string;
   genres?: Array<string>;
+  rating?: string;
 };
 
 export type Chapter = {

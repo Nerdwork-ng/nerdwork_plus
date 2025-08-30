@@ -46,7 +46,7 @@ export const comicData: Comic[] = [
   {
     id: 2,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "In My Head",
     short_description: "Just a short description",
     status: "draft",
     chapters: 3,
@@ -56,7 +56,7 @@ export const comicData: Comic[] = [
   {
     id: 3,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "Totem: Vessel of the Gods",
     short_description: "Just a short description",
     status: "published",
     chapters: 3,
@@ -66,17 +66,18 @@ export const comicData: Comic[] = [
   {
     id: 4,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "Celestial Eyes",
     short_description: "Just a short description",
     status: "published",
     chapters: 3,
     last_updated: "24/07/2024",
     genres: ["adventure", "fantasy", "mystery", "sci-fi"],
+    rating: "12 +",
   },
   {
     id: 5,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "This Side Up",
     short_description: "Just a short description",
     status: "scheduled",
     chapters: 3,
@@ -86,7 +87,7 @@ export const comicData: Comic[] = [
   {
     id: 6,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "Dream",
     short_description: "Just a short description",
     status: "scheduled",
     chapters: 3,
@@ -96,7 +97,7 @@ export const comicData: Comic[] = [
   {
     id: 7,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "Shuri",
     short_description: "Just a short description",
     status: "upcoming",
     chapters: 3,
@@ -106,7 +107,7 @@ export const comicData: Comic[] = [
   {
     id: 8,
     image: "/events/anime-con.jpg",
-    title: "Mystic Chronicles: The Awakening",
+    title: "The Ambassadors",
     short_description: "Just a short description",
     status: "upcoming",
     chapters: 3,
