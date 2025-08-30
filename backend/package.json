@@ -17,12 +17,16 @@
     "install:all": "npm run install:services && npm run install:tests",
     "install:services": "cd services/auth-service && npm install && cd ../user-service && npm install && cd ../comic-service && npm install && cd ../wallet-service && npm install && cd ../event-service && npm install && cd ../ledger-service && npm install && cd ../file-service && npm install && cd ../..",
     "install:tests": "cd tests && npm install && cd ..",
-    "install:root": "npm install"
+    "install:root": "npm install",
+    "build:services": "cd services/auth-service && npm run build && cd ../user-service && npm run build && cd ../comic-service && npm run build && cd ../wallet-service && npm run build && cd ../event-service && npm run build && cd ../ledger-service && npm run build && cd ../file-service && npm run build && cd ../..",
+    "deploy:aws": "npm run build:services && serverless deploy",
+    "deploy:aws:prod": "npm run build:services && serverless deploy --stage prod"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-ssm": "^3.658.1",
     "@heliofi/sdk": "^2.2.5",
     "@metaplex-foundation/mpl-core": "^1.4.1",
     "@metaplex-foundation/umi": "^1.2.0",
