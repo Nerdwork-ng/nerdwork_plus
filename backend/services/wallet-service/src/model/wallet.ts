@@ -39,31 +39,13 @@ export const transactions = pgTable('transactions', {
   referenceId: text('reference_id'), // Reference to comic purchase, event ticket, etc.
   referenceType: text('reference_type'), // 'comic', 'event', 'ticket', etc.
   status: text('status').notNull().default('completed'), // 'pending', 'completed', 'failed', 'cancelled'
-  paymentMethod: text('payment_method'), // 'stripe', 'paypal', 'crypto', etc.
-  externalTransactionId: text('external_transaction_id'), // Stripe payment intent, etc.
+  paymentMethod: text('payment_method'), // 'helio', 'nwt', etc.
+  externalTransactionId: text('external_transaction_id'), // Helio payment ID, etc.
   metadata: json('metadata'), // Additional transaction data
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
-export const paymentMethods = pgTable('payment_methods', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => authUsers.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(), // 'card', 'bank_account', 'paypal'
-  provider: text('provider').notNull(), // 'stripe', 'paypal'
-  externalId: text('external_id').notNull(), // Stripe customer ID, PayPal account ID
-  last4: text('last4'), // Last 4 digits for cards
-  brand: text('brand'), // 'visa', 'mastercard', etc.
-  expiryMonth: integer('expiry_month'),
-  expiryYear: integer('expiry_year'),
-  isDefault: boolean('is_default').notNull().default(false),
-  isActive: boolean('is_active').notNull().default(true),
-  metadata: json('metadata'),
-  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
-});
 
 export const nwtPricing = pgTable('nwt_pricing', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -84,8 +66,6 @@ export type SelectWallet = typeof wallets.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
 export type SelectTransaction = typeof transactions.$inferSelect;
 
-export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
-export type SelectPaymentMethod = typeof paymentMethods.$inferSelect;
 
 export type InsertNwtPricing = typeof nwtPricing.$inferInsert;
 export type SelectNwtPricing = typeof nwtPricing.$inferSelect;

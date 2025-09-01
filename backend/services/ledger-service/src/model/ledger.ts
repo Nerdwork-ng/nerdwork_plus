@@ -9,6 +9,7 @@ import {
   integer,
   unique
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { authUsers } from './auth.js';
 
 // Chart of Accounts - defines all account types
@@ -17,7 +18,7 @@ export const accounts = pgTable('accounts', {
   code: text('code').notNull().unique(), // e.g., '1000', '2000', '3000'
   name: text('name').notNull(), // e.g., 'Cash', 'NWT Token Inventory', 'User Deposits'
   type: text('type').notNull(), // 'asset', 'liability', 'equity', 'revenue', 'expense'
-  parentAccountId: uuid('parent_account_id').references(() => accounts.id),
+  parentAccountId: uuid('parent_account_id'),
   normalBalance: text('normal_balance').notNull(), // 'debit' or 'credit'
   description: text('description'),
   isActive: boolean('is_active').notNull().default(true),
@@ -43,7 +44,7 @@ export const ledgerEntries = pgTable('ledger_entries', {
   metadata: json('metadata'), // Additional context data
   entryDate: timestamp('entry_date', { mode: 'date' }).notNull().defaultNow(),
   isReversed: boolean('is_reversed').notNull().default(false),
-  reversedBy: uuid('reversed_by').references(() => ledgerEntries.id),
+  reversedBy: uuid('reversed_by'),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
@@ -58,7 +59,7 @@ export const transactions = pgTable('transactions', {
   status: text('status').notNull().default('completed'), // 'pending', 'completed', 'reversed'
   referenceId: text('reference_id'), // External reference (Stripe payment, etc.)
   isReversed: boolean('is_reversed').notNull().default(false),
-  reversedBy: uuid('reversed_by').references(() => transactions.id),
+  reversedBy: uuid('reversed_by'),
   transactionDate: timestamp('transaction_date', { mode: 'date' }).notNull().defaultNow(),
   metadata: json('metadata'),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
@@ -111,3 +112,59 @@ export type SelectAccountBalance = typeof accountBalances.$inferSelect;
 
 export type InsertAuditTrail = typeof auditTrail.$inferInsert;
 export type SelectAuditTrail = typeof auditTrail.$inferSelect;
+
+// Relations
+export const accountsRelations = relations(accounts, ({ one, many }) => ({
+  parentAccount: one(accounts, {
+    fields: [accounts.parentAccountId],
+    references: [accounts.id],
+    relationName: "parent_account"
+  }),
+  childAccounts: many(accounts, { relationName: "parent_account" }),
+  ledgerEntries: many(ledgerEntries),
+  accountBalances: many(accountBalances),
+}));
+
+export const ledgerEntriesRelations = relations(ledgerEntries, ({ one }) => ({
+  account: one(accounts, {
+    fields: [ledgerEntries.accountId],
+    references: [accounts.id],
+  }),
+  transaction: one(transactions, {
+    fields: [ledgerEntries.transactionId],
+    references: [transactions.id],
+  }),
+  user: one(authUsers, {
+    fields: [ledgerEntries.userId],
+    references: [authUsers.id],
+  }),
+  reversedByEntry: one(ledgerEntries, {
+    fields: [ledgerEntries.reversedBy],
+    references: [ledgerEntries.id],
+    relationName: "reversed_entry"
+  }),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one, many }) => ({
+  user: one(authUsers, {
+    fields: [transactions.userId],
+    references: [authUsers.id],
+  }),
+  ledgerEntries: many(ledgerEntries),
+  reversedByTransaction: one(transactions, {
+    fields: [transactions.reversedBy],
+    references: [transactions.id],
+    relationName: "reversed_transaction"
+  }),
+}));
+
+export const accountBalancesRelations = relations(accountBalances, ({ one }) => ({
+  account: one(accounts, {
+    fields: [accountBalances.accountId],
+    references: [accounts.id],
+  }),
+  user: one(authUsers, {
+    fields: [accountBalances.userId],
+    references: [authUsers.id],
+  }),
+}));

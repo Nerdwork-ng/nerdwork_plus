@@ -1,0 +1,75 @@
+service: nerdwork-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-1'}
+  memorySize: 512
+  timeout: 30
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+          Resource: 
+            - "arn:aws:ssm:${self:provider.region}:*:parameter/nerdwork/${self:provider.stage}/*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource: 
+            - "arn:aws:s3:::nerdwork-assets-${self:provider.stage}/*"
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+
+# Exclude large files and folders to avoid EMFILE error
+package:
+  excludeDevDependencies: true
+  patterns:
+    - '!node_modules/**'
+    - '!services/*/node_modules/**'
+    - '!api-gateway/node_modules/**'
+    - '!services/*/src/**'
+    - '!api-gateway/src/**'
+    - '!**/*.test.ts'
+    - '!**/*.spec.ts'
+    - '!**/test/**'
+    - '!**/tests/**'
+    - '!**/.git/**'
+    - '!**/*.md'
+    - 'services/*/dist/**'
+    - 'api-gateway/dist/**'
+
+plugins:
+  - serverless-offline
+
+functions:
+  # Simple health check function
+  health:
+    handler: src/lambda.handler
+    events:
+      - http:
+          path: /health
+          method: GET
+          cors: true
+    environment:
+      SERVICE_TYPE: health
+
+custom:
+  serverless-offline:
+    httpPort: 3000
+    noPrependStageInUrl: true

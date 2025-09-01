@@ -517,6 +517,29 @@ For technical support:
 3. **Service Logs**: Check individual service logs for errors
 4. **Health Checks**: Verify all services are operational
 
+
+
+✔ Service deployed to stack nerdwork-backend-dev (246s)
+
+endpoints:                                                                                                                          
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/auth/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/users/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/comics/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/wallet/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/events/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/ledger/{proxy+}
+  ANY - https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/files/{proxy+}
+functions:
+  api-gateway: nerdwork-backend-dev-api-gateway (1.3 MB)                                                                            
+  auth-service: nerdwork-backend-dev-auth-service (1.3 MB)
+  user-service: nerdwork-backend-dev-user-service (1.3 MB)
+  comic-service: nerdwork-backend-dev-comic-service (1.3 MB)
+  wallet-service: nerdwork-backend-dev-wallet-service (1.3 MB)
+  event-service: nerdwork-backend-dev-event-service (1.3 MB)
+  ledger-service: nerdwork-backend-dev-ledger-service (1.3 MB)
+  file-service: nerdwork-backend-dev-file-service (1.3 MB)
+
 ### Monitoring Service Health
 ```bash
 # Check all services

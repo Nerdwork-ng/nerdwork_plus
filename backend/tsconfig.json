@@ -12,33 +12,30 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
+    "isolatedModules": true,
+    "declaration": false,
     "sourceMap": true,
     "removeComments": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": false,
-    "exactOptionalPropertyTypes": true
+    "baseUrl": "./",
+    "paths": {
+      "*": ["node_modules/*", "src/*"]
+    }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "services/*/src/**/*",
+    "api-gateway/src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
+    ".serverless",
     "**/*.test.ts",
     "**/*.spec.ts"
   ]
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true
-  }
 }

@@ -6,14 +6,18 @@ provider:
   name: aws
   runtime: nodejs18.x
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'eu-west-1'}
   memorySize: 512
   timeout: 30
   environment:
     NODE_ENV: ${self:provider.stage}
     DATABASE_URL: ${ssm:/nerdwork/${self:provider.stage}/database-url}
     JWT_SECRET: ${ssm:/nerdwork/${self:provider.stage}/jwt-secret}
-    STRIPE_SECRET_KEY: ${ssm:/nerdwork/${self:provider.stage}/stripe-secret-key}
+    HELIO_API_KEY: ${ssm:/nerdwork/${self:provider.stage}/helio-api-key}
+    HELIO_BASE_URL: https://api.hel.io
+    HELIO_CLUSTER: ${ssm:/nerdwork/${self:provider.stage}/helio-cluster}
+    HELIO_RECEIVER_WALLET: ${ssm:/nerdwork/${self:provider.stage}/helio-receiver-wallet}
+    PAYMENT_SUCCESS_URL: ${ssm:/nerdwork/${self:provider.stage}/payment-success-url}
   iam:
     role:
       statements:

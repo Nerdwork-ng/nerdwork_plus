@@ -26,7 +26,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-ssm": "^3.658.1",
+    "@aws-sdk/client-rds": "^3.879.0",
+    "@aws-sdk/client-ssm": "^3.879.0",
     "@heliofi/sdk": "^2.2.5",
     "@metaplex-foundation/mpl-core": "^1.4.1",
     "@metaplex-foundation/umi": "^1.2.0",
@@ -35,12 +36,14 @@
     "@metaplex-foundation/umi-uploader-irys": "^1.2.0",
     "@neondatabase/serverless": "^1.0.1",
     "@solana/web3.js": "^1.98.2",
+    "@types/aws-lambda": "^8.10.152",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^8.2.3",
     "@types/morgan": "^1.9.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.0",
@@ -52,9 +55,9 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
+    "serverless-http": "^3.2.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "serverless-http": "^3.2.0"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",
@@ -71,11 +74,11 @@
     "babel-jest": "^30.0.2",
     "drizzle-kit": "^0.31.3",
     "jest": "^30.0.2",
-    "supertest": "^7.1.1",
-    "ts-jest": "^29.4.0",
     "serverless": "^3.38.0",
     "serverless-offline": "^13.3.3",
-    "serverless-plugin-typescript": "^2.1.5"
+    "serverless-plugin-typescript": "^2.1.5",
+    "supertest": "^7.1.1",
+    "ts-jest": "^29.4.0"
   },
   "transform": {
     "\\.[jt]sx?$": [

@@ -5,7 +5,7 @@ import { app } from './index.js';
 const loadParameters = async () => {
   if (process.env.NODE_ENV === 'production' || process.env.STAGE === 'prod') {
     const { SSMClient, GetParametersCommand } = await import('@aws-sdk/client-ssm');
-    const ssmClient = new SSMClient({ region: process.env.AWS_REGION || 'us-east-1' });
+    const ssmClient = new SSMClient({ region: process.env.AWS_REGION || 'eu-west-1' });
     
     const parameterNames = [
       `/nerdwork/${process.env.STAGE || 'prod'}/DATABASE_URL`,

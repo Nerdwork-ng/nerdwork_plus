@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
+    "@heliofi/sdk": "^2.2.5",
+    "@solana/web3.js": "^1.98.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

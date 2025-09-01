@@ -1,12 +1,7 @@
 import { eq, desc, and, sql } from "drizzle-orm";
 import { db } from "../config/db.js";
-import { wallets, transactions, paymentMethods, nwtPricing } from "../model/wallet.js";
-import Stripe from 'stripe';
+import { wallets, transactions, nwtPricing } from "../model/wallet.js";
 import HelioService, { type CreatePaymentLinkRequest } from '../services/helio.service.js';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
-});
 
 // Initialize Helio service
 const helioService = new HelioService({
@@ -136,11 +131,11 @@ export const getNwtPricing = async (req: any, res: any) => {
   }
 };
 
-// Purchase NWT tokens
-export const purchaseNwtTokens = async (req: any, res: any) => {
+// Create payment link for NWT token purchase
+export const createPaymentLink = async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { packageId, paymentMethodId } = req.body;
+    const { packageId } = req.body;
 
     if (!userId) {
       return res.status(401).json({
@@ -177,20 +172,23 @@ export const purchaseNwtTokens = async (req: any, res: any) => {
         .returning();
     }
 
-    // Create Stripe payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(parseFloat(pricingPackage.usdPrice) * 100), // Convert to cents
-      currency: 'usd',
-      payment_method: paymentMethodId,
-      confirmation_method: 'manual',
-      confirm: true,
+    // Create Helio payment link
+    const paymentLinkRequest: CreatePaymentLinkRequest = {
+      productName: `${pricingPackage.nwtAmount} NWT Tokens - ${pricingPackage.packageName}`,
+      productDescription: pricingPackage.description || `Purchase ${pricingPackage.nwtAmount} NWT tokens`,
+      price: parseFloat(pricingPackage.usdPrice),
+      currency: 'USDC',
+      receiverWallet: process.env.HELIO_RECEIVER_WALLET || '',
+      redirectUrl: process.env.PAYMENT_SUCCESS_URL,
       metadata: {
         userId,
         packageId,
         nwtAmount: pricingPackage.nwtAmount,
         type: 'nwt_purchase'
-      },
-    });
+      }
+    };
+
+    const paymentLink = await helioService.createPaymentLink(paymentLinkRequest);
 
     // Create pending transaction
     const [transaction] = await db
@@ -202,20 +200,96 @@ export const purchaseNwtTokens = async (req: any, res: any) => {
         amount: pricingPackage.nwtAmount,
         description: `Purchased ${pricingPackage.nwtAmount} NWT tokens (${pricingPackage.packageName})`,
         status: 'pending',
-        paymentMethod: 'stripe',
-        externalTransactionId: paymentIntent.id,
+        paymentMethod: 'helio',
+        externalTransactionId: paymentLink.id,
         metadata: {
           packageId,
           usdPrice: pricingPackage.usdPrice,
-          bonusPercentage: pricingPackage.bonusPercentage
+          bonusPercentage: pricingPackage.bonusPercentage,
+          paymentLink: paymentLink.url
         }
       })
       .returning();
 
-    if (paymentIntent.status === 'succeeded') {
+    return res.status(200).json({
+      success: true,
+      data: {
+        transaction,
+        paymentLink: {
+          id: paymentLink.id,
+          url: paymentLink.url,
+          qrCode: paymentLink.qrCode,
+          status: paymentLink.status
+        }
+      },
+      message: "Payment link created successfully"
+    });
+  } catch (error: any) {
+    console.error("Create payment link error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+// Check payment status and complete purchase
+export const checkPaymentStatus = async (req: any, res: any) => {
+  try {
+    const userId = req.userId;
+    const { paymentId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: "Authentication required",
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Get transaction by external payment ID
+    const [transaction] = await db
+      .select()
+      .from(transactions)
+      .where(and(
+        eq(transactions.userId, userId),
+        eq(transactions.externalTransactionId, paymentId)
+      ));
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        error: "Transaction not found",
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (transaction.status === 'completed') {
+      return res.status(200).json({
+        success: true,
+        data: { transaction },
+        message: "Payment already completed"
+      });
+    }
+
+    // Check payment status with Helio
+    const paymentStatus = await helioService.checkPaymentStatus(paymentId);
+
+    if (paymentStatus.status === 'completed') {
+      // Get wallet
+      const [wallet] = await db
+        .select()
+        .from(wallets)
+        .where(eq(wallets.id, transaction.walletId));
+
+      if (!wallet) {
+        throw new Error('Wallet not found');
+      }
+
       // Update wallet balance
-      const newBalance = (parseFloat(wallet.nwtBalance) + parseFloat(pricingPackage.nwtAmount)).toFixed(8);
-      const newTotalEarned = (parseFloat(wallet.totalEarned) + parseFloat(pricingPackage.nwtAmount)).toFixed(8);
+      const newBalance = (parseFloat(wallet.nwtBalance) + parseFloat(transaction.amount)).toFixed(8);
+      const newTotalEarned = (parseFloat(wallet.totalEarned) + parseFloat(transaction.amount)).toFixed(8);
 
       await db
         .update(wallets)
@@ -231,27 +305,38 @@ export const purchaseNwtTokens = async (req: any, res: any) => {
         .update(transactions)
         .set({
           status: 'completed',
+          metadata: {
+            ...transaction.metadata as any,
+            transactionHash: paymentStatus.transactionHash,
+            paidAt: paymentStatus.paidAt
+          },
           updatedAt: new Date(),
         })
         .where(eq(transactions.id, transaction.id));
+
+      const updatedTransaction = { ...transaction, status: 'completed' as const };
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          transaction: updatedTransaction,
+          paymentStatus,
+          newBalance
+        },
+        message: "Payment completed successfully"
+      });
     }
 
     return res.status(200).json({
       success: true,
       data: {
         transaction,
-        paymentIntent: {
-          id: paymentIntent.id,
-          status: paymentIntent.status,
-          clientSecret: paymentIntent.client_secret,
-        }
+        paymentStatus
       },
-      message: paymentIntent.status === 'succeeded' 
-        ? "NWT tokens purchased successfully" 
-        : "Payment processing"
+      message: "Payment still pending"
     });
   } catch (error: any) {
-    console.error("Purchase NWT tokens error:", error);
+    console.error("Check payment status error:", error);
     return res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -332,6 +417,7 @@ export const spendNwtTokens = async (req: any, res: any) => {
         referenceId,
         referenceType,
         status: 'completed',
+        paymentMethod: 'nwt',
       })
       .returning();
 
@@ -354,11 +440,11 @@ export const spendNwtTokens = async (req: any, res: any) => {
   }
 };
 
-// Add payment method
-export const addPaymentMethod = async (req: any, res: any) => {
+// Connect Solana wallet
+export const connectWallet = async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { paymentMethodId } = req.body;
+    const { walletAddress, walletType } = req.body;
 
     if (!userId) {
       return res.status(401).json({
@@ -368,61 +454,51 @@ export const addPaymentMethod = async (req: any, res: any) => {
       });
     }
 
-    // Retrieve payment method from Stripe
-    const stripePaymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-
-    if (!stripePaymentMethod) {
+    if (!walletAddress || !walletType) {
       return res.status(400).json({
         success: false,
-        error: "Invalid payment method",
+        error: "Wallet address and type are required",
         timestamp: new Date().toISOString()
       });
     }
 
-    // Create or get Stripe customer
-    let customer;
-    const existingCustomer = await stripe.customers.search({
-      query: `metadata['userId']:'${userId}'`,
-    });
+    // Get or create wallet
+    let [wallet] = await db
+      .select()
+      .from(wallets)
+      .where(eq(wallets.userId, userId));
 
-    if (existingCustomer.data.length > 0) {
-      customer = existingCustomer.data[0];
+    if (!wallet) {
+      [wallet] = await db
+        .insert(wallets)
+        .values({ 
+          userId,
+          connectedWalletAddress: walletAddress,
+          walletType
+        })
+        .returning();
     } else {
-      customer = await stripe.customers.create({
-        metadata: { userId }
-      });
+      // Update existing wallet with new connection
+      await db
+        .update(wallets)
+        .set({
+          connectedWalletAddress: walletAddress,
+          walletType,
+          updatedAt: new Date(),
+        })
+        .where(eq(wallets.id, wallet.id));
+      
+      wallet.connectedWalletAddress = walletAddress;
+      wallet.walletType = walletType;
     }
-
-    // Attach payment method to customer
-    await stripe.paymentMethods.attach(paymentMethodId, {
-      customer: customer.id,
-    });
-
-    // Save payment method to database
-    const [savedPaymentMethod] = await db
-      .insert(paymentMethods)
-      .values({
-        userId,
-        type: stripePaymentMethod.type,
-        provider: 'stripe',
-        externalId: paymentMethodId,
-        last4: stripePaymentMethod.card?.last4 || null,
-        brand: stripePaymentMethod.card?.brand || null,
-        expiryMonth: stripePaymentMethod.card?.exp_month || null,
-        expiryYear: stripePaymentMethod.card?.exp_year || null,
-        metadata: {
-          customerId: customer.id
-        }
-      })
-      .returning();
 
     return res.status(200).json({
       success: true,
-      data: savedPaymentMethod,
-      message: "Payment method added successfully"
+      data: wallet,
+      message: "Wallet connected successfully"
     });
   } catch (error: any) {
-    console.error("Add payment method error:", error);
+    console.error("Connect wallet error:", error);
     return res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -431,35 +507,66 @@ export const addPaymentMethod = async (req: any, res: any) => {
   }
 };
 
-// Get payment methods
-export const getPaymentMethods = async (req: any, res: any) => {
+// Process Helio webhook
+export const processWebhook = async (req: any, res: any) => {
   try {
-    const userId = req.userId;
+    const signature = req.headers['x-helio-signature'];
+    const payload = req.body;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: "Authentication required",
-        timestamp: new Date().toISOString()
-      });
+    // Process webhook payload
+    const webhookData = await helioService.processWebhook(payload, signature);
+
+    if (webhookData.status === 'completed') {
+      // Find transaction by payment ID
+      const [transaction] = await db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.externalTransactionId, webhookData.id));
+
+      if (transaction && transaction.status === 'pending') {
+        // Get wallet
+        const [wallet] = await db
+          .select()
+          .from(wallets)
+          .where(eq(wallets.id, transaction.walletId));
+
+        if (wallet) {
+          // Update wallet balance
+          const newBalance = (parseFloat(wallet.nwtBalance) + parseFloat(transaction.amount)).toFixed(8);
+          const newTotalEarned = (parseFloat(wallet.totalEarned) + parseFloat(transaction.amount)).toFixed(8);
+
+          await db
+            .update(wallets)
+            .set({
+              nwtBalance: newBalance,
+              totalEarned: newTotalEarned,
+              updatedAt: new Date(),
+            })
+            .where(eq(wallets.id, wallet.id));
+
+          // Update transaction status
+          await db
+            .update(transactions)
+            .set({
+              status: 'completed',
+              metadata: {
+                ...transaction.metadata as any,
+                transactionHash: webhookData.transactionHash,
+                paidAt: webhookData.paidAt
+              },
+              updatedAt: new Date(),
+            })
+            .where(eq(transactions.id, transaction.id));
+        }
+      }
     }
 
-    const methods = await db
-      .select()
-      .from(paymentMethods)
-      .where(and(eq(paymentMethods.userId, userId), eq(paymentMethods.isActive, true)));
-
-    return res.status(200).json({
-      success: true,
-      data: methods,
-      message: "Payment methods retrieved successfully"
-    });
+    return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error("Get payment methods error:", error);
+    console.error("Process webhook error:", error);
     return res.status(500).json({
       success: false,
-      error: "Internal server error",
-      timestamp: new Date().toISOString()
+      error: "Internal server error"
     });
   }
 };

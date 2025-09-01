@@ -6,7 +6,15 @@
       "WebFetch(domain:docs.magicblock.gg)",
       "WebFetch(domain:docs.verxio.xyz)",
       "Bash(npm install:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)",
+      "Bash(sudo:*)",
+      "Bash(./aws/install:*)",
+      "Bash(find:*)",
+      "Bash(sed:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

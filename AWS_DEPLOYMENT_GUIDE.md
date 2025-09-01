@@ -177,12 +177,6 @@ aws ssm put-parameter \
     --value "your-super-secure-jwt-secret-for-production" \
     --type "SecureString"
 
-# Stripe Keys
-aws ssm put-parameter \
-    --name "/nerdwork/prod/STRIPE_SECRET_KEY" \
-    --value "sk_live_your_stripe_live_secret_key" \
-    --type "SecureString"
-
 # Helio API Keys
 aws ssm put-parameter \
     --name "/nerdwork/prod/HELIO_API_KEY" \

@@ -5,7 +5,7 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'eu-west-1'}
   stage: ${opt:stage, 'dev'}
   environment:
     DATABASE_URL: ${env:DATABASE_URL}

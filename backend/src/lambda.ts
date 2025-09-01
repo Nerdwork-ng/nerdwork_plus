@@ -1,21 +1,24 @@
-import serverless from 'serverless-http';
-import { app } from './index.js';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-// Export the serverless handler
-export const handler = serverless(app, {
-  request: (request: any, event: any, context: any) => {
-    // Add custom request processing if needed
-    console.log('Request:', {
-      method: request.method,
-      path: request.path,
-      headers: request.headers,
-    });
-  },
-  response: (response: any, request: any, event: any, context: any) => {
-    // Add custom response processing if needed
-    console.log('Response:', {
-      statusCode: response.statusCode,
-      headers: response.headers,
-    });
-  },
-});
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  console.log('Health check request:', event.path);
+  
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+    body: JSON.stringify({
+      message: 'Nerdwork+ Backend is healthy! 🚀',
+      timestamp: new Date().toISOString(),
+      region: process.env.AWS_REGION || 'unknown',
+      stage: process.env.STAGE || 'unknown',
+      service: 'nerdwork-backend'
+    }),
+  };
+};

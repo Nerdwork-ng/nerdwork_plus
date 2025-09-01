@@ -41,7 +41,7 @@ export const createTransaction = async (req: any, res: any) => {
     }
 
     // Create transaction header
-    const [transaction] = await db
+    const transactionResult = await db
       .insert(transactions)
       .values({
         description,
@@ -52,6 +52,8 @@ export const createTransaction = async (req: any, res: any) => {
         metadata
       })
       .returning();
+    
+    const transaction = transactionResult[0];
 
     // Create ledger entries
     const ledgerEntriesData = entries.map((entry: any) => ({
