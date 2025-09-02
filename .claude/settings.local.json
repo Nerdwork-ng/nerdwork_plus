@@ -14,7 +14,11 @@
       "Bash(./aws/install:*)",
       "Bash(find:*)",
       "Bash(sed:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node generate-docs.js)",
+      "Bash(node:*)",
+      "Bash(aws logs describe-log-groups:*)",
+      "Bash(sls logs:*)"
     ],
     "deny": [],
     "ask": []

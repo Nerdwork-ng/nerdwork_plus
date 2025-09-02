@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Nerdwork+ API Tester</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .api-tester {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab-content {
+            padding: 30px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .response {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .response h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .response pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .status-200 { border-left-color: #28a745; }
+        .status-400 { border-left-color: #ffc107; }
+        .status-401 { border-left-color: #dc3545; }
+        .status-500 { border-left-color: #6f42c1; }
+        
+        .endpoint-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .method-GET { background: #28a745; color: white; }
+        .method-POST { background: #007bff; color: white; }
+        .method-PUT { background: #ffc107; color: black; }
+        .method-DELETE { background: #dc3545; color: white; }
+        
+        .loading {
+            display: none;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .config-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Nerdwork+ API Tester</h1>
+            <p>Interactive testing interface for Ireland deployment</p>
+            <p><strong>Base URL:</strong> https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev</p>
+        </div>
+        
+        <div class="api-tester">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('config')">⚙️ Config</button>
+                <button class="tab" onclick="switchTab('auth')">🔐 Auth</button>
+                <button class="tab" onclick="switchTab('wallet')">💰 Wallet</button>
+                <button class="tab" onclick="switchTab('users')">👤 Users</button>
+                <button class="tab" onclick="switchTab('comics')">📖 Comics</button>
+            </div>
+            
+            <!-- Configuration Tab -->
+            <div id="config" class="tab-content active">
+                <h3>🔧 Configuration</h3>
+                <div class="config-section">
+                    <h4>🌐 API Configuration</h4>
+                    <div class="form-group">
+                        <label for="baseUrl">Base URL:</label>
+                        <input type="text" id="baseUrl" class="form-control" 
+                               value="https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev">
+                    </div>
+                    <div class="form-group">
+                        <label for="authToken">Auth Token (JWT):</label>
+                        <input type="text" id="authToken" class="form-control" 
+                               placeholder="Paste your JWT token here after login">
+                    </div>
+                    <button class="btn" onclick="saveConfig()">💾 Save Configuration</button>
+                </div>
+                
+                <div class="config-section">
+                    <h4>📋 Quick Health Checks</h4>
+                    <button class="btn" onclick="healthCheck('auth')">Check Auth Service</button>
+                    <button class="btn" onclick="healthCheck('wallet')">Check Wallet Service</button>
+                    <button class="btn" onclick="healthCheck('users')">Check User Service</button>
+                </div>
+            </div>
+            
+            <!-- Auth Tab -->
+            <div id="auth" class="tab-content">
+                <h3>🔐 Authentication Service</h3>
+                
+                <div class="endpoint-info">
+                    <span class="method-badge method-POST">POST</span>
+                    <strong>/auth/signup</strong> - Register new user
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupEmail">Email:</label>
+                    <input type="email" id="signupEmail" class="form-control" value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password:</label>
+                    <input type="password" id="signupPassword" class="form-control" value="password123">
+                </div>
+                <div class="form-group">
+                    <label for="signupUsername">Username:</label>
+                    <input type="text" id="signupUsername" class="form-control" value="testuser">
+                </div>
+                <div class="form-group">
+                    <label for="signupFullName">Full Name:</label>
+                    <input type="text" id="signupFullName" class="form-control" value="Test User">
+                </div>
+                <button class="btn" onclick="signup()">🚀 Register User</button>
+                
+                <div class="endpoint-info" style="margin-top: 30px;">
+                    <span class="method-badge method-POST">POST</span>
+                    <strong>/auth/login</strong> - Login user
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" class="form-control" value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" class="form-control" value="password123">
+                </div>
+                <button class="btn" onclick="login()">🔑 Login</button>
+                
+                <div class="endpoint-info" style="margin-top: 30px;">
+                    <span class="method-badge method-GET">GET</span>
+                    <strong>/auth/me</strong> - Get current user (requires token)
+                </div>
+                <button class="btn" onclick="getCurrentUser()">👤 Get Current User</button>
+                
+                <div id="authResponse" class="response" style="display: none;"></div>
+                <div id="authLoading" class="loading">⏳ Processing request...</div>
+            </div>
+            
+            <!-- Wallet Tab -->
+            <div id="wallet" class="tab-content">
+                <h3>💰 Wallet Service</h3>
+                
+                <div class="endpoint-info">
+                    <span class="method-badge method-GET">GET</span>
+                    <strong>/wallet</strong> - Get user wallet
+                </div>
+                <button class="btn" onclick="getWallet()">💼 Get Wallet</button>
+                
+                <div class="endpoint-info" style="margin-top: 30px;">
+                    <span class="method-badge method-GET">GET</span>
+                    <strong>/wallet/pricing</strong> - Get NWT pricing (public)
+                </div>
+                <button class="btn" onclick="getPricing()">💲 Get Pricing</button>
+                
+                <div class="endpoint-info" style="margin-top: 30px;">
+                    <span class="method-badge method-POST">POST</span>
+                    <strong>/wallet/connect</strong> - Connect Solana wallet
+                </div>
+                
+                <div class="form-group">
+                    <label for="walletAddress">Wallet Address:</label>
+                    <input type="text" id="walletAddress" class="form-control" 
+                           value="5Gv8mBVKrYfJvWvCKPf8X3J1K7j2mNnH3Q4P5R6S7T8U9">
+                </div>
+                <div class="form-group">
+                    <label for="walletType">Wallet Type:</label>
+                    <select id="walletType" class="form-control">
+                        <option value="phantom">Phantom</option>
+                        <option value="solflare">Solflare</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="connectWallet()">🔗 Connect Wallet</button>
+                
+                <div id="walletResponse" class="response" style="display: none;"></div>
+                <div id="walletLoading" class="loading">⏳ Processing request...</div>
+            </div>
+            
+            <!-- Users Tab -->
+            <div id="users" class="tab-content">
+                <h3>👤 User Service</h3>
+                
+                <div class="endpoint-info">
+                    <span class="method-badge method-GET">GET</span>
+                    <strong>/users/me</strong> - Get user profile
+                </div>
+                <button class="btn" onclick="getUserProfile()">👤 Get Profile</button>
+                
+                <div class="endpoint-info" style="margin-top: 30px;">
+                    <span class="method-badge method-POST">POST</span>
+                    <strong>/users/creator/become</strong> - Become creator
+                </div>
+                <button class="btn" onclick="becomeCreator()">🎨 Become Creator</button>
+                
+                <div id="usersResponse" class="response" style="display: none;"></div>
+                <div id="usersLoading" class="loading">⏳ Processing request...</div>
+            </div>
+            
+            <!-- Comics Tab -->
+            <div id="comics" class="tab-content">
+                <h3>📖 Comics Service</h3>
+                
+                <div class="endpoint-info">
+                    <span class="method-badge method-GET">GET</span>
+                    <strong>/comics</strong> - Browse comics
+                </div>
+                <button class="btn" onclick="browseComics()">📚 Browse Comics</button>
+                
+                <div id="comicsResponse" class="response" style="display: none;"></div>
+                <div id="comicsLoading" class="loading">⏳ Processing request...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let config = {
+            baseUrl: 'https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev',
+            authToken: ''
+        };
+
+        // Load saved config
+        const savedConfig = localStorage.getItem('nerdworkApiConfig');
+        if (savedConfig) {
+            config = { ...config, ...JSON.parse(savedConfig) };
+            document.getElementById('baseUrl').value = config.baseUrl;
+            document.getElementById('authToken').value = config.authToken;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Save configuration
+        function saveConfig() {
+            config.baseUrl = document.getElementById('baseUrl').value;
+            config.authToken = document.getElementById('authToken').value;
+            localStorage.setItem('nerdworkApiConfig', JSON.stringify(config));
+            alert('✅ Configuration saved!');
+        }
+
+        // API request helper
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${config.baseUrl}${endpoint}`;
+            const defaultOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(config.authToken && { 'Authorization': `Bearer ${config.authToken}` })
+                }
+            };
+
+            try {
+                const response = await fetch(url, { ...defaultOptions, ...options });
+                const data = await response.json();
+                return { status: response.status, data, ok: response.ok };
+            } catch (error) {
+                return { status: 0, data: { error: error.message }, ok: false };
+            }
+        }
+
+        // Show response
+        function showResponse(tabName, status, data) {
+            const responseDiv = document.getElementById(`${tabName}Response`);
+            const loadingDiv = document.getElementById(`${tabName}Loading`);
+            
+            // loadingDiv.style.display = 'none';
+            //responseDiv.style.display = 'block';
+            responseDiv.className = `response status-${status}`;
+            
+            responseDiv.innerHTML = `
+                <h4>Response (${status}):</h4>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        // Show loading
+        function showLoading(tabName) {
+            const responseDiv = document.getElementById(`${tabName}Response`);
+            const loadingDiv = document.getElementById(`${tabName}Loading`);
+            
+           // responseDiv.style.display = 'none';
+           // loadingDiv.style.display = 'block';
+        }
+
+        // Health checks
+        async function healthCheck(service) {
+            showLoading('config');
+            const result = await apiRequest(`/${service}/health`);
+            console.log(result);
+            showResponse('config', result.status, result.data);
+        }
+
+        // Auth functions
+        async function signup() {
+            showLoading('auth');
+            const userData = {
+                email: document.getElementById('signupEmail').value,
+                password: document.getElementById('signupPassword').value,
+                username: document.getElementById('signupUsername').value,
+                fullName: document.getElementById('signupFullName').value
+            };
+            
+            const result = await apiRequest('/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+            
+            if (result.data.success && result.data.data.token) {
+                config.authToken = result.data.data.token;
+                document.getElementById('authToken').value = config.authToken;
+                saveConfig();
+            }
+            
+            showResponse('auth', result.status, result.data);
+        }
+
+        async function login() {
+            showLoading('auth');
+            const credentials = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+            
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(credentials)
+            });
+            
+            if (result.data.success && result.data.data.token) {
+                config.authToken = result.data.data.token;
+                document.getElementById('authToken').value = config.authToken;
+                saveConfig();
+            }
+            
+            showResponse('auth', result.status, result.data);
+        }
+
+        async function getCurrentUser() {
+            showLoading('auth');
+            const result = await apiRequest('/auth/me');
+            showResponse('auth', result.status, result.data);
+        }
+
+        // Wallet functions
+        async function getWallet() {
+            showLoading('wallet');
+            const result = await apiRequest('/wallet');
+            showResponse('wallet', result.status, result.data);
+        }
+
+        async function getPricing() {
+            showLoading('wallet');
+            const result = await apiRequest('/wallet/pricing');
+            showResponse('wallet', result.status, result.data);
+        }
+
+        async function connectWallet() {
+            showLoading('wallet');
+            const walletData = {
+                walletAddress: document.getElementById('walletAddress').value,
+                walletType: document.getElementById('walletType').value
+            };
+            
+            const result = await apiRequest('/wallet/connect', {
+                method: 'POST',
+                body: JSON.stringify(walletData)
+            });
+            
+            showResponse('wallet', result.status, result.data);
+        }
+
+        // User functions
+        async function getUserProfile() {
+            showLoading('users');
+            const result = await apiRequest('/users/me');
+            showResponse('users', result.status, result.data);
+        }
+
+        async function becomeCreator() {
+            showLoading('users');
+            const result = await apiRequest('/users/creator/become', {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+            showResponse('users', result.status, result.data);
+        }
+
+        // Comics functions
+        async function browseComics() {
+            showLoading('comics');
+            const result = await apiRequest('/comics');
+            showResponse('comics', result.status, result.data);
+        }
+    </script>
+</body>
+</html>

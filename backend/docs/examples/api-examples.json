@@ -1,0 +1,17 @@
+{
+  "curl": {
+    "auth": {
+      "signup": "curl -X POST https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/auth/signup \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"username\": \"testuser\",\n    \"fullName\": \"Test User\"\n  }'",
+      "login": "curl -X POST https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/auth/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n  }'",
+      "me": "curl -X GET https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/auth/me \\\n  -H \"Authorization: Bearer YOUR_TOKEN\""
+    },
+    "wallet": {
+      "getWallet": "curl -X GET https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/wallet \\\n  -H \"Authorization: Bearer YOUR_TOKEN\"",
+      "pricing": "curl -X GET https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/wallet/pricing",
+      "connect": "curl -X POST https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev/wallet/connect \\\n  -H \"Authorization: Bearer YOUR_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"walletAddress\": \"5Gv8mBVKrYfJvWvCKPf8X3J1K7j2mNnH3Q4P5R6S7T8U9\",\n    \"walletType\": \"phantom\"\n  }'"
+    }
+  },
+  "javascript": {
+    "auth": "\n// Authentication helper\nclass NerdworkAuth {\n  constructor(baseUrl) {\n    this.baseUrl = baseUrl;\n    this.token = localStorage.getItem('authToken');\n  }\n\n  async signup(userData) {\n    const response = await fetch(`${this.baseUrl}/auth/signup`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(userData)\n    });\n    const data = await response.json();\n    if (data.success) {\n      this.token = data.data.token;\n      localStorage.setItem('authToken', this.token);\n    }\n    return data;\n  }\n\n  async login(credentials) {\n    const response = await fetch(`${this.baseUrl}/auth/login`, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(credentials)\n    });\n    const data = await response.json();\n    if (data.success) {\n      this.token = data.data.token;\n      localStorage.setItem('authToken', this.token);\n    }\n    return data;\n  }\n\n  async getCurrentUser() {\n    const response = await fetch(`${this.baseUrl}/auth/me`, {\n      headers: { 'Authorization': `Bearer ${this.token}` }\n    });\n    return response.json();\n  }\n}\n\n// Usage\nconst auth = new NerdworkAuth('https://rjk44eecli.execute-api.eu-west-1.amazonaws.com/dev');\nconst user = await auth.signup({\n  email: 'test@example.com',\n  password: 'password123',\n  username: 'testuser',\n  fullName: 'Test User'\n});"
+  }
+}
