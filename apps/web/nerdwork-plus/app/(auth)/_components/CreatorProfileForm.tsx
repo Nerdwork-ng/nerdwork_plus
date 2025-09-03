@@ -16,6 +16,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Eye } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { apiClient } from "@/lib/api";
+import { useState } from "react";
 
 const creatorProfileSchema = z.object({
   fullName: z
@@ -31,19 +34,57 @@ const creatorProfileSchema = z.object({
 });
 
 export function CreatorProfileForm({ onNext }: { onNext: () => void }) {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const form = useForm<z.infer<typeof creatorProfileSchema>>({
     resolver: zodResolver(creatorProfileSchema),
     defaultValues: {
-      fullName: "",
+      fullName: user?.username || "",
       creatorName: "",
       phoneNumber: "",
       bio: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof creatorProfileSchema>) {
-    console.log("Creator profile data:", data);
-    onNext();
+  async function onSubmit(data: z.infer<typeof creatorProfileSchema>) {
+    try {
+      setIsLoading(true);
+      setError("");
+    alert("Creating profile...");
+      // First create user profile
+      const profileResponse = await apiClient.createUserProfile({
+        displayName: data.fullName,
+        firstName: data.fullName.split(' ')[0],
+        lastName: data.fullName.split(' ').slice(1).join(' ') || undefined,
+        bio: data.bio,
+        preferences: { role: 'creator', phoneNumber: data.phoneNumber },
+        language: 'en',
+      });
+
+      if (!profileResponse.success) {
+        throw new Error(profileResponse.error || "Failed to create profile");
+      }
+
+      // Then make user a creator
+      const creatorResponse = await apiClient.becomeCreator({
+        creatorName: data.creatorName,
+        creatorBio: data.bio,
+      });
+
+      if (creatorResponse.success) {
+        console.log("Creator profile created:", creatorResponse.data);
+        onNext();
+      } else {
+        throw new Error(creatorResponse.error || "Failed to become creator");
+      }
+    } catch (error: any) {
+      console.error("Creator profile creation error:", error);
+      setError(error.message || "Failed to create creator profile");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -61,6 +102,12 @@ export function CreatorProfileForm({ onNext }: { onNext: () => void }) {
             <Eye className="w-6 h-6 text-gray-400" />
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -135,8 +182,13 @@ export function CreatorProfileForm({ onNext }: { onNext: () => void }) {
                 </FormItem>
               )}
             />
-            <Button type="submit" variant={"primary"} className="w-full mt-4">
-              Continue
+            <Button 
+              type="submit" 
+              variant={"primary"} 
+              className="w-full mt-4"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Profile..." : "Continue"}
             </Button>
           </form>
         </Form>

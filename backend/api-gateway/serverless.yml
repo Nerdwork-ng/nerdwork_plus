@@ -18,6 +18,7 @@ provider:
     WALLET_SERVICE_URL: ${ssm:/nerdwork/${self:provider.stage}/wallet-service-url}
     EVENT_SERVICE_URL: ${ssm:/nerdwork/${self:provider.stage}/event-service-url}
     LEDGER_SERVICE_URL: ${ssm:/nerdwork/${self:provider.stage}/ledger-service-url}
+    FILE_SERVICE_URL: ${ssm:/nerdwork/${self:provider.stage}/file-service-url}
 
 plugins:
   - serverless-plugin-typescript

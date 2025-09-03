@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Eye } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { apiClient } from "@/lib/api";
+import { useState } from "react";
 
 const finishProfileSchema = z.object({
   fullName: z
@@ -27,17 +30,43 @@ interface ReaderFormProps {
 }
 
 export function ReaderForm({ onNext }: ReaderFormProps) {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
   const form = useForm<z.infer<typeof finishProfileSchema>>({
     resolver: zodResolver(finishProfileSchema),
     defaultValues: {
-      fullName: "",
+      fullName: user?.username || "",
     },
   });
 
-  const onSubmit = (data: z.infer<typeof finishProfileSchema>) => {
-    onNext(data);
-    // Redirect to the dashboard
-    // router.push("/dashboard");
+  const onSubmit = async (data: z.infer<typeof finishProfileSchema>) => {
+    try {
+      setIsLoading(true);
+      setError("");
+
+      // Create user profile
+      const response = await apiClient.createUserProfile({
+        displayName: data.fullName,
+        firstName: data.fullName.split(' ')[0],
+        lastName: data.fullName.split(' ').slice(1).join(' ') || undefined,
+        preferences: { role: 'reader' },
+        language: 'en',
+      });
+
+      if (response.success) {
+        console.log("Reader profile created:", response.data);
+        onNext(data);
+      } else {
+        setError(response.error || "Failed to create profile");
+      }
+    } catch (error) {
+      console.error("Profile creation error:", error);
+      setError("Failed to create profile");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,6 +83,12 @@ export function ReaderForm({ onNext }: ReaderFormProps) {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -66,6 +101,7 @@ export function ReaderForm({ onNext }: ReaderFormProps) {
                     <Input
                       placeholder="Enter Name"
                       {...field}
+                      disabled={isLoading}
                       className="bg-[#292A2E] border-[#292A2E] text-white placeholder:text-[#707073]"
                     />
                   </FormControl>
@@ -76,8 +112,13 @@ export function ReaderForm({ onNext }: ReaderFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" variant={"primary"} className="w-full mt-2">
-              Continue
+            <Button 
+              type="submit" 
+              variant={"primary"} 
+              className="w-full mt-2"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Profile..." : "Continue"}
             </Button>
           </form>
         </Form>

@@ -4,6 +4,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import LoadingProvider from "@/components/LoadingProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth";
+import { WalletProvider } from "@/lib/wallet";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -82,10 +84,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${obostar.variable} antialiased`}>
-        <LoadingProvider logoSrc={"/nerdwork.svg"} logoAlt="Nerwork Logo">
-          {children}
-        </LoadingProvider>
-        <Toaster richColors />
+        <AuthProvider>
+          <WalletProvider>
+            <LoadingProvider logoSrc={"/nerdwork.svg"} logoAlt="Nerwork Logo">
+              {children}
+            </LoadingProvider>
+            <Toaster richColors />
+          </WalletProvider>
+        </AuthProvider>
       </body>
     </html>
   );

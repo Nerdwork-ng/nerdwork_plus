@@ -1,4 +1,5 @@
 import AuthNav from "../_components/AuthNav";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function OnboardingLayout({
   children,
@@ -6,9 +7,11 @@ export default function OnboardingLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="bg-[#171719] text-white min-h-screen py-16">
-      <AuthNav />
-      {children}
-    </main>
+    <ProtectedRoute>
+      <main className="bg-[#171719] text-white min-h-screen py-16">
+        <AuthNav />
+        {children}
+      </main>
+    </ProtectedRoute>
   );
 }

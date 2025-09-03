@@ -1,3 +1,0 @@
-ALTER TABLE "payments" ADD COLUMN "webhook_id" text;--> statement-breakpoint
-ALTER TABLE "user_wallets" ADD CONSTRAINT "user_wallets_user_profile_id_user_profiles_id_fk" FOREIGN KEY ("user_profile_id") REFERENCES "public"."user_profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_wallets" ADD CONSTRAINT "user_wallets_user_profile_id_unique" UNIQUE("user_profile_id");

@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import solflareLogo from "@/assets/creator/solflare.svg";
 import phantomLogo from "@/assets/creator/phantom.svg";
+import Solflare from '@solflare-wallet/sdk';
+
 
 export function PaymentDetailsForm() {
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
-
+  const [isConnected, setIsConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const wallet = new Solflare();
   // A function to simulate wallet detection. In a real app, you would
   // use a library like @solana/wallet-adapter to check for installed wallets.
   const walletDetected = (walletName: string) => {
@@ -17,10 +21,26 @@ export function PaymentDetailsForm() {
     return true; // or false based on the check
   };
 
-  const handleContinue = () => {
+  useEffect(() => {
+    wallet.on('connect', () => {
+      console.log("Wallet connected");
+      setSelectedWallet("solflare");
+      setIsConnected(true);
+      setWalletAddress(wallet?.publicKey!.toString());
+    });
+  }, []);
+
+  const handleContinue = async () => {
     console.log("Selected wallet:", selectedWallet);
+   if (selectedWallet === "solflare") {
+    await wallet.connect();
+   }
+
+   if (selectedWallet === "phantom") {
+    await (window as any).phantom?.solana.connect();
+   }
     // Proceed to the next step, e.g., connect to the wallet
-    alert("Proceeding to wallet connection...");
+    
   };
 
   return (

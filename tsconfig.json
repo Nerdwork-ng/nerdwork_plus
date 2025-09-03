@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-<<<<<<< HEAD
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -25,9 +24,4 @@
     "typeRoots": ["./node_modules/@types"]
   },
   "exclude": ["node_modules", "cdk.out"]
-=======
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  }
->>>>>>> 004ff6c30f4d32dcf48f7cdf1fe72a20a8117e77
 }

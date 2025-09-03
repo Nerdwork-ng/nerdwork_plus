@@ -29,16 +29,17 @@ export default function Hero() {
             From comics to conventions, find your people and immerse yourself in
             everything you love.
           </p>
-          <form className="max-w-[704px] w-full flex gap-3 justify-center items-stretch">
+          <div className="max-w-[704px] w-full flex gap-3 justify-center items-stretch">
             <Input
               type="email"
-              className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4 w-"
+              className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4"
               placeholder="Email address"
+              readOnly
             />
-            <Button variant={"primary"} className="h-full font-inter">
-              Sign Up
+            <Button asChild variant={"primary"} className="h-full font-inter">
+              <Link href="/signup">Sign Up</Link>
             </Button>
-          </form>
+          </div>
           <p className="text-[#FFFFFFB2] max-md:text-[13px]">
             Step into the ultimate nerd verse:
             <br />

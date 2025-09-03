@@ -3,14 +3,31 @@ import Image from "next/image";
 import React from "react";
 import Logo from "@/assets/nerdwork.png";
 import { Button } from "@/components/ui/button";
-import { MenuIcon, X } from "lucide-react";
+import { MenuIcon, X, User, LogOut, Wallet } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { useWallet } from "@/lib/wallet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  
+  const { user, isAuthenticated, logout } = useAuth();
+  const { nwtBalance } = useWallet();
 
   const handleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
   };
 
   return (
@@ -41,13 +58,57 @@ export default function Navbar() {
             </Link>
             <li>Company</li>
           </ul>
-          <div className="flex gap-4">
-            <Button asChild>
-              <Link href={"/signup"}>Log In</Link>
-            </Button>
-            <Button asChild variant={"primary"}>
-              <Link href={"/signup"}>Sign Up</Link>
-            </Button>
+          <div className="flex gap-4 items-center">
+            {isAuthenticated ? (
+              <>
+                {/* Wallet Balance */}
+                <div className="flex items-center gap-2 text-sm">
+                  <Wallet className="h-4 w-4 text-[#1BDB6C]" />
+                  <span>{parseFloat(nwtBalance).toFixed(2)} NWT</span>
+                </div>
+                
+                {/* User Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>{user?.username || user?.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-[#1D1E21] border-[#292A2E]">
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="text-white hover:bg-[#292A2E]">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/wallet" className="text-white hover:bg-[#292A2E]">
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Wallet
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-[#292A2E]" />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="text-white hover:bg-[#292A2E] cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button asChild>
+                  <Link href="/signup">Log In</Link>
+                </Button>
+                <Button asChild variant={"primary"}>
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </section>
 
@@ -91,12 +152,26 @@ export default function Navbar() {
                 <li>Company</li>
               </ul>
               <div className="flex justify-between gap-4 w-full">
-                <Button asChild className="bg-[#343435] w-1/2">
-                  <Link href={"signup"}>Log In</Link>
-                </Button>
-                <Button asChild className="bg-[#3373D9] w-1/2">
-                  <Link href={"signup"}>Sign Up</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-2 text-sm text-[#1BDB6C]">
+                      <Wallet className="h-4 w-4" />
+                      <span>{parseFloat(nwtBalance).toFixed(2)} NWT</span>
+                    </div>
+                    <Button onClick={handleLogout} className="bg-red-600 w-1/2">
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild className="bg-[#343435] w-1/2">
+                      <Link href="/signup">Log In</Link>
+                    </Button>
+                    <Button asChild className="bg-[#3373D9] w-1/2">
+                      <Link href="/signup">Sign Up</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}

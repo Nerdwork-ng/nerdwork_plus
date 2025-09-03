@@ -8,8 +8,6 @@ import { globalErrorHandler, globalNotFoundHandler } from "./middleware/common.j
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(helmet());
 app.use(compression());
@@ -23,10 +21,11 @@ const services = {
   wallet: process.env.WALLET_SERVICE_URL || 'http://localhost:3004',
   event: process.env.EVENT_SERVICE_URL || 'http://localhost:3005',
   ledger: process.env.LEDGER_SERVICE_URL || 'http://localhost:3006',
+  file: process.env.FILE_SERVICE_URL || 'http://localhost:3007',
 };
 
-// Health check for the gateway itself
-app.get("/health", (req, res) => {
+// Health check for the gateway itself (needs JSON parsing)
+app.get("/health", express.json(), (req, res) => {
   res.status(200).json({ 
     status: "healthy", 
     service: "api-gateway",
@@ -40,7 +39,7 @@ app.use('/auth', createProxyMiddleware({
   target: services.auth,
   changeOrigin: true,
   pathRewrite: {
-    '^/auth': '/auth'
+    '^/auth': ''
   },
   onError: (err, req, res) => {
     console.error('Auth Service Proxy Error:', err.message);
@@ -56,7 +55,7 @@ app.use('/users', createProxyMiddleware({
   target: services.user,
   changeOrigin: true,
   pathRewrite: {
-    '^/users': '/users'
+    '^/users': ''
   },
   onError: (err, req, res) => {
     console.error('User Service Proxy Error:', err.message);
@@ -72,7 +71,7 @@ app.use('/comics', createProxyMiddleware({
   target: services.comic,
   changeOrigin: true,
   pathRewrite: {
-    '^/comics': '/comics'
+    '^/comics': ''
   },
   onError: (err, req, res) => {
     console.error('Comic Service Proxy Error:', err.message);
@@ -88,7 +87,7 @@ app.use('/wallet', createProxyMiddleware({
   target: services.wallet,
   changeOrigin: true,
   pathRewrite: {
-    '^/wallet': '/wallet'
+    '^/wallet': ''
   },
   onError: (err, req, res) => {
     console.error('Wallet Service Proxy Error:', err.message);
@@ -104,7 +103,7 @@ app.use('/events', createProxyMiddleware({
   target: services.event,
   changeOrigin: true,
   pathRewrite: {
-    '^/events': '/events'
+    '^/events': ''
   },
   onError: (err, req, res) => {
     console.error('Event Service Proxy Error:', err.message);
@@ -120,13 +119,29 @@ app.use('/ledger', createProxyMiddleware({
   target: services.ledger,
   changeOrigin: true,
   pathRewrite: {
-    '^/ledger': '/ledger'
+    '^/ledger': ''
   },
   onError: (err, req, res) => {
     console.error('Ledger Service Proxy Error:', err.message);
     (res as express.Response).status(503).json({
       success: false,
       error: 'Ledger service unavailable',
+      timestamp: new Date().toISOString()
+    });
+  }
+}));
+
+app.use('/files', createProxyMiddleware({
+  target: services.file,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/files': ''
+  },
+  onError: (err, req, res) => {
+    console.error('File Service Proxy Error:', err.message);
+    (res as express.Response).status(503).json({
+      success: false,
+      error: 'File service unavailable',
       timestamp: new Date().toISOString()
     });
   }
