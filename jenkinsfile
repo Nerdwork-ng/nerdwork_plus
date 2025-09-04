@@ -1,0 +1,64 @@
+pipeline {
+  agent any
+
+
+  stages {
+    stage('Setup') {
+      steps {
+        // Install Node.js using NodeJS plugin
+        tool name: 'Node18', type: 'nodejs'
+        bat 'node --version'
+        bat 'npm --version'
+        bat 'npm install -g pnpm@10.15.1' // Pin pnpm version
+      }
+    }
+
+    stage('Checkout') {
+      steps {
+        git branch: 'feat/jenkins-pipeline-creation', url: 'https://github.com/Nerdwork-ng/nerdwork_plus.git'
+      }
+    }
+
+    stage('Install Frontend Dependencies') {
+      steps {
+        dir('apps/web/nerdwork-plus') {
+          bat 'pnpm install'
+        }
+      }
+    }
+
+    stage('Test Frontend') {
+      steps {
+        dir('apps/web/nerdwork-plus') {
+          bat 'pnpm run test'
+        }
+      }
+    }
+
+    stage('Build Frontend') {
+      steps {
+        dir('apps/web/nerdwork-plus') {
+          bat 'pnpm build'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        dir('apps/web/nerdwork-plus') {
+          bat 'docker build -t nerdwork-plus-frontend:latest .'
+          bat 'docker images'
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Pipeline failed. Check logs for details.'
+    }
+    success {
+      echo 'Frontend pipeline completed successfully!'
+    }
+  }
+}
