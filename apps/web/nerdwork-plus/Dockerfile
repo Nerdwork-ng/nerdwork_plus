@@ -15,7 +15,7 @@ COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Copy the frontend app source
-COPY ../../apps/web/nerdwork-plus ./apps/web/nerdwork-plus
+COPY /apps/web/nerdwork-plus ./apps/web/nerdwork-plus
 
 # Build the frontend
 WORKDIR /app/apps/web/nerdwork-plus
