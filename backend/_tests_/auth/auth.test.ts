@@ -1,17 +1,10 @@
 // __tests__/auth.test.ts
 import request from "supertest";
-<<<<<<< HEAD:backend/_tests_/auth.test.ts
 import { app } from "../src";
 import * as authController from "../src/controller/auth.controller";
 import { db as realDb } from "../src/config/db";
-=======
-<<<<<<< HEAD:backend/_tests_/auth.test.ts
-import { app } from "../src/index";
-=======
 import { app } from "../../src/index.js";
->>>>>>> main:backend/_tests_/auth/auth.test.ts
 import { describe, expect, it } from "@jest/globals";
->>>>>>> main:backend/_tests_/auth/auth.test.ts
 
 const db = realDb as unknown as {
   insert: jest.Mock;
