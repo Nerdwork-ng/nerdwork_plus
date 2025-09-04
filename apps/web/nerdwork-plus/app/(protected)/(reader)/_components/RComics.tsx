@@ -18,11 +18,11 @@ const RComics = ({ data }: { data: Comic[] }) => {
 
   return (
     <section className="font-inter text-white mb-10 max-md:mt-5 max-2xl:mx-5">
-      <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 ">
+      <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 ">
         {data.map((comic) => (
           <div
             key={comic.id}
-            className="relative group rounded flex flex-col border border-transparent hover:border-[#9D9D9F] hover:bg-[#FFFFFF05] transition duration-300 hover:ease-in-out overflow-hidden"
+            className="relative group rounded flex flex-col p-2 hover:bg-[#FFFFFF05] transition duration-300 hover:ease-in-out overflow-hidden"
           >
             <Image
               src={comic.image}
@@ -36,7 +36,7 @@ const RComics = ({ data }: { data: Comic[] }) => {
                 {comic.last_updated}
               </Badge>
             </div> */}
-            <div className="p-2">
+            <div className="px-1 py-2">
               <Link href={`/r/comics/${comic.id}`} className="hover:underline">
                 <p className="mb-2 font-semibold">{comic.title}</p>
               </Link>

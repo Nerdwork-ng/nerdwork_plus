@@ -4,10 +4,12 @@ import Image from "next/image";
 import { ImageIcon, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ControllerRenderProps } from "react-hook-form";
-import { ComicSeriesFormData } from "@/lib/schema";
+import { ComicSeriesFormData, NFTFormData } from "@/lib/schema";
 
 interface ImageUploadProps {
-  field: ControllerRenderProps<ComicSeriesFormData, "coverImage">;
+  field:
+    | ControllerRenderProps<ComicSeriesFormData, "coverImage">
+    | ControllerRenderProps<NFTFormData, "coverImage">;
 }
 
 export const ImageUpload = ({ field }: ImageUploadProps) => {

@@ -81,3 +81,29 @@ export const chapterSchema = z.object({
       }
     ),
 });
+
+export const nftFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  description: z
+    .string()
+    .min(10, { message: "Description must be at least 10 characters." }),
+  supply: z.number().min(1, { message: "Supply must be at least 1." }),
+  price: z.number().nonnegative({ message: "Price cannot be negative." }),
+  properties: z.array(
+    z.object({
+      type: z.string().optional(),
+      name: z.string().optional(),
+    })
+  ),
+  tags: z.array(z.string()).min(1, { message: "Please add at least one tag." }),
+  coverImage: z
+    .any()
+    .refine((file) => file instanceof File, "Cover image is required.")
+    .refine((file) => file.size <= MAX_FILE_SIZE, `Max image size is 5MB.`)
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+      "Only .jpg, .jpeg, .png and .webp formats are supported."
+    ),
+});
+
+export type NFTFormData = z.infer<typeof nftFormSchema>;

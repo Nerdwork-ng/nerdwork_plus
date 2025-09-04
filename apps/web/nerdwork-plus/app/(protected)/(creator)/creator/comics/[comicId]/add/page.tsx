@@ -77,7 +77,7 @@ const NewChapterPage = ({
           <ArrowLeft size={16} /> back to Dashboard
         </button>
       </Link>
-      <h1 className="text-[28px] font-semibold my-4">New Chapter</h1>
+      <h3 className="text-[28px] font-semibold my-4">New Chapter</h3>
 
       <Form {...form}>
         <form

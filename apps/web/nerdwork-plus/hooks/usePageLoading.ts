@@ -50,7 +50,7 @@ export function useAdvancedPageLoading() {
 
     const fallbackTimer = setTimeout(() => {
       setIsLoading(false);
-    }, 3800);
+    }, 3500);
 
     return () => clearTimeout(fallbackTimer);
   }, [pathname]);

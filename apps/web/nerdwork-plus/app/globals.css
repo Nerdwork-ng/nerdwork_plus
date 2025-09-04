@@ -210,3 +210,8 @@
     transform: scale(1.2);
   }
 }
+
+.password-font {
+  font-family: "text-security-disc", sans-serif;
+  -webkit-text-security: disc;
+}

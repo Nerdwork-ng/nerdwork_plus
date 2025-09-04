@@ -1,9 +1,8 @@
 "use client";
-import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { comicData } from "@/components/data";
+import { useSearchParams } from "next/navigation";
+import React from "react";
 import RComics from "../../_components/RComics";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -26,8 +25,9 @@ import { LucideChevronDown } from "lucide-react";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
-const LibraryPage = () => {
-  const [tab, setTab] = React.useState<string>("all");
+const ComicSearch = () => {
+  const searchParams = useSearchParams();
+  const search = searchParams.get("q");
 
   const comics = comicData ?? [];
 
@@ -36,24 +36,10 @@ const LibraryPage = () => {
   const [showOngoing, setShowOngoing] = React.useState<Checked>(false);
   const [showCompleted, setShowCompleted] = React.useState<Checked>(false);
   const [sortFilter, setSortFilter] = React.useState("");
-  const [searchQuery, setSearchQuery] = React.useState("");
 
   const filteredComics = React.useMemo(() => {
     let tempComics = [...comics];
 
-    // Apply Search Filter
-    if (searchQuery) {
-      tempComics = tempComics.filter((comic) =>
-        comic.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply Tabs Filter
-    if (tab !== "all") {
-      tempComics = tempComics.filter((comic) => comic.status === tab);
-    }
-
-    // Apply Dropdown Filters
     if (showFree) {
       tempComics = tempComics.filter((comic) => !comic.isPaid);
     } else if (showPaid) {
@@ -66,7 +52,6 @@ const LibraryPage = () => {
       tempComics = tempComics.filter((comic) => !comic.isOngoing);
     }
 
-    // Apply Sort
     if (sortFilter) {
       tempComics.sort((a, b) => {
         if (sortFilter === "asc") {
@@ -81,58 +66,15 @@ const LibraryPage = () => {
     }
 
     return tempComics;
-  }, [
-    comics,
-    tab,
-    searchQuery,
-    showFree,
-    showPaid,
-    showOngoing,
-    showCompleted,
-    sortFilter,
-  ]);
+  }, [comics, showFree, showPaid, showOngoing, showCompleted, sortFilter]);
 
   return (
     <main className="pt-20">
-      <h4 className="max-w-[1200px] mx-auto text-2xl font-semibold mt-6 px-5">
-        Library
-      </h4>
-
-      <Tabs
-        value={tab}
-        onValueChange={setTab}
-        defaultValue="chapters"
-        className="bg-transparent mt-10 px-5"
-      >
-        <div className="flex justify-between w-full max-w-[1160px] mx-auto">
-          <TabsList className="bg-transparent text-white flex lg:gap-10 p-0">
-            <TabsTrigger
-              className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"
-              value="all"
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"
-              value="new"
-            >
-              New Releases
-            </TabsTrigger>
-            <TabsTrigger
-              className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"
-              value="completed"
-            >
-              Completed
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center gap-3 -mt-3">
-            <Input
-              placeholder="Search library"
-              className="h- max-w-[400px]  border-[#292A2E] rounded-md"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <section className=" border-b border-[#FFFFFF0D]">
+        <section className="max-w-[1200px] mx-auto mt-6 px-5 pb-4 flex max-md:flex-col justify-between md:items-center">
+          <h3 className="text-2xl font-semibold capitalize">{search}</h3>
+          <div className="flex items-center gap-4 text-sm">
+            <p className="mr-4">{comics.length} Results</p>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -191,7 +133,6 @@ const LibraryPage = () => {
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
             <Select onValueChange={setSortFilter} value={sortFilter}>
               <SelectTrigger className="outline-none border-none !text-white">
                 <SelectValue placeholder="Sort:" />
@@ -207,17 +148,14 @@ const LibraryPage = () => {
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <hr className="!text-[#292A2E] h-0 border-t border-[#292A2E]" />
-        <div className=" max-w-[1160px] mx-auto w-full mt-8">
-          <TabsContent value={tab}>
-            <RComics data={filteredComics} />
-          </TabsContent>
-        </div>
-        <hr className="!text-[#292A2E] h-0 mb-10 border-t border-[#292A2E]" />
-      </Tabs>
+        </section>
+      </section>
+
+      <section className="max-w-[1200px] mt-6 px-5  mx-auto ">
+        <RComics data={filteredComics} />
+      </section>
     </main>
   );
 };
 
-export default LibraryPage;
+export default ComicSearch;

@@ -33,3 +33,15 @@ export type Transaction = {
   description: string;
   date: string;
 };
+
+export type NFTCollectible = {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  status: "active" | "scheduled" | "sold out";
+  total_copies: number;
+  sold_copies: number;
+  price: number;
+  commission: number;
+};

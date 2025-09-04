@@ -55,9 +55,6 @@ export default function CreatorNav() {
           </div>
         </div>
         <div className="flex justify-between items-center gap-3">
-          <Link href={""} className="mr-3 text-sm">
-            Become a Creator
-          </Link>
           <p className="bg-[#1D1E21] px-3 py-1.5 rounded-[20px] flex items-center gap-1">
             100 <Image src={NWT} width={16} height={16} alt="nwt" />
           </p>
@@ -72,18 +69,15 @@ export default function CreatorNav() {
               <MenubarContent className="bg-[#1D1E21] text-white border-0 absolute -right-[30px]">
                 <MenubarItem>
                   <Link className="flex items-center gap-3" href={""}>
-                    <Book className="text-white" />
-                    Library
-                  </Link>
-                </MenubarItem>
-                <MenubarItem>
-                  <Link className="flex items-center gap-3" href={""}>
                     <User2 className="text-white" />
                     Profile
                   </Link>
                 </MenubarItem>
                 <MenubarItem>
-                  <Link className="flex items-center gap-3" href={""}>
+                  <Link
+                    className="flex items-center gap-3"
+                    href={"/creator/wallet"}
+                  >
                     <Wallet2 className="text-white" /> Wallet
                   </Link>
                 </MenubarItem>
@@ -96,12 +90,6 @@ export default function CreatorNav() {
                 <MenubarItem>
                   <Link className="flex items-center gap-3" href={""}>
                     <HelpCircle className="text-white" /> Help Centre
-                  </Link>
-                </MenubarItem>
-                <MenubarSeparator />
-                <MenubarItem>
-                  <Link className="flex items-center gap-3" href={""}>
-                    <Plus className="text-white" /> Become a Creator
                   </Link>
                 </MenubarItem>
                 <MenubarSeparator />

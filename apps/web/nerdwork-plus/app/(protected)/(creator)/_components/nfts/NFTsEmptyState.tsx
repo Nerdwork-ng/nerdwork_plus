@@ -1,9 +1,8 @@
 "use client";
 import { Book, Plus } from "lucide-react";
-// import Link from "next/link";
+import Link from "next/link";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 const NFTsEmptyState = () => {
   return (
@@ -18,16 +17,12 @@ const NFTsEmptyState = () => {
           your very first NFT!
         </p>
       </div>
-      {/* <Link href={"/creator/nfts/new"} className="max-md:w-full"> */}
-      <Button
-        onClick={() => toast.info("Feature coming soon...")}
-        variant={"secondary"}
-        className="min-w-[262px] max-md:w-full"
-      >
-        <Plus />
-        Create NFT
-      </Button>
-      {/* </Link> */}
+      <Link href={"/creator/nfts/new"} className="max-md:w-full">
+        <Button variant={"secondary"} className="min-w-[262px] max-md:w-full">
+          <Plus />
+          Create NFT
+        </Button>
+      </Link>
     </section>
   );
 };

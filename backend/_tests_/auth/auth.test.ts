@@ -1,5 +1,6 @@
 // __tests__/auth.test.ts
 import request from "supertest";
+<<<<<<< HEAD:backend/_tests_/auth.test.ts
 import { app } from "../src";
 import * as authController from "../src/controller/auth.controller";
 import { db as realDb } from "../src/config/db";

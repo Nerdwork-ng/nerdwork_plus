@@ -25,7 +25,7 @@ const ReaderComics = () => {
 
   return (
     <div className="pt-20">
-      <section className="border-t border-[#292A2E]">
+      <section>
         <Tabs
           value={tab}
           onValueChange={setTab}
