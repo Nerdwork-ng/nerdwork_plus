@@ -4,6 +4,8 @@ import {
   addReaderProfile,
   getCreatorProfile,
   getReaderProfile,
+  updateCreatorProfilePin,
+  updateReaderProfilePin,
 } from "../controller/profile.controller";
 
 const router = express.Router();
@@ -38,6 +40,22 @@ router.get("/creator", getCreatorProfile);
  */
 
 router.get("/reader", getReaderProfile);
+
+/**
+ * @route   PUT /profile/reader/pin
+ * @desc    update Reader Profile pin
+ * @access  Private (Jwt required)
+ */
+
+router.put("/reader/pin", updateReaderProfilePin);
+
+/**
+ * @route   PUT /profile/creator/pin
+ * @desc    update Creator Profile pin
+ * @access  Private (Jwt required)
+ */
+
+router.put("/creator/pin", updateCreatorProfilePin);
 
 /**
  * @swagger
@@ -113,12 +131,16 @@ router.get("/reader", getReaderProfile);
  *             type: object
  *             required:
  *               - userId
+ *               - fullName
  *               - genres
  *             properties:
  *               userId:
  *                 type: string
  *                 format: uuid
  *                 example: "5c2f7df9-1d21-49f3-90d6-65b3e94bbfc2"
+ *               fullName:
+ *                 type: string
+ *                 example: "John Doe"
  *               genres:
  *                 type: array
  *                 items:
@@ -211,6 +233,144 @@ router.get("/reader", getReaderProfile);
  *         description: Unauthorized (missing or invalid token)
  *       404:
  *         description: Profile not found
+ */
+
+/**
+ * @swagger
+ * /profile/reader/pin:
+ *   put:
+ *     summary: Update reader profile PIN
+ *     description: Updates the reader profile PIN for the authenticated user. The PIN is securely hashed before storing.
+ *     tags:
+ *       - Reader Profile
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pin
+ *             properties:
+ *               pin:
+ *                 type: string
+ *                 description: 4+ digit PIN to set for the profile
+ *                 example: "1234"
+ *     responses:
+ *       200:
+ *         description: PIN updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "PIN updated successfully"
+ *       400:
+ *         description: Invalid request (e.g., missing or too short PIN)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "PIN must be at least 4 digits"
+ *       401:
+ *         description: Unauthorized (missing/invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       404:
+ *         description: Reader profile not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profile not found"
+ */
+
+/**
+ * @swagger
+ * /profile/creator/pin:
+ *   put:
+ *     summary: Update reader profile PIN
+ *     description: Updates the reader profile PIN for the authenticated user. The PIN is securely hashed before storing.
+ *     tags:
+ *       - Reader Profile
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pin
+ *             properties:
+ *               pin:
+ *                 type: string
+ *                 description: 4+ digit PIN to set for the profile
+ *                 example: "1234"
+ *     responses:
+ *       200:
+ *         description: PIN updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "PIN updated successfully"
+ *       400:
+ *         description: Invalid request (e.g., missing or too short PIN)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "PIN must be at least 4 digits"
+ *       401:
+ *         description: Unauthorized (missing/invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       404:
+ *         description: Reader profile not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profile not found"
  */
 
 /**

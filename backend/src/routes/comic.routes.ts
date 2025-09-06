@@ -2,8 +2,9 @@ import { Router } from "express";
 import {
   createComic,
   fetchAllComicByJwt,
-  fetchAllComics,
   fetchComicBySlug,
+  fetchAllComics,
+  fetchComicBySlugForReaders,
 } from "../controller/comic.controller";
 
 const router = Router();
@@ -12,6 +13,7 @@ router.post("/create", createComic);
 router.get("/mine", fetchAllComicByJwt);
 router.get("/all-comics", fetchAllComics);
 router.get("/:slug", fetchComicBySlug);
+router.get("/reader/:slug", fetchComicBySlugForReaders);
 
 /**
  * @swagger
@@ -116,6 +118,35 @@ router.get("/:slug", fetchComicBySlug);
  * /comics/{slug}:
  *   get:
  *     summary: Fetch a comic by its slug
+ *     tags: [Comics]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The slug of the comic
+ *     responses:
+ *       200:
+ *         description: Comic found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 comic:
+ *                   $ref: '#/components/schemas/Comic'
+ *       404:
+ *         description: Comic not found
+ *       400:
+ *         description: Failed to fetch comic
+ */
+
+/**
+ * @swagger
+ * /comics/reader/{slug}:
+ *   get:
+ *     summary: Fetch a comic by its slug for readers
  *     tags: [Comics]
  *     parameters:
  *       - in: path
