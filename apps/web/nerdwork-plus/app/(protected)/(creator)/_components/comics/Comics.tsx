@@ -29,14 +29,14 @@ const Comics = () => {
 
   const counts = {
     all: comics.length,
-    draft: comics.filter((b) => b.status === "draft").length,
-    published: comics.filter((b) => b.status === "published").length,
-    scheduled: comics.filter((b) => b.status === "scheduled").length,
-    upcoming: comics.filter((b) => b.status === "upcoming").length,
+    draft: comics.filter((b) => b.comicStatus === "draft").length,
+    published: comics.filter((b) => b.comicStatus === "published").length,
+    scheduled: comics.filter((b) => b.comicStatus === "scheduled").length,
+    upcoming: comics.filter((b) => b.comicStatus === "upcoming").length,
   };
 
   const filteredComics = comics.filter((comic) =>
-    tab === "all" ? true : comic.status === tab
+    tab === "all" ? true : comic.comicStatus === tab
   );
 
   return (

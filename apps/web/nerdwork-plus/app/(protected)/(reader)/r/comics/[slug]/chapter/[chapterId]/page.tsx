@@ -19,9 +19,9 @@ import { Chapter } from "@/lib/types";
 const ComicReader = ({
   params,
 }: {
-  params: Promise<{ chapterId: string }>;
+  params: Promise<{ chapterId: string; slug: string }>;
 }) => {
-  const { chapterId } = use(params);
+  const { chapterId, slug } = use(params);
   const [readingMode, setReadingMode] = useState("horizontal");
   const [sizing, setSizing] = useState("auto");
   const [currentPage, setCurrentPage] = useState(0);
@@ -95,10 +95,10 @@ const ComicReader = ({
 
   if (isLoading) return <LoaderScreen />;
 
-  const chapter: Chapter = pagesData?.data?.chapter ?? [];
-  const chapterPages: string[] = chapter?.chapterPages;
+  const chapter: Chapter = pagesData?.data?.data ?? [];
+  const chapterPages: string[] = chapter?.pages;
 
-  const totalPages = chapterPages.length;
+  const totalPages = chapterPages?.length;
 
   const handleNextPage = () => {
     if (currentPage + 2 < totalPages) {
@@ -165,7 +165,7 @@ const ComicReader = ({
       } bg-[#151515] border-[#FFFFFF0D] md:max-h-[72px] fixed bottom-0 left-0 right-0 font-inter`}
     >
       <div className="max-w-[1200px] mx-auto flex gap-2 justify-between items-center px-10 py-5 text-sm">
-        {chapter && <ComicInfo chapter={chapter} />}
+        {chapter && <ComicInfo slug={slug} chapter={chapter} />}
 
         {readingMode === "2-page" ? (
           <div className="max-md:hidden flex items-center gap-4">

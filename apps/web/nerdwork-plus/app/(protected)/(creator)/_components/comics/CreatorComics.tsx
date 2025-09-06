@@ -28,7 +28,7 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
             />
             <div className="absolute left-5 right-5 flex justify-between top-3">
               <Badge variant={"secondary"} className="capitalize h-8">
-                {comic.status ?? "N"}
+                {comic.comicStatus ?? "N"}
               </Badge>
               <Menubar className="bg-[#1D1E21] justify-self-end font-inter outline-none border-none ring-0 rounded-full transition duration-300 hover:ease-in-out  p-0">
                 <MenubarMenu>
@@ -43,7 +43,7 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
               <p className="mb-3 font-semibold">{comic.title}</p>
               <div className="text-sm text-[#707073] flex flex-col gap-1">
                 <p className="flex items-center gap-3">
-                  <BookOpen size={16} /> {comic.chapters ?? 0} Chapters
+                  <BookOpen size={16} /> {comic.noOfChapters ?? 0} Chapters
                 </p>
                 <p className="flex items-center gap-3">
                   <Calendar size={16} /> Updated{" "}
@@ -76,7 +76,7 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
               </Link>
               <div className="text-sm text-[#707073] mt-3 flex flex-col gap-1">
                 <p className="flex items-center gap-3">
-                  <BookOpen size={16} /> {comic.chapters ?? 0} Chapters
+                  <BookOpen size={16} /> {comic.noOfChapters ?? 0} Chapters
                 </p>
                 <p className="flex items-center gap-3">
                   <Calendar size={16} /> Updated{" "}
