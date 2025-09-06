@@ -1,40 +1,38 @@
-# apps/web/nerdwork-plus/Dockerfile
-
-# Stage 1: Builder
+# --- Stage 1: Builder ---
 FROM node:18-alpine AS builder
-
 WORKDIR /app
 
+# Install pnpm
 RUN npm install -g pnpm
-RUN corepack enable
 
-# Copy root package manager files for monorepo
-COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
+# Copy only root files for dependency install
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/web/nerdwork-plus/package.json ./apps/web/nerdwork-plus/
 
-# Install dependencies at root for monorepo
+# Install dependencies (workspace-aware)
 RUN pnpm install --frozen-lockfile
 
-# Copy the frontend app source
-COPY /apps/web/nerdwork-plus ./apps/web/nerdwork-plus
+# Copy source code
+COPY . .
 
-# Build the frontend
+# Build frontend
 WORKDIR /app/apps/web/nerdwork-plus
 RUN pnpm build
 
-# Stage 2: Production
+# --- Stage 2: Production ---
 FROM node:18-alpine AS production
-
 WORKDIR /app
 
-RUN npm install -g pnpm
-RUN corepack enable
+ENV NODE_ENV=production
 
-# Copy only necessary files from builder
+# Copy only required artifacts
 COPY --from=builder /app/apps/web/nerdwork-plus/.next ./.next
 COPY --from=builder /app/apps/web/nerdwork-plus/public ./public
 COPY --from=builder /app/apps/web/nerdwork-plus/package.json ./package.json
-COPY --from=builder /app/apps/web/nerdwork-plus/node_modules ./node_modules
+
+# Install only production deps for web app
+RUN npm install -g pnpm \
+    && pnpm install --prod --frozen-lockfile
 
 EXPOSE 3000
-
 CMD ["pnpm", "start"]

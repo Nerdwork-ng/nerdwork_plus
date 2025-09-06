@@ -1,42 +1,29 @@
-# syntax=docker/dockerfile:1
+# --- Builder Stage ---
+FROM node:18-alpine AS builder
+WORKDIR /app
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+# Install pnpm
+RUN npm install -g pnpm
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+# Copy only root package.json + lockfile first for caching
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
-ARG NODE_VERSION=22.14.0
-ARG PNPM_VERSION=8.15.4
-
-FROM node:${NODE_VERSION}-alpine
-
-# Use production node environment by default.
-ENV NODE_ENV production
-
-# Install pnpm.
-RUN --mount=type=cache,target=/root/.npm \
-    npm install -g pnpm@${PNPM_VERSION}
-
-WORKDIR /usr/src/app
-
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.local/share/pnpm/store to speed up subsequent builds.
-# Leverage a bind mounts to package.json and pnpm-lock.yaml to avoid having to copy them into
-# into this layer.
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile
-
-# Run the application as a non-root user.
-USER node
-
-# Copy the rest of the source files into the image.
+# Copy everything else
 COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 3000
+# Install dependencies for backend only
+RUN pnpm install --filter backend...
 
-# Run the application.
-CMD pnpm run
+# Build backend
+RUN pnpm build --filter backend...
+
+# --- Runtime Stage ---
+FROM node:18-alpine
+WORKDIR /app
+
+# Copy built backend only
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+CMD ["node", "dist/index.js"]
