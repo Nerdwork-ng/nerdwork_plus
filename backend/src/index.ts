@@ -7,14 +7,26 @@ import { authenticate } from "./middleware/common/auth";
 import nftRoutes from "./routes/nft.routes";
 import walletRoutes from "./routes/wallet.routes";
 import profileRoutes from "./routes/profile.routes";
+import fileRoutes from "./routes/file.routes";
+import comicRoutes from "./routes/comic.routes";
+import TransactionRoutes from "./routes/transaction.routes"
+import ChapterRoutes from "./routes/chapter.routes"
+import NftRoutes from "./routes/nft.routes"
 
 app.use("/auth", authRoutes);
 app.use("/payment", authenticate, paymentRoutes);
 app.use("/nft", authenticate, nftRoutes);
 app.use("/wallet", authenticate, walletRoutes);
 app.use("/profile", profileRoutes);
+app.use("/file", fileRoutes);
+app.use("/comics", comicRoutes);
+app.use("/transaction", TransactionRoutes)
+app.use("chapters", ChapterRoutes)
+app.use("nft", NftRoutes)
 
-const PORT = 5000;
+
+const PORT = process.env.PORT || 5000;
+console.log(PORT)
 /**
  * @swagger
  * /users:

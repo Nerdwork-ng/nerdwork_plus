@@ -9,19 +9,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { WalletCardsIcon } from "lucide-react";
+import { WalletCardsIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import NWT from "@/assets/nwt.svg";
 import Helio from "@/assets/helio.svg";
 import { toast } from "sonner";
+import { createPaymentLink, createPaymentWebhook } from "@/lib/api/payment";
+import HelioModal from "./HelioModal";
 
 const PurchaseTokenModal = () => {
   const [nwtAmount, setNwtAmount] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [helioModalOpen, setHelioModalOpen] = React.useState(false);
+  const [helioModalMinimized, setHelioModalMinimized] = React.useState(false);
+  const [paymentData, setPaymentData] = React.useState<{
+    paymentLink?: string;
+    paylinkId?: string;
+  }>({});
 
   // Hardcoded values for demonstration
-  const usdPerNwt = 1.405; // 100 NWT for $140.50
+  const usdPerNwt = 0.05105; // 100 NWT for $140.50
   const transactionFeeRate = 0.01; // 1%
 
   const suggestedAmounts = [50, 100, 200, 500];
@@ -41,14 +51,64 @@ const PurchaseTokenModal = () => {
   const transactionFee = calculateFee(nwtAmount);
   const totalToPay = calculateTotal(nwtAmount);
 
-  const handleSubmit = () => {
-    // console.log(totalToPay);
-    toast.info("Redirecting to Helio for payment...");
+  const handleSubmit = async () => {
+    if (nwtAmount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Create payment link
+      toast.info("Creating payment link...");
+      const paymentResponse = await createPaymentLink({
+        amount: nwtAmount * usdPerNwt,
+        name: "NWT_Purchase",
+        // cannot use localhost as redirect url
+        redirectUrl: "http://nerdwork.ng/helio/webhook/handle"
+      });
+
+      if (!paymentResponse.success) {
+        throw new Error("Failed to create payment link");
+      }
+
+      console.log(paymentResponse)
+
+      // Create webhook for payment notifications
+      const webhook = await createPaymentWebhook({
+        paymentId: paymentResponse.paylinkId
+      });
+
+      console.log(webhook)
+
+      // Store payment data and open Helio modal
+      setPaymentData({
+        paymentLink: paymentResponse.payment.url,
+        paylinkId: paymentResponse.paylinkId
+      });
+
+      console.log(paymentResponse)
+
+      // Close purchase modal and open Helio modal
+      setIsOpen(false);
+      setHelioModalOpen(true);
+      toast.success("Payment form ready!");
+
+      
+      
+    } catch (error: unknown) {
+      console.error("Payment error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create payment. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div>
-      <Dialog>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <form>
           <DialogTrigger asChild>
             <Button variant="primary">
@@ -114,8 +174,16 @@ const PurchaseTokenModal = () => {
                 onClick={handleSubmit}
                 variant={"primary"}
                 className="w-full mt-3"
+                disabled={isLoading || nwtAmount <= 0}
               >
-                Continue to Payment
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Continue to Payment"
+                )}
               </Button>
               <p className="text-xs text-center text-nerd-muted flex items-center justify-center gap-2">
                 Powered by Helio{" "}
@@ -125,6 +193,25 @@ const PurchaseTokenModal = () => {
           </DialogContent>
         </form>
       </Dialog>
+
+      {/* Helio Payment Modal */}
+      <HelioModal
+        isOpen={helioModalOpen}
+        onOpenChange={(open) => {
+          setHelioModalOpen(open);
+          if (!open) {
+            setHelioModalMinimized(false);
+          }
+        }}
+        isMinimized={helioModalMinimized}
+        onMinimize={setHelioModalMinimized}
+        paymentLink={paymentData.paymentLink}
+        paylinkId={paymentData.paylinkId}
+        amount={nwtAmount}
+        usdEquivalent={usdEquivalent}
+        transactionFee={transactionFee}
+        totalToPay={totalToPay}
+      />
     </div>
   );
 };

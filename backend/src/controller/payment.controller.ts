@@ -4,20 +4,37 @@ import { payments, userProfiles } from "../model/schema";
 import axios from "axios";
 import { sdk } from "../config/helio.config";
 import { CreatePaylinkHookByApiKeyDto, CreatePaylinkWithApiDto } from "@heliofi/common";
+import { 
+  createUserPurchaseTransaction, 
+  updateUserTransactionStatus,
+  updateUserWalletBalance 
+} from "./transaction.controller";
+
 const HELIO_API_BASE = "https://api.dev.hel.io/v1";
 // const HELIO_API_BASE = "https://api.hel.io/v1"; // For production
 const HELIO_PUBLIC_KEY = process.env.HELIO_PUBLIC_KEY;
 const HELIO_PRIVATE_KEY = process.env.HELIO_PRIVATE_KEY;
 const WEBHOOK_REDIRECT_URL = process.env.WEBHOOK_REDIRECT_URL;
+const HELIO_WALLET_ID = process.env.HELIO_WALLET_ID;
+const HELIO_PCURRENCY = process.env.HELIO_PCURRENCY;
+const STATIC_PRICE_FEED = 90.49
 
-import { InsertPayment } from "../model/payment"; // Make sure this import exists
+import jwt from "jsonwebtoken";
 
 export const createPaymentLink = async (req: any, res: any) => {
-    if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+
+    const token = authHeader.split(" ")[1];
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const userId = decoded.userId;
+
+    console.log(userId)
+    
     try {
-        const { amount, name } = req.body;
+        const { amount, name, redirectUrl } = req.body;
 
         if (!amount ) {
             return res.status(400).json({
@@ -30,71 +47,54 @@ export const createPaymentLink = async (req: any, res: any) => {
         //     currencies
         // });
 
+        console.log(HELIO_PCURRENCY,HELIO_WALLET_ID )
         // Prepare DTO for Helio
         const createPaylinkDto: CreatePaylinkWithApiDto = {
-            name: req.user.id + name + new Date().toISOString(), // Unique name for each payment link
+            name: "NWT_PURCHASE", // Unique name for each payment link
             price: (Number(amount) * 1000000).toString(), // Ensure amount is a number
-            pricingCurrency: "63777da9d2f1ab96ae0ee600",
-            description: `Payment for Nerd Work Token by ${req.user.id} on ${new Date().toISOString()} amount: ${amount} `,
+            pricingCurrency: HELIO_PCURRENCY, 
+            description: `Payment for Nerd Work Token by ${userId} on ${new Date().toISOString()} amount: ${amount} `,
             features: {},
+            redirectUrl,
             recipients: [
                 {
-                    walletId: "685ef2364608b2fabd47f02d",
-                    currencyId: "66e2b724a88df2dcc5f63fe8"
+                    walletId: HELIO_WALLET_ID,
+                    currencyId: HELIO_PCURRENCY
                 }
             ],
         };
 
         // Call Helio SDK
         const helioResponse = await sdk.paylink.create(createPaylinkDto);
+        console.log(helioResponse)
 
-       console.log(req.user)
-        // get user from db
-        const user = await db.query.authUsers.findFirst({
-            where: (users, { eq }) => eq(users.id, req.user.id),
-            with: {
-                profile: true, // 👈 include the wallet relation here
-            },
-        });
-    
-        console.log(user)
-
-        const userProfile = await db.query.userProfiles.findFirst({
-            where:(profiles, {eq}) => eq(profiles.id, user.profile.id),
-            with: {
-                wallet: true
-            }
-        })
-
+        // Calculate NWT amount (assuming 1 USD = STATIC_PRICE_FEED NWT based on your frontend calculation)
+        const nwtAmount = amount * STATIC_PRICE_FEED; // This should match your frontend calculation
         
+        // Create user purchase transaction record
+        const transactionResult = await createUserPurchaseTransaction(
+            userId,
+            nwtAmount,
+            amount, // USD amount
+            helioResponse.id,
+            `Purchase ${nwtAmount} NWT for $${amount} via Helio`
+        );
 
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        if (!transactionResult.success) {
+            console.error('Failed to create transaction record:', transactionResult.error);
+            // Continue anyway - we can still process the payment
         }
 
-        // Insert into DB
-        const paymentToInsert: InsertPayment = {
-            userWalletId: userProfile.wallet.id || "testuser", // adjust as needed
-            amount: helioResponse.price.toString(),
-            currency: helioResponse.currency?.symbol || "USD", // Default to USD if not provided
-            nwtAmount: amount,
-            exchangeRate: "100",
-            paymentIntentId: helioResponse.id,
-            blockchainTxHash: null,
-            status: "pending",
-            failureReason: null,
-            metadata: helioResponse, // Save full response for reference
-            processedAt: null,
-            // createdAt and updatedAt will default to now
-        };
+        console.log('Helio payment created:', helioResponse.id);
+        console.log('Transaction record created:', transactionResult.success);
 
-        await db.insert(payments).values(paymentToInsert);
-        console.log(helioResponse.id)
-        // Return the full Helio response
         res.json({
             success: true,
             payment: helioResponse,
-            paylinkId: helioResponse.id
+            paylinkId: helioResponse.id,
+            transactionId: transactionResult.transaction?.id,
+            nwtAmount,
+            usdAmount: amount
         });
     } catch (error: any) {
         console.error('Helio payment link creation error:', error.response?.data || error.message);
@@ -107,24 +107,33 @@ export const createPaymentLink = async (req: any, res: any) => {
 
 
 export const createWebhookForPayment = async (req: any, res: any) => {
-    if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+
+    const token = authHeader.split(" ")[1];
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const userId = decoded.userId;
+
+    console.log(userId)
     try {
         const { paymentId } = req.body;
+        console.log(paymentId)
         const events = ["CREATED"];
 
         const webhookPayload :CreatePaylinkHookByApiKeyDto={
             name: "Nerd Work Payment Webhook",
-            targetUrl: WEBHOOK_REDIRECT_URL || "http://localhost:5000/helio/webhook/handle",
+            targetUrl: WEBHOOK_REDIRECT_URL || "http://nerdwork.ng/helio/webhook/handle",
             paylinkId: paymentId,
         }
 
         const response = await sdk.paylinkWebhook.createPaylinkWebhook(webhookPayload);
         console.log('Webhook created successfully:', response);
-        await db.update(payments)
-            .set({ webhookId: response.id }) // Add this column if you want to store webhookId
-            .where(eq(payments.paymentIntentId, paymentId));
+        // add paymet update
+        // await db.update(payments)
+        //     .set({ webhookId: response.id }) // Add this column if you want to store webhookId
+        //     .where(eq(payments.paymentIntentId, paymentId));
 
         res.json({
             success: true,
@@ -140,24 +149,112 @@ export const createWebhookForPayment = async (req: any, res: any) => {
     }
 }
 
-export const handlePaymentWebhook = async (req: any, res: any) => {
-    try {
-        console.log(req.body);
-        const { event, data } = req.body;
-        console.log('Received webhook event:', event, 'with data:', data);
 
-        // Example: Update payment status and metadata based on webhook event
-        if (data?.id) {
-            await db.update(payments)
-                .set({
-                    status: data.status || 'processing',
-                    failureReason: data.failureReason || null,
-                    blockchainTxHash: data.blockchainTxHash || null,
-                    processedAt: data.processedAt ? new Date(data.processedAt) : null,
-                    metadata: data, // Save the full webhook data for reference
-                    updatedAt: new Date()
-                })
-                .where(eq(payments.paymentIntentId, data.id));
+
+// // incomming req body
+
+ 
+// {
+//     transaction: 'BcQK8ibZFXpjQbBNSWGar11Xi85AT21hfaknQB4FJB4HPLtV2mrZbjSZtKeug14crw9qKVgmyWxtJT7G4fBq3WD',
+//     data: {
+//       content: {},
+//       transactionSignature: 'BcQK8ibZFXpjQbBNSWGar11Xi85AT21hfaknQB4FJB4HPLtV2mrZbjSZtKeug14crw9qKVgmyWxtJT7G4fBq3WD',
+//       status: 'SUCCESS',
+//       statusToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0cmFuc2FjdGlvblNpZ25hdHVyZSI6IkJjUUs4aWJaRlhwalFiQk5TV0dhcjExWGk4NUFUMjFoZmFrblFCNEZKQjRIUEx0VjJtclpialNadEtldWcxNGNydzlxS1ZnbXlXeHRKVDdHNGZCcTNXRCIsInRyYW5zYWN0aW9uSWQiOiI2OGJlNjlkNzVmMTI3ODQzZjFiZjQ1MmQiLCJpYXQiOjE3NTczMDk0MDMsImV4cCI6MTc1NzMxNjYwM30.lXf2-BAlDhJrWytTZGCwK-ehm27Oq7XKtmATtlyAldk'
+//     },
+//     blockchainSymbol: 'SOL',
+//     senderPK: 'FBnExnQQzaowHA3g5VQKV9JKbD4StwnMNz8EymUo9wcT'
+//   }
+
+export const handlePayment = async (req: any, res: any) => {
+    try {
+        console.log('Webhook received:', req.body);
+        const { transaction: txHash, data, blockchainSymbol, senderPK } = req.body;
+
+        if (!data || !data.transactionSignature) {
+            console.log('Invalid webhook data received');
+            return res.status(400).json({ error: 'Invalid webhook data' });
+        }
+
+       
+
+        
+        const { transactionSignature, status, statusToken } = data;
+        const transaction = await sdk.transaction.getTransaction(transactionSignature);
+        
+        console.log('Processing webhook:', {
+            transaction,
+            status,
+            transactionSignature,
+            blockchainSymbol
+        });
+
+        console.log(transaction.meta.transactionStatus)
+        console.log(transaction.meta.id)
+
+        // Find the transaction by transaction signature or other identifier
+        // Note: You'll need to store the transaction signature when creating the payment
+        // For now, we'll try to match by metadata or implement a lookup mechanism
+        
+        if (transaction.meta.transactionStatus == 'SUCCESS') {
+            // For successful payments, we need to:
+            // 1. Update the transaction status
+            // 2. Add NWT to user's wallet
+
+            
+            
+            console.log('Payment successful, processing...');
+            
+            // You might need to implement a way to map the blockchain transaction
+            // back to your Helio payment ID. For now, this is a placeholder:
+            
+            // Example: If you store the transaction signature in metadata
+            console.log((transaction as any).paylink.id)
+            const updateResult = await updateUserTransactionStatus(
+                (transaction as any).paylink.id, // Using tx signature as lookup - you may need to adjust this
+                'completed',
+            
+                transaction.meta.transactionDataHash,
+                {
+                    blockchainSymbol: transaction.paymentRequestCurrencySymbol,
+                    senderPK,
+                    statusToken,
+                    webhookData: req.body
+                }
+            );
+            console.log(transaction.meta.amount.toString())
+            
+
+            if (updateResult.success && updateResult.transaction) {
+                // Update user wallet balance
+                const balanceResult = await updateUserWalletBalance(
+                    updateResult.transaction.userId,
+                    parseFloat(Number(updateResult.transaction.nwtAmount).toFixed(0)),
+                    'add'
+                );
+
+                console.log('Transaction completed:', {
+                    transactionId: updateResult.transaction.id,
+                    balanceUpdated: balanceResult.success,
+                    newBalance: balanceResult.newBalance
+                });
+            }
+        } else {
+            // Handle failed transactions
+            console.log('Payment failed or pending:', status);
+            
+            await updateUserTransactionStatus(
+                transactionSignature,
+                'failed',
+                transactionSignature,
+                {
+                    blockchainSymbol,
+                    senderPK, 
+                    statusToken,
+                    webhookData: req.body
+                },
+                `Payment failed with status: ${status}`
+            );
         }
 
         res.status(200).json({ success: true });

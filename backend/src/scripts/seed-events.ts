@@ -7,7 +7,7 @@ async function seedEvents() {
       name: "Nerdwork Launch Summit",
       description: "A launch event for the Nerdwork+ community platform.",
       date: new Date("2025-08-15T18:00:00Z"),
-      ticketPrice: 2500,
+      ticketPrice: "2500.00",
     },
   ]);
   console.log("Event seeded successfully.");

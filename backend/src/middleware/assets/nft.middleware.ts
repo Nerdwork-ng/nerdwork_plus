@@ -1,4 +1,4 @@
-import multer = require("multer");
+import * as multer from  "multer";
 
 
 

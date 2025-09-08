@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# TypeScript compiled files
+**/*.js
+**/*.d.ts
+!next.config.js
+!jest.config.js
+!.next/**
+!node_modules/**

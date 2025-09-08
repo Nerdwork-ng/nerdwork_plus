@@ -4,7 +4,7 @@ import { tickets, events } from "../model/schema"; // adjust path if needed
 import { AuthRequest } from "../middleware/common/auth";
 import { eq } from "drizzle-orm";
 
-export const purchaseTicket = async (req: AuthRequest, res: Response) => {
+export const purchaseTicket = async (req: any, res: any) => {
   const { eventId, paymentMethod, amount } = req.body;
   const userId = req.userId;
 

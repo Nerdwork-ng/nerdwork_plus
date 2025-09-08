@@ -23,7 +23,7 @@ const s3Client = new S3Client({
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "nerdwork-comics";
 const CLOUDFRONT_DOMAIN =
-  process.env.CLOUDFRONT_DOMAIN || "dgumbu3t6hn53.cloudfront.net";
+  process.env.CLOUDFRONT_DOMAIN || "d3q14soxsgunx0.cloudfront.net";
 const CLOUDFRONT_URL = `https://${CLOUDFRONT_DOMAIN}`;
 
 // Helper function to convert S3 key to CloudFront URL

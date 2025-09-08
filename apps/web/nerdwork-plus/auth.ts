@@ -26,9 +26,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!account?.id_token) {
           return token;
         }
-
+        console.log(account.id_token)
         const response = await googleAuth(account.id_token);
-
+        console.log(response)
         if (!response || response.success === false || !response.data) {
           console.error("Backend response was unsuccessful or missing data.");
           return null;
