@@ -44,6 +44,7 @@ export const googleAuthController = async (req, res) => {
           username: email.split("@")[0],
           emailVerified: true,
           isActive: true,
+          passwordHash: "",
         })
         .returning();
 

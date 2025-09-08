@@ -28,9 +28,9 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
             />
             <div className="absolute left-5 right-5 flex justify-between top-3">
               <Badge variant={"secondary"} className="capitalize h-8">
-                {comic.status}
+                {comic.comicStatus ?? "N"}
               </Badge>
-              <Menubar className="bg-[#1D1E21] font-inter outline-none border-none ring-0 rounded-full transition duration-300 hover:ease-in-out  p-0">
+              <Menubar className="bg-[#1D1E21] justify-self-end font-inter outline-none border-none ring-0 rounded-full transition duration-300 hover:ease-in-out  p-0">
                 <MenubarMenu>
                   <MenubarTrigger className="bg-[#1D1E21] data-[state=open]:bg-none h-8 w-8 flex justify-center items-center transition duration-300 cursor-pointer rounded-full p-0">
                     <EllipsisVertical size={16} />
@@ -43,10 +43,11 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
               <p className="mb-3 font-semibold">{comic.title}</p>
               <div className="text-sm text-[#707073] flex flex-col gap-1">
                 <p className="flex items-center gap-3">
-                  <BookOpen size={16} /> {comic.chapters} Chapters
+                  <BookOpen size={16} /> {comic.noOfChapters ?? 0} Chapters
                 </p>
                 <p className="flex items-center gap-3">
-                  <Calendar size={16} /> Updated {comic.last_updated}
+                  <Calendar size={16} /> Updated{" "}
+                  {new Date(comic.updatedAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -68,17 +69,18 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
 
             <div className="">
               <Link
-                href={`/creator/comics/${comic.id}`}
+                href={`/creator/comics/${comic.slug}`}
                 className="font-semibold active:underline hover:underline"
               >
                 {comic.title}
               </Link>
               <div className="text-sm text-[#707073] mt-3 flex flex-col gap-1">
                 <p className="flex items-center gap-3">
-                  <BookOpen size={16} /> {comic.chapters} Chapters
+                  <BookOpen size={16} /> {comic.noOfChapters ?? 0} Chapters
                 </p>
                 <p className="flex items-center gap-3">
-                  <Calendar size={16} /> Updated {comic.last_updated}
+                  <Calendar size={16} /> Updated{" "}
+                  {new Date(comic.updatedAt).toLocaleDateString()}
                 </p>
               </div>
             </div>

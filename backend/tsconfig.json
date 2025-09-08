@@ -11,5 +11,17 @@
     "skipLibCheck": true,
     // "strict": true,
     "outDir": "./dist"
-  }
+  },
+  "exclude": [
+    "services/**/*",
+    "node_modules",
+    "dist",
+    "_test_/**/*",
+    "_test_/*",
+    "api-gateway/**/*",
+    "api-gateway/*",
+    "api-gateway",
+    "deployment"
+
+  ]
 }

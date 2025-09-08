@@ -1,9 +1,14 @@
+"use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 const ComicsHeader = () => {
+  const { data: session } = useSession();
+  const userData = session?.user;
+
   return (
     <section className="!mx-auto max-w-[1300px] font-inter flex max-md:flex-col max-md:gap-6 justify-between md:items-center mt-10 mb-6 max-2xl:px-5">
       <div className="flex flex-col max-md:gap-1 gap-2">
@@ -11,7 +16,7 @@ const ComicsHeader = () => {
           My Comics
         </h3>
         <p className="font-medium text-sm text-[#707073]">
-          Welcome back, Creatorba09! Manage your comic series
+          Welcome back, {userData?.username} Manage your comic series
         </p>
       </div>
       <Link href={"/creator/comics/new"} className="max-md:w-full">

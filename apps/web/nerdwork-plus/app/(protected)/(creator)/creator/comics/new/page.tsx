@@ -12,11 +12,14 @@ import NewComicStepTwo from "@/app/(protected)/(creator)/_components/comics/NewC
 import NewComicStepThree from "@/app/(protected)/(creator)/_components/comics/NewComicStepThree";
 import NewComicStepOne from "@/app/(protected)/(creator)/_components/comics/NewComicStepOne";
 import { useRouter } from "next/navigation";
+import { createComicAction } from "@/actions/comic.actions";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 
 const NewComicsPage = () => {
   const [newTag, setNewTag] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
@@ -51,28 +54,27 @@ const NewComicsPage = () => {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const onSubmit = (data: ComicSeriesFormData) => {
-    console.log(data);
-    const formData = new FormData();
+  const onSubmit = async (data: ComicSeriesFormData) => {
+    setLoading(true);
 
-    formData.append("title", data.title);
-    formData.append("language", data.language);
-    formData.append("contentRating", data.contentRating);
-    formData.append("description", data.description);
-    data.genres.forEach((genre) => formData.append("genres[]", genre));
-    data.tags.forEach((tag) => formData.append("tags[]", tag));
-    if (data.coverImage) {
-      formData.append("coverImage", data.coverImage);
-    }
+    try {
+      const response = await createComicAction(data);
 
-    // for (const pair of formData.entries()) {
-    //   console.log(pair[0], pair[1]);
-    // }
-    toast.success("Series updated successfully!");
+      if (!response?.success) {
+        toast.error(
+          response?.message ?? "An error occurred while submitting the form."
+        );
+        return;
+      }
 
-    setTimeout(() => {
+      toast.success("Series created successfully!");
       router.push("/creator/comics");
-    }, 3000);
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addTag = () => {
@@ -157,9 +159,14 @@ const NewComicsPage = () => {
         )}
         {currentStep == 2 && (
           <div className="w-full flex flex-col gap-3">
-            <Button variant={"primary"} type="submit">
+            <LoadingButton
+              isLoading={loading}
+              loadingText="Submitting..."
+              variant={"primary"}
+              type="submit"
+            >
               Submit
-            </Button>
+            </LoadingButton>
             <Button className="w-full" type="button" onClick={handlePrevious}>
               Back
             </Button>
@@ -182,9 +189,14 @@ const NewComicsPage = () => {
         />
         <div className="flex gap-3 justify-end">
           <Button>Cancel</Button>
-          <Button type="submit" variant={"primary"}>
-            Update Series
-          </Button>
+          <LoadingButton
+            isLoading={loading}
+            loadingText="Submitting..."
+            type="submit"
+            variant={"primary"}
+          >
+            Create Series
+          </LoadingButton>
         </div>
       </div>
       <div className="w-2/5">

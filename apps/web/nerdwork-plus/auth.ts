@@ -1,4 +1,3 @@
-//auth.ts
 import NextAuth, { DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
@@ -27,12 +26,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!account?.id_token) {
           return token;
         }
-
+        console.log(account.id_token)
         const response = await googleAuth(account.id_token);
-
+        console.log(response)
         if (!response || response.success === false || !response.data) {
           console.error("Backend response was unsuccessful or missing data.");
-          return token;
+          return null;
         }
 
         const { token: backendToken, user, cProfile, rProfile } = response.data;
@@ -48,7 +47,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       // Handle the update trigger from the client
       if (trigger === "update") {
-        // Check for each property individually before updating
         if (session?.cProfile !== undefined) {
           token.cProfile = session.cProfile;
         }

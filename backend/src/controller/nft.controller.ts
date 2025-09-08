@@ -71,7 +71,7 @@ const keypair = umi.eddsa.createKeypairFromSecretKey(
     215, 39, 54, 158, 233, 66, 129, 141, 95, 31, 203, 109, 193, 83,
   ])
 );
-console.log(keypair);
+
 const masterWallet = createSignerFromKeypair(umi, keypair);
 umi.use(signerIdentity(masterWallet));
 

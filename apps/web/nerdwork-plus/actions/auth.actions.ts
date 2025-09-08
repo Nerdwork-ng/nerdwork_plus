@@ -5,7 +5,7 @@ import axios from "axios";
 
 export const googleAuth = async (idToken: string) => {
   try {
-    const response = await axiosPost("auth/signin", { idToken });
+    const response = await axiosPost("/auth/signin", { idToken });
 
     return {
       success: true,

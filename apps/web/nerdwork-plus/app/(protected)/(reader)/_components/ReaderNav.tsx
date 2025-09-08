@@ -41,8 +41,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { usePathname } from "next/navigation";
 import SearchResultsPanel from "./SearchResultsPanel";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserSession } from "@/lib/api/queries";
+import { Profile } from "@/lib/types/user.types";
 
 const ReaderNav = () => {
   const pathname = usePathname();
@@ -69,6 +72,11 @@ const ReaderNav = () => {
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const isReadingRoute = /^\/r\/comics\/[^/]+\/chapter\/[^/]+$/.test(pathname);
+  const { data: session } = useSession();
+  const user = session?.user;
+  const { profile } = useUserSession();
+
+  const readerProfile: Profile = profile;
 
   useEffect(() => {
     if (!isReadingRoute) {
@@ -157,12 +165,31 @@ const ReaderNav = () => {
               href={"/r/wallet"}
               className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-2"
             >
-              <CreditCard size={16} /> 100{" "}
+              <CreditCard size={16} /> {readerProfile?.walletBalance ?? ""}
               <Image src={NWT} width={16} height={16} alt="nwt" />
             </Link>
-            <button className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-1">
-              <span className="h-7 w-7 rounded-full bg-blue-400"></span>{" "}
-              0xDEAF...fB8B
+            <button
+              type="button"
+              className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-1"
+            >
+              <Avatar>
+                {user?.profilePicture && (
+                  <AvatarImage
+                    src={user?.profilePicture}
+                    alt={`${user.email} profile image`}
+                  />
+                )}
+                {user?.email && (
+                  <AvatarFallback className="uppercase">
+                    {user?.email[0]}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              {readerProfile?.walletId
+                ? readerProfile?.walletId.slice(0, 3) +
+                  "..." +
+                  readerProfile?.walletId.slice(-3)
+                : ""}
             </button>
             <Menubar className="bg-[#1D1E21] font-inter outline-none border-none ring-0 rounded-full">
               <MenubarMenu>
@@ -268,7 +295,8 @@ const ReaderNav = () => {
           </Popover>
 
           <p className="bg-[#1D1E21] px-3 py-1.5 rounded-[20px] text-sm flex items-center gap-1">
-            100 <Image src={NWT} width={16} height={16} alt="nwt" />
+            {readerProfile?.walletBalance ?? ""}
+            <Image src={NWT} width={16} height={16} alt="nwt" />
           </p>
           <DropdownMenu>
             <DropdownMenuTrigger className="bg-[#1D1E21] h-8 w-8 flex justify-center items-center cursor-pointer rounded-full outline-none border-none ring-0">

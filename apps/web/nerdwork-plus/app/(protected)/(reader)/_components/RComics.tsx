@@ -37,11 +37,14 @@ const RComics = ({ data }: { data: Comic[] }) => {
               </Badge>
             </div> */}
             <div className="px-1 py-2">
-              <Link href={`/r/comics/${comic.id}`} className="hover:underline">
+              <Link
+                href={`/r/comics/${comic.slug}`}
+                className="hover:underline"
+              >
                 <p className="mb-2 font-semibold">{comic.title}</p>
               </Link>
               <p className="flex items-center text-sm text-nerd-muted gap-3">
-                {comic.chapters} Chapters
+                {comic.noOfChapters ?? 0} Chapters
               </p>
             </div>
           </div>

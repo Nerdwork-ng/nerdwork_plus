@@ -32,10 +32,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserSession } from "@/lib/api/queries";
 
 export default function CreatorNav() {
+  const { data: session } = useSession();
+  const user = session?.user;
+  const { profile } = useUserSession();
+
+  // const readerProfile: Profile = profile;
+
   const handleSignOut = () => {
     toast.success("Logging out...");
     signOut({ callbackUrl: "/signin" });
@@ -63,11 +71,22 @@ export default function CreatorNav() {
         </div>
         <div className="flex justify-between items-center gap-3">
           <p className="bg-[#1D1E21] px-3 py-1.5 rounded-[20px] flex items-center gap-1">
-            100 <Image src={NWT} width={16} height={16} alt="nwt" />
+            {profile?.walletBalance ?? ""}{" "}
+            <Image src={NWT} width={16} height={16} alt="nwt" />
           </p>
-          <button className="bg-[#545558] cursor-pointer rounded-full h-8 w-8 flex items-center justify-center">
-            C
-          </button>
+          <Avatar>
+            {user?.profilePicture && (
+              <AvatarImage
+                src={user?.profilePicture}
+                alt={`${user.email} profile image`}
+              />
+            )}
+            {user?.email && (
+              <AvatarFallback className="uppercase">
+                {user?.email[0]}
+              </AvatarFallback>
+            )}
+          </Avatar>
           <Menubar className="bg-[#1D1E21] font-inter outline-none border-none ring-0 rounded-full">
             <MenubarMenu>
               <MenubarTrigger className="bg-[#1D1E21] data-[state=open]:bg-none h-8 w-8 flex justify-center items-center cursor-pointer rounded-full">

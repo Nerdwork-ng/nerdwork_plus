@@ -1,0 +1,12 @@
+import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
+config({ path: ".env.local" });
+export default defineConfig({
+    schema: "./src/model/schema.ts",
+    out: "./migrations",
+    dialect: "postgresql",
+    dbCredentials: {
+        url: process.env.DATABASE_URL,
+    },
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZHJpenpsZS5jb25maWcuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJkcml6emxlLmNvbmZpZy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxPQUFPLEVBQUUsTUFBTSxFQUFFLE1BQU0sUUFBUSxDQUFDO0FBQ2hDLE9BQU8sRUFBRSxZQUFZLEVBQUUsTUFBTSxhQUFhLENBQUM7QUFFM0MsTUFBTSxDQUFDLEVBQUUsSUFBSSxFQUFFLFlBQVksRUFBRSxDQUFDLENBQUM7QUFFL0IsZUFBZSxZQUFZLENBQUM7SUFDMUIsTUFBTSxFQUFFLHVCQUF1QjtJQUMvQixHQUFHLEVBQUUsY0FBYztJQUNuQixPQUFPLEVBQUUsWUFBWTtJQUNyQixhQUFhLEVBQUU7UUFDYixHQUFHLEVBQUUsT0FBTyxDQUFDLEdBQUcsQ0FBQyxZQUFhO0tBQy9CO0NBQ0YsQ0FBQyxDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgY29uZmlnIH0gZnJvbSBcImRvdGVudlwiO1xyXG5pbXBvcnQgeyBkZWZpbmVDb25maWcgfSBmcm9tIFwiZHJpenpsZS1raXRcIjtcclxuXHJcbmNvbmZpZyh7IHBhdGg6IFwiLmVudi5sb2NhbFwiIH0pO1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZGVmaW5lQ29uZmlnKHtcclxuICBzY2hlbWE6IFwiLi9zcmMvbW9kZWwvc2NoZW1hLnRzXCIsXHJcbiAgb3V0OiBcIi4vbWlncmF0aW9uc1wiLFxyXG4gIGRpYWxlY3Q6IFwicG9zdGdyZXNxbFwiLFxyXG4gIGRiQ3JlZGVudGlhbHM6IHtcclxuICAgIHVybDogcHJvY2Vzcy5lbnYuREFUQUJBU0VfVVJMISxcclxuICB9LFxyXG59KTtcclxuIl19

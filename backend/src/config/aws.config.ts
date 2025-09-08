@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env" });
 
 // AWS S3 Configuration
 export const AWS_CONFIG = {

@@ -1,24 +1,42 @@
 "use client";
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { comicData } from "@/components/data";
 import CreatorComics from "./CreatorComics";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getCreatorComics } from "@/actions/comic.actions";
+import { Comic } from "@/lib/types";
+import MyComicsEmptyState from "./MyComicsEmptyState";
 
 const Comics = () => {
-  const comics = comicData ?? [];
   const [tab, setTab] = useState<string>("all");
+
+  const {
+    data: comicData,
+    isLoading,
+    // error,
+  } = useQuery({
+    queryKey: ["comics"],
+    queryFn: getCreatorComics,
+    placeholderData: keepPreviousData,
+    refetchInterval: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const comics: Comic[] = comicData?.data.comics ?? [];
+
+  if (!comics || isLoading) return <MyComicsEmptyState />;
 
   const counts = {
     all: comics.length,
-    draft: comics.filter((b) => b.status === "draft").length,
-    published: comics.filter((b) => b.status === "published").length,
-    scheduled: comics.filter((b) => b.status === "scheduled").length,
-    upcoming: comics.filter((b) => b.status === "upcoming").length,
+    draft: comics.filter((b) => b.comicStatus === "draft").length,
+    published: comics.filter((b) => b.comicStatus === "published").length,
+    scheduled: comics.filter((b) => b.comicStatus === "scheduled").length,
+    upcoming: comics.filter((b) => b.comicStatus === "upcoming").length,
   };
 
   const filteredComics = comics.filter((comic) =>
-    tab === "all" ? true : comic.status === tab
+    tab === "all" ? true : comic.comicStatus === tab
   );
 
   return (

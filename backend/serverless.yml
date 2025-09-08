@@ -2,18 +2,50 @@ service: nerdwork-backend
 
 frameworkVersion: '3'
 
+useDotenv: true
+
+package:
+  individually: false
+  excludeDevDependencies: true
+  exclude:
+    - node_modules/drizzle-orm/sqlite-core/**
+    - node_modules/**/*.d.ts
+    - '**/*.test.ts'
+    - '**/*.spec.ts'
+    - 'tests/**'
+    - '__tests__/**'
+    - '*.md'
+    - '.git/**'
+    - '.github/**'
+
 provider:
   name: aws
   runtime: nodejs18.x
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'eu-west-1'}
   memorySize: 512
   timeout: 30
+  deploymentBucket:
+    name: ${env:S3_BUCKET_NAME}
   environment:
     NODE_ENV: ${self:provider.stage}
-    DATABASE_URL: ${ssm:/nerdwork/${self:provider.stage}/database-url}
-    JWT_SECRET: ${ssm:/nerdwork/${self:provider.stage}/jwt-secret}
-    S3_BUCKET_NAME: ${ssm:/nerdwork/${self:provider.stage}/s3-bucket-name}
+    DATABASE_URL: ${env:DATABASE_URL}
+    JWT_SECRET: ${env:JWT_SECRET}
+    JWT_EXPIRES_IN: ${env:JWT_EXPIRES_IN, '7d'}
+    S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
+    AWS_REGION: ${env:AWS_REGION, 'eu-west-1'}
+    S3_REGION: ${env:S3_REGION, 'eu-west-1'}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    CLOUDFRONT_DOMAIN: ${env:CLOUDFRONT_DOMAIN}
+    CLOUDFRONT_DISTRIBUTION_ID: ${env:CLOUDFRONT_DISTRIBUTION_ID}
+    MAX_FILES_PER_UPLOAD: ${env:MAX_FILES_PER_UPLOAD, '20'}
+    MAX_FILE_SIZE: ${env:MAX_FILE_SIZE, '104857600'}
+    GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID}
+    GOOGLE_CLIENT_SECRET: ${env:GOOGLE_CLIENT_SECRET}
+    HELIO_BASE_URL_DEV: ${env:HELIO_BASE_URL_DEV}
+    HELIO_CLUSTER: ${env:HELIO_CLUSTER}
+    HELIO_API_KEY: ${env:HELIO_API_KEY}
   iam:
     role:
       statements:
@@ -23,7 +55,7 @@ provider:
             - s3:PutObject
             - s3:DeleteObject
           Resource: 
-            - "arn:aws:s3:::${ssm:/nerdwork/${self:provider.stage}/s3-bucket-name}/*"
+            - "arn:aws:s3:::${env:S3_BUCKET_NAME}/*"
         - Effect: Allow
           Action:
             - rds-data:ExecuteStatement
@@ -54,3 +86,10 @@ custom:
     noPrependStageInUrl: true
   typescript:
     tsConfigFile: tsconfig.json
+    include:
+      - src/**/*
+    exclude:
+      - node_modules/**
+      - .build/**
+      - .serverless/**
+      - tests/**

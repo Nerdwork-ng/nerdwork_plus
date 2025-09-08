@@ -19,7 +19,7 @@ const ComicActions = ({
     <>
       <MenubarContent className="max-md:hidden bg-[#1D1E21] text-white border-0 absolute -right-[30px]">
         {!details && (
-          <Link href={`/creator/comics/${comic.id}`}>
+          <Link href={`/creator/comics/${comic.slug}`}>
             <MenubarItem>
               <Eye />
               View Details

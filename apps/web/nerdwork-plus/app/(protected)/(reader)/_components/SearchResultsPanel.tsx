@@ -84,9 +84,7 @@ const SearchResultsPanel = ({ query }: SearchResultsPanelProps) => {
                 />
                 <Link href={`/r/comics/${comic.id}`} className="block">
                   <h4 className="text-white text-base">{comic.title}</h4>
-                  <p className="text-sm text-nerd-muted">
-                    {comic.short_description}
-                  </p>
+                  <p className="text-sm text-nerd-muted">{comic.description}</p>
                 </Link>
               </Card>
             ))}

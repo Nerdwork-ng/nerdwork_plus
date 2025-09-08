@@ -1,5 +1,5 @@
 // import NFTsEmptyState from "@/app/(protected)/(creator)/_components/nfts/NFTsEmptyState";
-import { nftData } from "@/components/data";
+// import { nftData } from "@/components/data";
 // import { Button } from "@/components/ui/button";
 // import { Plus } from "lucide-react";
 // import Link from "next/link";
@@ -7,7 +7,7 @@ import React from "react";
 // import NFTList from "../../_components/nfts/NFTList";
 
 const NFTsPage = () => {
-  const NFTs = nftData ?? [];
+  // const NFTs = nftData ?? [];
 
   return (
     <main className="font-inter text-white">

@@ -1,28 +1,38 @@
 export type Comic = {
-  id: number;
+  id: string;
   image: string;
   title: string;
-  short_description: string;
-  status: "upcoming" | "draft" | "scheduled" | "published";
-  chapters: number;
-  last_updated: string;
-  genres?: Array<string>;
-  rating?: string;
+  description: string;
+  comicStatus: "upcoming" | "draft" | "scheduled" | "published";
+  noOfChapters: number;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  creatorName: string;
+  genre?: Array<string>;
+  ageRating?: string;
   isPaid?: boolean;
   isOngoing?: boolean;
 };
 
 export type Chapter = {
-  id: number;
+  id: string;
+  serialNo: number;
   image: string;
   title: string;
-  description: string;
-  pages: number;
-  status: "published" | "scheduled" | "draft";
+  summary: string;
+  pages: string[];
+  chapterStatus: "published" | "scheduled" | "draft";
   date: string;
   views?: number;
   read?: boolean;
   unlocked?: boolean;
+  uniqueCode?: string;
+  slug?: string;
+  chapterPages: string[];
+  chapterType?: "free" | "paid";
+  price?: number;
+  updatedAt: string;
 };
 
 export type Transaction = {

@@ -4,15 +4,16 @@ import { tickets } from "../model/tickets";
 export async function issueTicket(
   userId: string,
   eventId: string,
-  quantity = 1
+  paymentMethod: string,
+  amount: string
 ) {
   const [ticket] = await db
     .insert(tickets)
     .values({
-      userProfileId: userId,
+      userId,
       eventId,
-      quantity,
-      status: "issued",
+      paymentMethod,
+      amount,
     })
     .returning();
 

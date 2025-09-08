@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  timestamp,
-  integer,
-  pgEnum,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp, boolean, integer, pgEnum } from "drizzle-orm/pg-core";
 import { creatorProfile } from "./profile";
 
 export const comicStatusEnum = pgEnum("comic_status_enum", [
@@ -29,9 +21,14 @@ export const comics = pgTable("comics", {
   genre: text("genre").array().notNull(),
   tags: text("tags").array(),
   slug: varchar("slug", { length: 300 }).notNull().unique(),
+  isDraft: boolean("is_draft").notNull().default(true), // Starts as draft
+  publishedAt: timestamp("published_at", { mode: "date" }),
   creatorId: uuid("creator_id")
     .notNull()
     .references(() => creatorProfile.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+export type InsertComic = typeof comics.$inferInsert;
+export type SelectComic = typeof comics.$inferSelect;
