@@ -19,16 +19,18 @@ import { Chapter } from "@/lib/types";
 const ComicReader = ({
   params,
 }: {
-  params: Promise<{ chapterId: string; slug: string }>;
+  params: Promise<{ uniqueCode: string; slug: string }>;
 }) => {
-  const { chapterId, slug } = use(params);
+  const { uniqueCode, slug } = use(params);
   const [readingMode, setReadingMode] = useState("vertical");
   const [sizing, setSizing] = useState("auto");
   const [currentPage, setCurrentPage] = useState(0);
   const [showFooter, setShowFooter] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const pathname = usePathname();
-  const isReadingRoute = /^\/r\/comics\/[^/]+\/chapter\/[^/]+$/.test(pathname);
+  const isReadingRoute =
+    /^\/r\/comics\/[^/]+\/chapter\/[^/]+$/.test(pathname) ||
+    /^\/creator\/comics\/[^/]+\/view\/[^/]+$/.test(pathname);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Array<HTMLElement | null>>([]);
@@ -87,7 +89,7 @@ const ComicReader = ({
 
   const { data: pagesData, isLoading } = useQuery({
     queryKey: ["pages"],
-    queryFn: () => getChapterPages(chapterId),
+    queryFn: () => getChapterPages(uniqueCode),
     placeholderData: keepPreviousData,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,

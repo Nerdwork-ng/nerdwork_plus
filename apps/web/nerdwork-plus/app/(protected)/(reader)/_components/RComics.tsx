@@ -1,10 +1,23 @@
-// import { Badge } from "@/components/ui/badge";
+"use client";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
 import { Comic } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 const RComics = ({ data }: { data: Comic[] }) => {
+  const router = useRouter();
+
+  const isNew = (dateString: string) => {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const comicCreationDate = new Date(dateString);
+
+    return comicCreationDate > threeDaysAgo;
+  };
+
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-10 text-center">
@@ -22,7 +35,8 @@ const RComics = ({ data }: { data: Comic[] }) => {
         {data.map((comic) => (
           <div
             key={comic.id}
-            className="relative group rounded flex flex-col p-2 hover:bg-[#FFFFFF05] transition duration-300 hover:ease-in-out overflow-hidden"
+            onClick={() => router.push(`/r/comics/${comic.slug}`)}
+            className="relative group rounded flex flex-col p-2 hover:bg-[#FFFFFF05] cursor-pointer transition duration-300 hover:ease-in-out overflow-hidden"
           >
             <Image
               src={comic.image}
@@ -31,11 +45,11 @@ const RComics = ({ data }: { data: Comic[] }) => {
               alt={`${comic.title} cover`}
               className="h-[267px] w-full object-cover rounded"
             />
-            {/* <div className="absolute left-5 right-5 flex justify-between top-3">
-              <Badge variant={"secondary"} className="capitalize h-8">
-                {comic.last_updated}
-              </Badge>
-            </div> */}
+            {isNew(comic.createdAt) && (
+              <div className="absolute left-5 right-5 flex justify-between top-3">
+                <Badge className="capitalize h-6 bg-blue-600">New</Badge>
+              </div>
+            )}
             <div className="px-1 py-2">
               <Link
                 href={`/r/comics/${comic.slug}`}

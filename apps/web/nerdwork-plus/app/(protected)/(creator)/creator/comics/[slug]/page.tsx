@@ -179,7 +179,7 @@ const ComicDetailsPage = ({
       </section>
       <hr className="!text-[#292A2E] max-md:hidden h-0 border-t border-[#292A2E]" />
       {comic && chapters.length == 0 ? (
-        <ChaptersEmptyState comicId={comic?.slug} />
+        <ChaptersEmptyState comicId={comic?.slug ?? ""} />
       ) : (
         <section className="py-8">
           <h3 className="font-semibold text-2xl">
