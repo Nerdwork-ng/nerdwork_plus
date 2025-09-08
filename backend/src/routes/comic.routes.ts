@@ -4,33 +4,22 @@ import {
   publishComic,
   fetchAllComicByJwt,
   fetchComicBySlug,
-<<<<<<< HEAD
   fetchAllComics,
   fetchComicBySlugForReaders,
-=======
   createChapter,
   updateChapter,
   publishChapter,
   getComicChapters,
   getChapter,
   deleteChapter,
->>>>>>> merge-fix-endpoints
 } from "../controller/comic.controller";
 import { authenticate } from "../middleware/common/auth";
 
 const router = Router();
 
-<<<<<<< HEAD
-router.post("/create", createComic);
-router.get("/mine", fetchAllComicByJwt);
-router.get("/all-comics", fetchAllComics);
-router.get("/:slug", fetchComicBySlug);
-router.get("/reader/:slug", fetchComicBySlugForReaders);
-=======
 // ===============================
 // COMIC ROUTES
 // ===============================
->>>>>>> merge-fix-endpoints
 
 /**
  * @swagger
@@ -263,7 +252,6 @@ router.get("/:slug", fetchComicBySlug);
 
 /**
  * @swagger
-<<<<<<< HEAD
  * /comics/reader/{slug}:
  *   get:
  *     summary: Fetch a comic by its slug for readers
@@ -294,7 +282,6 @@ router.get("/:slug", fetchComicBySlug);
 /**
  * @swagger
  * /comics/all-comics:
-=======
  * /comics/{comicId}/chapters:
  *   post:
  *     summary: Create a new chapter for a comic
@@ -342,7 +329,6 @@ router.post("/:comicId/chapters", authenticate, createChapter);
 /**
  * @swagger
  * /comics/{comicId}/chapters:
->>>>>>> merge-fix-endpoints
  *   get:
  *     summary: Get all chapters for a comic
  *     tags: [Chapters]

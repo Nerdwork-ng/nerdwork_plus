@@ -20,8 +20,10 @@ export const chapters = pgTable("chapters", {
   price: integer("price").default(0).notNull(),
   summary: text("summary"),
   pages: text("pages").array().notNull(),
-  chapterNumber: integer("chapter_number").notNull(), // User can reorder
+  chapterNumber: integer("chapter_number").default(1), // User can reorder
   chapterStatus: comicStatusEnum("chapter_status").default("draft"),
+  serialNo: integer("serial_no").notNull().default(0),
+
   comicId: uuid("comic_id")
     .notNull()
     .references(() => comics.id, { onDelete: "cascade" }),
