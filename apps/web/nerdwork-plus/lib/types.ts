@@ -3,8 +3,8 @@ export type Comic = {
   image: string;
   title: string;
   description: string;
-  status: "upcoming" | "draft" | "scheduled" | "published";
-  chapters: number;
+  comicStatus: "upcoming" | "draft" | "scheduled" | "published";
+  noOfChapters: number;
   slug: string;
   updatedAt: string;
   createdAt: string;
@@ -16,19 +16,23 @@ export type Comic = {
 };
 
 export type Chapter = {
-  id: number;
+  id: string;
+  serialNo: number;
   image: string;
   title: string;
-  description: string;
-  pages: number;
-  status: "published" | "scheduled" | "draft";
+  summary: string;
+  pages: string[];
+  chapterStatus: "published" | "scheduled" | "draft";
   date: string;
   views?: number;
   read?: boolean;
   unlocked?: boolean;
-  code?: string;
-  comicSlug?: string;
+  uniqueCode?: string;
+  slug?: string;
   chapterPages: string[];
+  chapterType?: "free" | "paid";
+  price?: number;
+  updatedAt: string;
 };
 
 export type Transaction = {

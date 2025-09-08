@@ -44,7 +44,7 @@ const RComics = ({ data }: { data: Comic[] }) => {
                 <p className="mb-2 font-semibold">{comic.title}</p>
               </Link>
               <p className="flex items-center text-sm text-nerd-muted gap-3">
-                {comic.chapters ?? 0} Chapters
+                {comic.noOfChapters ?? 0} Chapters
               </p>
             </div>
           </div>

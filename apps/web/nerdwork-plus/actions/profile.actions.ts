@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { axiosGet, axiosPost } from "@/lib/api/apiClientAuth";
+import { axiosGet, axiosPost, axiosPut } from "@/lib/api/apiClientAuth";
 import axios from "axios";
 
 type createReaderProfileData = {
@@ -148,6 +148,36 @@ export const getReaderProfile = async () => {
       success: false,
       status: 500,
       message: "Failed to retrieve reader profile. Please try again.",
+    };
+  }
+};
+
+export const setReaderPin = async (data: string) => {
+  try {
+    const response = await axiosPut("profile/reader/pin", { pin: data });
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Reader pin set successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Reader pin set failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to set reader pin. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to set reader pin. Please try again.",
     };
   }
 };

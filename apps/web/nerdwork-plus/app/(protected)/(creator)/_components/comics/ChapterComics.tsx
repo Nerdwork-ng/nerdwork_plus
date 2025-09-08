@@ -17,7 +17,7 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
         >
           <div className="md:w-[80%] text-nerd-muted flex gap-8">
             <Image
-              src={chapter.image}
+              src={chapter.image ?? null}
               width={92}
               height={132}
               alt="Chapter cover"
@@ -28,31 +28,31 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
                 {chapter.title}{" "}
                 <Badge
                   className={` ${
-                    chapter.status == "published"
+                    chapter.chapterStatus == "published"
                       ? "bg-[#1A9733]"
-                      : chapter.status == "scheduled"
+                      : chapter.chapterStatus == "scheduled"
                       ? "bg-[#064EC0]"
                       : "bg-[#25262A]"
                   }`}
                 >
-                  {chapter.status}
+                  {chapter.chapterStatus}
                 </Badge>
               </p>
-              <p>{chapter.description}</p>
+              <p>{chapter.summary}</p>
 
               <div className="flex gap-5 text-sm">
                 <span className="flex items-center gap-1">
                   <ImageIcon size={16} />
-                  {chapter.pages} pages
+                  {chapter.pages.length} pages
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={16} />
-                  {chapter.status == "published"
+                  {chapter.chapterStatus == "published"
                     ? "published"
-                    : chapter.status == "scheduled"
+                    : chapter.chapterStatus == "scheduled"
                     ? "scheduled for"
                     : "last edited"}{" "}
-                  {chapter.date}
+                  {new Date(chapter.updatedAt).toLocaleDateString()}
                 </span>
                 {chapter.views && (
                   <span className="flex items-center gap-1">
@@ -64,16 +64,16 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
             </div>
           </div>
           <div className="md:w-[20%] md:justify-end flex gap-2">
-            <Link href={`/r/comics/${slug}/chapter/${chapter?.code}`}>
+            <Link href={`/r/comics/${slug}/chapter/${chapter?.uniqueCode}`}>
               <Button className="bg-nerd-default">
                 <Eye />
                 View
               </Button>
             </Link>
             <Button className="bg-nerd-default">
-              {chapter.status == "published" ? <Edit2 /> : <Send />}
+              {chapter.chapterStatus == "published" ? <Edit2 /> : <Send />}
 
-              {chapter.status == "published" ? "Edit" : "Publish"}
+              {chapter.chapterStatus == "published" ? "Edit" : "Publish"}
             </Button>
             <ChapterActions chapter={chapter} />
           </div>
