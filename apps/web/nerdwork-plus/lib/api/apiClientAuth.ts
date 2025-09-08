@@ -43,9 +43,6 @@ async function getAuthHeader(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// All axios functions are now simplified to use apiUrl as the base URL.
-// The isCustom parameter has been completely removed.
-
 async function axiosGet<T = any>(
   url: string,
   params = {},
@@ -122,6 +119,29 @@ async function axiosPatch<T = any, D = any>(
   }
 }
 
+async function axiosPut<T = any, D = any>(
+  url: string,
+  body: D,
+  params = {}
+): Promise<AxiosResponse<T>> {
+  const headers = await getAuthHeader();
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    params,
+  };
+  const fullUrl = `${apiUrl}${url}`;
+  try {
+    const response = await axios.put<T>(fullUrl, body, config);
+    return response;
+  } catch (error) {
+    console.error(`Error in PATCH request to ${fullUrl}:`, error);
+    throw error;
+  }
+}
+
 async function axiosPostData<T = any>(
   url: string,
   body: FormData,
@@ -167,4 +187,11 @@ async function axiosDelete<T = any>(
   }
 }
 
-export { axiosGet, axiosPost, axiosPatch, axiosPostData, axiosDelete };
+export {
+  axiosGet,
+  axiosPost,
+  axiosPatch,
+  axiosPut,
+  axiosPostData,
+  axiosDelete,
+};

@@ -19,6 +19,7 @@ import {
 import LoaderScreen from "@/components/loading-screen";
 import { Chapter, Comic } from "@/lib/types";
 import { toast } from "sonner";
+import { useUserSession } from "@/lib/api/queries";
 
 const ComicDetailsPage = ({
   params,
@@ -28,6 +29,7 @@ const ComicDetailsPage = ({
   const { slug } = use(params);
   const [isExpanded, setIsExpanded] = useState(false);
   const [tab, setTab] = useState<string>("all");
+  const { profile } = useUserSession();
 
   const {
     data: comicData,
@@ -37,7 +39,7 @@ const ComicDetailsPage = ({
     queryKey: ["comic"],
     queryFn: () => getSingleComic(slug),
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
@@ -49,7 +51,7 @@ const ComicDetailsPage = ({
     queryKey: ["chapters"],
     queryFn: () => getComicChaptersBySlug(slug),
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
@@ -60,31 +62,20 @@ const ComicDetailsPage = ({
       error?.message || chapterError?.message || "Error getting chapter details"
     );
 
-  // if (error) {
-  //   return (
-  //     <div className="flex flex-col items-center justify-center p-10 text-center">
-  //       <p className="text-xl font-semibold">Error retrieving data</p>
-  //       <p className="mt-2 text-sm">
-  //         Try adjusting your filters or search terms.
-  //       </p>
-  //     </div>
-  //   );
-  // }
-
   const comic: Comic = comicData?.data?.comic;
-  const chapters: Chapter[] = chaptersData?.data?.chapters ?? [];
+  const chapters: Chapter[] = chaptersData?.data?.data ?? [];
 
   const truncatedText = comic?.description.substring(0, 200);
 
   const counts = {
     all: chapters.length,
-    draft: chapters.filter((b) => b.status === "draft").length,
-    published: chapters.filter((b) => b.status === "published").length,
-    scheduled: chapters.filter((b) => b.status === "scheduled").length,
+    draft: chapters.filter((b) => b.chapterStatus === "draft").length,
+    published: chapters.filter((b) => b.chapterStatus === "published").length,
+    scheduled: chapters.filter((b) => b.chapterStatus === "scheduled").length,
   };
 
   const filteredChapters = chapters.filter((chapter) =>
-    tab === "all" ? true : chapter.status === tab
+    tab === "all" ? true : chapter.chapterStatus === tab
   );
 
   return (
@@ -141,14 +132,14 @@ const ComicDetailsPage = ({
               </Sheet>
             )}
           </div>
-          <div className="flex max-md:flex-col gap-6 md:gap-12 max-md:text-sm">
+          <div className="flex text-[15px] max-md:flex-col gap-6 md:gap-12 max-md:text-sm">
             <p className="md:hidden max-w-[505px] w-full">
               {isExpanded ? comic?.description : `${truncatedText}...`}
             </p>
             <p className="max-md:hidden max-w-[505px] w-full">
               {comic?.description}
             </p>
-            <ul className={`${isExpanded ? "" : "max-md:hidden"}`}>
+            <ul className={`space-y-2 ${isExpanded ? "" : "max-md:hidden"}`}>
               <li>
                 {comic?.genre?.map((gen, index) => (
                   <span key={index} className="text-white capitalize">
@@ -160,12 +151,12 @@ const ComicDetailsPage = ({
               <li>
                 Released{" "}
                 <span className="text-white">
-                  {new Date(comic.createdAt).toDateString()}
+                  {new Date(comic?.createdAt).toDateString()}
                 </span>
               </li>
-              <li>{comic?.chapters} chapters</li>
-              <li>{comic?.ageRating} Rating</li>
-              <li>Creator: {comic?.creatorName ?? ""}</li>
+              <li className="capitalize">{comic?.noOfChapters} chapters</li>
+              <li className="capitalize">{comic?.ageRating} Rating</li>
+              <li>Creator: {profile?.creatorName ?? ""}</li>
             </ul>
             <button
               className="md:hidden cursor-pointer text-left text-[#707073] font-normal"

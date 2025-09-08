@@ -1,46 +1,101 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-// import Link from "next/link";
 import React, { use } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/data-table";
 import { columns } from "./columns";
-import { Check } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
-  getComicChaptersBySlug,
-  getSingleComic,
+  getReaderComicChapters,
+  getSingleComicReader,
 } from "@/actions/comic.actions";
 import LoaderScreen from "@/components/loading-screen";
 import { Chapter, Comic } from "@/lib/types";
 import Link from "next/link";
+import { LoadingButton } from "@/components/ui/LoadingButton";
+import { toast } from "sonner";
+import { addToLibrary, removeFromLibrary } from "@/actions/library.actions";
 
 const ComicInterface = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params);
   const [tab, setTab] = React.useState<string>("chapters");
   const [library, setLibrary] = React.useState(false);
 
-  const { data: comicData, isLoading } = useQuery({
+  const {
+    data: comicData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["comic"],
-    queryFn: () => getSingleComic(slug),
+    queryFn: () => getSingleComicReader(slug),
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
   const { data: chaptersData, isLoading: isChaptersLoading } = useQuery({
     queryKey: ["chapters"],
-    queryFn: () => getComicChaptersBySlug(slug),
+    queryFn: () => getReaderComicChapters(slug),
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
   if (isLoading || isChaptersLoading) return <LoaderScreen />;
 
-  const comic: Comic = comicData?.data?.comic;
-  const chapters: Chapter[] = chaptersData?.data?.chapters ?? [];
+  const comic: Comic = comicData?.data?.data?.comic;
+  const creator = comicData?.data?.data?.creatorName ?? "";
+  const isInLibrary = comicData?.data?.data?.inLibrary;
+
+  const chapters: Chapter[] = chaptersData?.data?.data ?? [];
+
+  const handleAddToLibrary = async () => {
+    setLibrary(true);
+    const comicId = comic.id;
+    try {
+      const response = await addToLibrary(comicId);
+
+      if (!response?.success) {
+        toast.error(
+          response?.message ?? "An error occurred while submitting the form."
+        );
+        return;
+      }
+
+      toast.success("Comic added to library successfully");
+      refetch();
+    } catch (err) {
+      console.log(err);
+      toast.error("An error occurred!");
+    } finally {
+      setLibrary(false);
+    }
+  };
+
+  const handleRemoveFromLibrary = async () => {
+    setLibrary(true);
+    const comicId = comic.id;
+    try {
+      const response = await removeFromLibrary(comicId);
+
+      if (!response?.success) {
+        toast.error(
+          response?.message ?? "An error occurred while submitting the form."
+        );
+        return;
+      }
+
+      toast.success("Comic removed from library successfully");
+      refetch();
+    } catch (err) {
+      console.log(err);
+      toast.error("An error occurred!");
+    } finally {
+      setLibrary(false);
+    }
+  };
 
   return (
     <>
@@ -50,9 +105,14 @@ const ComicInterface = ({ params }: { params: Promise<{ slug: string }> }) => {
           <section className="flex max-md:flex-col-reverse max-md:pt-20 justify-between min-h-[70vh] font-inter -mb-px max-md:gap-6 md:gap-8 items-center px-5">
             <section className="max-w-[445px] space-y-7">
               <div className="flex flex-col gap-6">
+                <Link href={"/r/comics"}>
+                  <button className="flex items-center cursor-pointer gap-2.5 text-sm font-medium">
+                    <ArrowLeft size={16} /> back
+                  </button>
+                </Link>
                 <h1 className="text-5xl font-bold">{comic?.title}</h1>
                 <p className="font-semibold capitalize">
-                  {comic?.ageRating} Rating, {comic?.chapters} chapters,{" "}
+                  {comic?.ageRating} Rating, {comic?.noOfChapters} chapters,{" "}
                   {comic?.genre && comic?.genre[0]}
                 </p>
               </div>
@@ -60,11 +120,10 @@ const ComicInterface = ({ params }: { params: Promise<{ slug: string }> }) => {
               <p>{comic?.description}</p>
 
               <div className="text-nerd-muted">
-                Author:{" "}
-                <span className="text-white">{comic?.creatorName ?? ""}</span>,
+                Author: <span className="text-white">{creator ?? ""}</span>,
                 Started:{" "}
                 <span className="text-white">
-                  {new Date(comic.createdAt).toDateString()}
+                  {new Date(comic?.createdAt).toDateString()}
                 </span>
                 , Status: <span className="text-white capitalize">Ongoing</span>
                 , Genre:{" "}
@@ -79,13 +138,27 @@ const ComicInterface = ({ params }: { params: Promise<{ slug: string }> }) => {
                 <Link href={`/r/comics/${slug}/chapters/`}>
                   <Button variant={"primary"}>Start Reading</Button>
                 </Link>
-                <Button
-                  onClick={() => setLibrary(!library)}
-                  variant={"outline"}
-                >
-                  <Check size={16} className={`${library ? "" : "hidden"}`} />{" "}
-                  {library ? "Added to library" : "Add to Library"}
-                </Button>
+                {isInLibrary ? (
+                  <LoadingButton
+                    onClick={handleRemoveFromLibrary}
+                    isLoading={library}
+                    disabled={library}
+                    loadingText="Removing..."
+                    variant={"outline"}
+                  >
+                    <Check size={16} className={``} /> Added to library
+                  </LoadingButton>
+                ) : (
+                  <LoadingButton
+                    onClick={handleAddToLibrary}
+                    isLoading={library}
+                    disabled={library}
+                    loadingText="Adding..."
+                    variant={"outline"}
+                  >
+                    Add to Library
+                  </LoadingButton>
+                )}
               </div>
             </section>
             {comic?.image && (
@@ -114,7 +187,7 @@ const ComicInterface = ({ params }: { params: Promise<{ slug: string }> }) => {
                 className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"
                 value="chapters"
               >
-                Chapters {comic?.chapters}
+                Chapters {comic?.noOfChapters}
               </TabsTrigger>
               <TabsTrigger
                 className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"

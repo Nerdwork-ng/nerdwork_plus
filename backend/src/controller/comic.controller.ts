@@ -34,8 +34,9 @@ export const createComic = async (req:any, res:any) => {
       return res.status(404).json({ message: "Creator profile not found" });
     }
 
-    // Generate slug from title + email
-    const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${decoded.email}`;
+    const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${
+      creator.creatorName
+    }`;
 
     const [comic] = await db
       .insert(comics)
@@ -48,6 +49,7 @@ export const createComic = async (req:any, res:any) => {
         slug,
         genre,
         tags,
+        comicStatus: "draft",
         creatorId: creator.id,
         isDraft: true, // Always starts as draft
       })
@@ -156,10 +158,7 @@ export const fetchComicBySlug = async (req: any, res: any) => {
   try {
     const { slug } = req.params;
 
-    const [comic] = await db
-      .select()
-      .from(comics)
-      .where(eq(comics.slug, slug));
+    const [comic] = await db.select().from(comics).where(eq(comics.slug, slug));
 
     if (!comic) {
       return res.status(404).json({ message: "Comic not found" });
@@ -180,18 +179,43 @@ export const fetchComicBySlug = async (req: any, res: any) => {
   }
 };
 
+// Get comic by slug for readers
+export const fetchComicBySlugForReaders = async (req: any, res: any) => {
+  try {
+    const { slug } = req.params;
+
+    const [comic] = await db.select().from(comics).where(eq(comics.slug, slug));
+    if (!comic) return res.status(404).json({ message: "Comic not found" });
+
+    const [creator] = await db
+      .select()
+      .from(creatorProfile)
+      .where(eq(creatorProfile.id, comic.creatorId));
+
+    return res.json({
+      data: {
+        comic,
+        creatorName: creator.creatorName,
+        isInLibrary: false,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ message: "Failed to fetch comic" });
+  }
+};
+
 // Get all published comics (reader endpoint)
 export const fetchAllComics = async (req: any, res: any) => {
   try {
-    const allComics = await db
+    const publishedComics = await db
       .select()
       .from(comics)
-      .where(eq(comics.isDraft, false)) // Only published comics
-      .orderBy(desc(comics.publishedAt));
+      .where(eq(comics.comicStatus, "published"));
 
     return res.json({
       success: true,
-      data: { comics: allComics },
+      data: { comics: publishedComics },
     });
   } catch (err) {
     console.error(err);

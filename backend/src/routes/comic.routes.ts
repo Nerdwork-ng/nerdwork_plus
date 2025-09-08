@@ -3,7 +3,6 @@ import {
   createComic,
   publishComic,
   fetchAllComicByJwt,
-  fetchAllComics,
   fetchComicBySlug,
   createChapter,
   updateChapter,
@@ -11,6 +10,8 @@ import {
   getComicChapters,
   getChapter,
   deleteChapter,
+  fetchAllComics,
+  fetchComicBySlugForReaders,
 } from "../controller/comic.controller";
 import { authenticate } from "../middleware/common/auth";
 
@@ -244,6 +245,7 @@ router.get("/published", fetchAllComics);
  *         description: Comic not found or is draft
  */
 router.get("/:slug", fetchComicBySlug);
+router.get("/reader/:slug", fetchComicBySlugForReaders);
 
 // ===============================
 // CHAPTER ROUTES
@@ -251,53 +253,36 @@ router.get("/:slug", fetchComicBySlug);
 
 /**
  * @swagger
- * /comics/{comicId}/chapters:
- *   post:
- *     summary: Create a new chapter for a comic
- *     tags: [Chapters]
- *     security:
- *       - bearerAuth: []
+ * /comics/reader/{slug}:
+ *   get:
+ *     summary: Fetch a comic by its slug for readers
+ *     tags: [Comics]
  *     parameters:
  *       - in: path
- *         name: comicId
- *         required: true
+ *         name: slug
  *         schema:
  *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - chapterNumber
- *             properties:
- *               title:
- *                 type: string
- *                 example: "Chapter 1: The Beginning"
- *               chapterNumber:
- *                 type: integer
- *                 example: 1
- *               description:
- *                 type: string
- *                 example: "Our hero begins their journey"
- *               pages:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["https://s3.../page1.jpg", "https://s3.../page2.jpg"]
- *                 description: Array of pre-uploaded S3 URLs
+ *         required: true
+ *         description: The slug of the comic
  *     responses:
- *       201:
- *         description: Chapter created successfully (as draft)
+ *       200:
+ *         description: Comic found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 comic:
+ *                   $ref: '#/components/schemas/Comic'
+ *       404:
+ *         description: Comic not found
+ *       400:
+ *         description: Failed to fetch comic
  */
-router.post("/:comicId/chapters", authenticate, createChapter);
 
 /**
  * @swagger
- * /comics/{comicId}/chapters:
+ * /comics/all-comics:
  *   get:
  *     summary: Get all chapters for a comic
  *     tags: [Chapters]
@@ -359,6 +344,7 @@ router.get("/chapters/:chapterId", getChapter);
  *     summary: Update chapter (reorder pages, change info)
  *     tags: [Chapters]
  *     security:
+ * 
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -409,6 +395,7 @@ router.put("/chapters/:chapterId", authenticate, updateChapter);
  *       200:
  *         description: Chapter published successfully
  */
+
 router.patch("/chapters/:chapterId/publish", authenticate, publishChapter);
 
 /**

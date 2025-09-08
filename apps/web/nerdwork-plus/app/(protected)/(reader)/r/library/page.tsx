@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { comicData } from "@/components/data";
 import RComics from "../../_components/RComics";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,20 +22,31 @@ import {
 } from "@/components/ui/select";
 import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
 import { LucideChevronDown } from "lucide-react";
+import { getLibraryComics } from "@/actions/library.actions";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import LoaderScreen from "@/components/loading-screen";
+import { Comic } from "@/lib/types";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
 const LibraryPage = () => {
   const [tab, setTab] = React.useState<string>("all");
-
-  const comics = comicData ?? [];
-
   const [showFree, setShowFree] = React.useState<Checked>(false);
   const [showPaid, setShowPaid] = React.useState<Checked>(false);
   const [showOngoing, setShowOngoing] = React.useState<Checked>(false);
   const [showCompleted, setShowCompleted] = React.useState<Checked>(false);
   const [sortFilter, setSortFilter] = React.useState("");
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  const { data: libraryData, isLoading } = useQuery({
+    queryKey: ["comics"],
+    queryFn: () => getLibraryComics(),
+    placeholderData: keepPreviousData,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const comics: Comic[] = libraryData?.data?.comics;
 
   const filteredComics = React.useMemo(() => {
     let tempComics = [...comics];
@@ -50,7 +60,7 @@ const LibraryPage = () => {
 
     // Apply Tabs Filter
     if (tab !== "all") {
-      tempComics = tempComics.filter((comic) => comic.status === tab);
+      tempComics = tempComics.filter((comic) => comic.comicStatus === tab);
     }
 
     // Apply Dropdown Filters
@@ -91,6 +101,8 @@ const LibraryPage = () => {
     showCompleted,
     sortFilter,
   ]);
+
+  if (isLoading) return <LoaderScreen />;
 
   return (
     <main className="pt-20">
