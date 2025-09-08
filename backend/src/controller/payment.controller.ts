@@ -17,6 +17,7 @@ const HELIO_PRIVATE_KEY = process.env.HELIO_PRIVATE_KEY;
 const WEBHOOK_REDIRECT_URL = process.env.WEBHOOK_REDIRECT_URL;
 const HELIO_WALLET_ID = process.env.HELIO_WALLET_ID;
 const HELIO_PCURRENCY = process.env.HELIO_PCURRENCY;
+const STATIC_PRICE_FEED = 90.49
 
 import jwt from "jsonwebtoken";
 
@@ -65,9 +66,10 @@ export const createPaymentLink = async (req: any, res: any) => {
 
         // Call Helio SDK
         const helioResponse = await sdk.paylink.create(createPaylinkDto);
+        console.log(helioResponse)
 
-        // Calculate NWT amount (assuming 1 USD = 90.49 NWT based on your frontend calculation)
-        const nwtAmount = amount * 90.49; // This should match your frontend calculation
+        // Calculate NWT amount (assuming 1 USD = STATIC_PRICE_FEED NWT based on your frontend calculation)
+        const nwtAmount = amount * STATIC_PRICE_FEED; // This should match your frontend calculation
         
         // Create user purchase transaction record
         const transactionResult = await createUserPurchaseTransaction(
@@ -174,22 +176,32 @@ export const handlePayment = async (req: any, res: any) => {
             return res.status(400).json({ error: 'Invalid webhook data' });
         }
 
+       
+
+        
         const { transactionSignature, status, statusToken } = data;
+        const transaction = await sdk.transaction.getTransaction(transactionSignature);
         
         console.log('Processing webhook:', {
+            transaction,
             status,
             transactionSignature,
             blockchainSymbol
         });
 
+        console.log(transaction.meta.transactionStatus)
+        console.log(transaction.meta.id)
+
         // Find the transaction by transaction signature or other identifier
         // Note: You'll need to store the transaction signature when creating the payment
         // For now, we'll try to match by metadata or implement a lookup mechanism
         
-        if (status === 'SUCCESS') {
+        if (transaction.meta.transactionStatus == 'SUCCESS') {
             // For successful payments, we need to:
             // 1. Update the transaction status
             // 2. Add NWT to user's wallet
+
+            
             
             console.log('Payment successful, processing...');
             
@@ -197,23 +209,27 @@ export const handlePayment = async (req: any, res: any) => {
             // back to your Helio payment ID. For now, this is a placeholder:
             
             // Example: If you store the transaction signature in metadata
+            console.log((transaction as any).paylink.id)
             const updateResult = await updateUserTransactionStatus(
-                transactionSignature, // Using tx signature as lookup - you may need to adjust this
+                (transaction as any).paylink.id, // Using tx signature as lookup - you may need to adjust this
                 'completed',
-                transactionSignature,
+            
+                transaction.meta.transactionDataHash,
                 {
-                    blockchainSymbol,
+                    blockchainSymbol: transaction.paymentRequestCurrencySymbol,
                     senderPK,
                     statusToken,
                     webhookData: req.body
                 }
             );
+            console.log(transaction.meta.amount.toString())
+            
 
             if (updateResult.success && updateResult.transaction) {
                 // Update user wallet balance
                 const balanceResult = await updateUserWalletBalance(
                     updateResult.transaction.userId,
-                    parseFloat(updateResult.transaction.nwtAmount),
+                    parseFloat(Number(updateResult.transaction.nwtAmount).toFixed(0)),
                     'add'
                 );
 

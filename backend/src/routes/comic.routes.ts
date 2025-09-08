@@ -12,6 +12,8 @@ import {
   getComicChapters,
   getChapter,
   deleteChapter,
+  buyComic,
+  buyChapter,
 } from "../controller/comic.controller";
 import { authenticate } from "../middleware/common/auth";
 
@@ -462,5 +464,215 @@ router.patch("/chapters/:chapterId/publish", authenticate, publishChapter);
  *         description: Chapter deleted successfully
  */
 router.delete("/chapters/:chapterId", authenticate, deleteChapter);
+
+// ===============================
+// PURCHASE ROUTES
+// ===============================
+
+router.get("/reader/:slug", fetchComicBySlugForReaders);
+
+/**
+ * @swagger
+ * /comics/{comicId}/buy:
+ *   post:
+ *     summary: Purchase access to a comic using NWT
+ *     tags: [Comics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The ID of the comic to purchase
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nwtAmount
+ *             properties:
+ *               nwtAmount:
+ *                 type: number
+ *                 minimum: 0.01
+ *                 example: 10.5
+ *                 description: Amount of NWT to pay for the comic
+ *     responses:
+ *       200:
+ *         description: Comic purchased successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Comic purchased successfully!"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     comic:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         title:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                     creator:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                     transaction:
+ *                       type: object
+ *                       properties:
+ *                         userTransactionId:
+ *                           type: string
+ *                         creatorTransactionId:
+ *                           type: string
+ *                         nwtAmount:
+ *                           type: number
+ *                         userNewBalance:
+ *                           type: number
+ *                         creatorNewBalance:
+ *                           type: number
+ *       400:
+ *         description: Invalid request or insufficient balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Insufficient NWT balance. Please purchase more tokens."
+ *                 errorCode:
+ *                   type: string
+ *                   example: "INSUFFICIENT_BALANCE"
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Comic or creator not found
+ */
+router.post("/:comicId/buy", authenticate, buyComic);
+
+/**
+ * @swagger
+ * /comics/chapters/{chapterId}/buy:
+ *   post:
+ *     summary: Purchase access to a specific chapter using NWT
+ *     tags: [Chapters]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: chapterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The ID of the chapter to purchase
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nwtAmount
+ *             properties:
+ *               nwtAmount:
+ *                 type: number
+ *                 minimum: 0.01
+ *                 example: 5.0
+ *                 description: Amount of NWT to pay for the chapter
+ *     responses:
+ *       200:
+ *         description: Chapter purchased successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Chapter purchased successfully!"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     chapter:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         title:
+ *                           type: string
+ *                         chapterNumber:
+ *                           type: integer
+ *                     comic:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         title:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                     creator:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                     transaction:
+ *                       type: object
+ *                       properties:
+ *                         userTransactionId:
+ *                           type: string
+ *                         creatorTransactionId:
+ *                           type: string
+ *                         nwtAmount:
+ *                           type: number
+ *                         userNewBalance:
+ *                           type: number
+ *                         creatorNewBalance:
+ *                           type: number
+ *       400:
+ *         description: Invalid request, insufficient balance, or free chapter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "This chapter is free and doesn't need to be purchased"
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Chapter, comic, or creator not found
+ */
+router.post("/chapters/:chapterId/buy", authenticate, buyChapter);
 
 export default router;

@@ -31,7 +31,7 @@ const PurchaseTokenModal = () => {
   }>({});
 
   // Hardcoded values for demonstration
-  const usdPerNwt = 0.01105; // 100 NWT for $140.50
+  const usdPerNwt = 0.05105; // 100 NWT for $140.50
   const transactionFeeRate = 0.01; // 1%
 
   const suggestedAmounts = [50, 100, 200, 500];

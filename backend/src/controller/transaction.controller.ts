@@ -2,7 +2,8 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../config/db";
 import { userTransactions } from "../model/userTransaction";
 import { creatorTransactions } from "../model/creatorTransaction";
-import { userProfiles, creatorProfile } from "../model/schema";
+import { creatorProfile } from "../model/profile";
+import { updateUserWalletBalance as updateWalletBalance } from "../services/userService";
 
 // ===============================
 // USER TRANSACTION FUNCTIONS
@@ -53,6 +54,7 @@ export const updateUserTransactionStatus = async (
     const updateData: any = {
       status,
       updatedAt: new Date(),
+      
     };
 
     if (blockchainTxHash) updateData.blockchainTxHash = blockchainTxHash;
@@ -107,47 +109,9 @@ export const createUserSpendTransaction = async (
 
 /**
  * Update user wallet balance after successful purchase
+ * Using the userService to handle different profile types
  */
-export const updateUserWalletBalance = async (
-  userId: string,
-  nwtAmount: number,
-  operation: "add" | "subtract" = "add"
-) => {
-  try {
-    // Get user profile with wallet
-    const [userProfile] = await db
-      .select()
-      .from(userProfiles)
-      .where(eq(userProfiles.userId, userId));
-
-    if (!userProfile) {
-      return { success: false, error: "User profile not found" };
-    }
-
-    const currentBalance = parseFloat(userProfile.walletBalance || "0");
-    const changeAmount = operation === "add" ? nwtAmount : -nwtAmount;
-    const newBalance = currentBalance + changeAmount;
-
-    // Prevent negative balance for spending
-    if (operation === "subtract" && newBalance < 0) {
-      return { success: false, error: "Insufficient balance" };
-    }
-
-    // Update wallet balance
-    await db
-      .update(userProfiles)
-      .set({ 
-        walletBalance: newBalance.toString(),
-        updatedAt: new Date()
-      })
-      .where(eq(userProfiles.userId, userId));
-
-    return { success: true, newBalance };
-  } catch (error) {
-    console.error("Error updating user wallet balance:", error);
-    return { success: false, error };
-  }
-};
+export const updateUserWalletBalance = updateWalletBalance;
 
 // ===============================
 // CREATOR TRANSACTION FUNCTIONS

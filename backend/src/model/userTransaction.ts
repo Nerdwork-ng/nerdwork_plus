@@ -8,7 +8,7 @@ import {
   pgEnum,
   jsonb,
 } from "drizzle-orm/pg-core";
-import { userProfiles } from "./profile";
+import { authUsers } from "./auth";
 
 // User transaction type - users can only buy or spend NWT
 export const userTransactionTypeEnum = pgEnum("user_transaction_type", [
@@ -39,7 +39,7 @@ export const userTransactions = pgTable("user_transactions", {
   // User reference
   userId: uuid("user_id")
     .notNull()
-    .references(() => userProfiles.id, { onDelete: "cascade" }),
+    .references(() => authUsers.id, { onDelete: "cascade" }),
   
   // Transaction info
   transactionType: userTransactionTypeEnum("transaction_type").notNull(),
