@@ -11,11 +11,11 @@ export const uploadImage = async (data: FormData) => {
     if (!file) {
       return { error: "No file provided." };
     }
-    const response = await axiosPostData("file-upload/media", data);
+    const response = await axiosPostData("/file-upload/media", data);
 
     return {
       success: true,
-      data: "https://" + response.data.url,
+      data: response.data.url,
       message: "Image uploaded successfully",
     };
   } catch (error: unknown) {
@@ -50,7 +50,7 @@ export const createComicAction = async (data: ComicSeriesFormData) => {
       tags: data.tags,
     };
 
-    const response = await axiosPost("comics/create", requestBody);
+    const response = await axiosPost("/comics/create", requestBody);
 
     return {
       success: true,
@@ -80,7 +80,7 @@ export const createComicAction = async (data: ComicSeriesFormData) => {
 
 export const getCreatorComics = async () => {
   try {
-    const response = await axiosGet("comics/mine");
+    const response = await axiosGet("/comics/mine");
 
     return {
       success: true,
@@ -110,7 +110,7 @@ export const getCreatorComics = async () => {
 
 export const getSingleComic = async (slug: string) => {
   try {
-    const response = await axiosGet(`comics/${slug}`);
+    const response = await axiosGet(`/comics/${slug}`);
 
     return {
       success: true,
@@ -140,7 +140,7 @@ export const getSingleComic = async (slug: string) => {
 
 export const getSingleComicReader = async (slug: string) => {
   try {
-    const response = await axiosGet(`comics/reader/${slug}`);
+    const response = await axiosGet(`/comics/reader/${slug}`);
 
     return {
       success: true,
@@ -170,7 +170,7 @@ export const getSingleComicReader = async (slug: string) => {
 
 export const getAllComicsForReader = async () => {
   try {
-    const response = await axiosGet("comics/all-comics");
+    const response = await axiosGet("/comics/all-comics");
 
     return {
       success: true,
@@ -212,7 +212,7 @@ export const createDraftChapter = async (
       comicId: comicId,
     };
 
-    const response = await axiosPost("chapters/draft", requestBody);
+    const response = await axiosPost("/chapters/draft", requestBody);
 
     return {
       success: true,
@@ -254,7 +254,7 @@ export const createComicChapter = async (
       comicId: comicId,
     };
 
-    const response = await axiosPost("chapters/create", requestBody);
+    const response = await axiosPost("/chapters/create", requestBody);
 
     return {
       success: true,
@@ -284,7 +284,7 @@ export const createComicChapter = async (
 
 export const getComicChaptersBySlug = async (slug: string) => {
   try {
-    const response = await axiosGet(`chapters/by-comic/creator/${slug}`);
+    const response = await axiosGet(`/chapters/by-comic/creator/${slug}`);
 
     return {
       success: true,
@@ -314,7 +314,7 @@ export const getComicChaptersBySlug = async (slug: string) => {
 
 export const getReaderComicChapters = async (slug: string) => {
   try {
-    const response = await axiosGet(`chapters/by-comic/reader/${slug}`);
+    const response = await axiosGet(`/chapters/by-comic/reader/${slug}`);
 
     return {
       success: true,
@@ -344,7 +344,7 @@ export const getReaderComicChapters = async (slug: string) => {
 
 export const getChapterPages = async (code: string) => {
   try {
-    const response = await axiosGet(`chapters/by-code/${code}`);
+    const response = await axiosGet(`/chapters/by-code/${code}`);
 
     return {
       success: true,

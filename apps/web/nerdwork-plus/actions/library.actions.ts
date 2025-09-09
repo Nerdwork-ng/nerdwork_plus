@@ -4,7 +4,7 @@ import axios from "axios";
 
 export const getLibraryComics = async () => {
   try {
-    const response = await axiosGet("library");
+    const response = await axiosGet("/library");
 
     return {
       success: true,
@@ -34,7 +34,7 @@ export const getLibraryComics = async () => {
 
 export const addToLibrary = async (data: string) => {
   try {
-    const response = await axiosPost("library", { comicId: data });
+    const response = await axiosPost("/library", { comicId: data });
 
     return {
       success: true,
@@ -64,7 +64,7 @@ export const addToLibrary = async (data: string) => {
 
 export const removeFromLibrary = async (comicId: string) => {
   try {
-    const response = await axiosDelete(`library/${comicId}`);
+    const response = await axiosDelete(`/library/${comicId}`);
     return {
       success: true,
       data: response.data,

@@ -1,17 +1,16 @@
 "use client";
+import { useUserSession } from "@/lib/api/queries";
 // import NFTsEmptyState from "@/app/(protected)/(creator)/_components/nfts/NFTsEmptyState";
 // import { nftData } from "@/components/data";
 // import { Button } from "@/components/ui/button";
 // import { Plus } from "lucide-react";
 // import Link from "next/link";
-import { useSession } from "next-auth/react";
 import React from "react";
 // import NFTList from "../../_components/nfts/NFTList";
 
 const NFTsPage = () => {
   // const NFTs = nftData ?? [];
-  const { data: session } = useSession();
-  const userData = session?.user;
+  const { profile } = useUserSession();
 
   return (
     <main className="font-inter text-white">
@@ -19,7 +18,7 @@ const NFTsPage = () => {
         <div>
           <h3 className="font-semibold text-[28px]">My NFTs</h3>
           <p className="text-sm text-nerd-muted">
-            Welcome back, {userData?.username}! Manage your comic series
+            Welcome back, {profile?.createdName}! Manage your comic series
           </p>
         </div>
         {/* <Link href={"/creator/nfts/new"} className="max-md:w-full">

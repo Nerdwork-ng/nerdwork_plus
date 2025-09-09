@@ -331,6 +331,8 @@ const ComicReader = ({
             }`}
           >
             <Image
+              priority
+              unoptimized
               src={page}
               width={573}
               height={880}

@@ -12,12 +12,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "from-s3-bucket.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "lh3.googleusercontent.com",
         port: "",
         pathname: "/**",
@@ -34,6 +28,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "d3q14soxsgunx0.cloudfront.net",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 
@@ -44,6 +44,8 @@ const nextConfig: NextConfig = {
         }
       : false,
   },
+
+  staticPageGenerationTimeout: 300,
 };
 
 export default nextConfig;

@@ -25,7 +25,7 @@ export const createReaderProfile = async (data: createReaderProfileData) => {
       genres: data.genres,
     };
 
-    const response = await axiosPost("profile/reader", requestBody);
+    const response = await axiosPost("/profile/reader", requestBody);
 
     return {
       success: true,
@@ -64,7 +64,7 @@ export const createCreatorProfile = async (data: createCreatorProfileData) => {
       bio: data.bio,
     };
 
-    const response = await axiosPost("profile/creator", requestBody);
+    const response = await axiosPost("/profile/creator", requestBody);
 
     return {
       success: true,
@@ -94,7 +94,7 @@ export const createCreatorProfile = async (data: createCreatorProfileData) => {
 
 export const getCreatorProfile = async () => {
   try {
-    const response = await axiosGet("profile/creator");
+    const response = await axiosGet("/profile/creator");
 
     return {
       success: true,
@@ -124,7 +124,7 @@ export const getCreatorProfile = async () => {
 
 export const getReaderProfile = async () => {
   try {
-    const response = await axiosGet("profile/reader");
+    const response = await axiosGet("/profile/reader");
 
     return {
       success: true,
@@ -154,7 +154,7 @@ export const getReaderProfile = async () => {
 
 export const setReaderPin = async (data: string) => {
   try {
-    const response = await axiosPut("profile/reader/pin", { pin: data });
+    const response = await axiosPut("/profile/reader/pin", { pin: data });
 
     return {
       success: true,

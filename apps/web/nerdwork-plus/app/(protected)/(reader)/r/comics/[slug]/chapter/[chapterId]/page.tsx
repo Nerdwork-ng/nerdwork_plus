@@ -12,9 +12,13 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import ComicInfo from "@/app/(protected)/(reader)/_components/ComicInfo";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getChapterPages } from "@/actions/comic.actions";
+import {
+  getChapterPages,
+  getReaderComicChapters,
+} from "@/actions/comic.actions";
 import LoaderScreen from "@/components/loading-screen";
 import { Chapter } from "@/lib/types";
+import Link from "next/link";
 
 const ComicReader = ({
   params,
@@ -92,6 +96,25 @@ const ComicReader = ({
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
+
+  const { data: chaptersData } = useQuery({
+    queryKey: ["chapters"],
+    queryFn: () => getReaderComicChapters(slug),
+    placeholderData: keepPreviousData,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const chapters: Chapter[] = chaptersData?.data?.data ?? [];
+
+  const currentIndex = chapters.findIndex(
+    (chapter) => chapter.uniqueCode === chapterId
+  );
+
+  const nextChapterCode =
+    currentIndex !== -1 && currentIndex < chapters.length - 1
+      ? chapters[currentIndex + 1].uniqueCode
+      : null;
 
   if (isLoading) return <LoaderScreen />;
 
@@ -293,6 +316,8 @@ const ComicReader = ({
                 className="w-1/2 flex justify-center"
               >
                 <Image
+                  priority
+                  unoptimized
                   src={page}
                   width={573}
                   height={880}
@@ -337,6 +362,13 @@ const ComicReader = ({
             />
           </figure>
         ))}
+
+        <Link
+          className="text-center"
+          href={`/r/comics/${slug}/chapter/${nextChapterCode}`}
+        >
+          <Button>Next Chapter</Button>
+        </Link>
       </main>
       {FooterPanel}
     </>

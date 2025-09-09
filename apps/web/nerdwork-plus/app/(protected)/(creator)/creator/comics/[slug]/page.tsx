@@ -169,11 +169,13 @@ const ComicDetailsPage = ({
 
         {comic?.image && (
           <Image
+            priority
+            unoptimized
             src={comic?.image}
             width={322}
             height={477}
             alt={`${comic.title} cover image`}
-            className="w-[322px] h-[477px] rounded-[8px] object-cover max-md:hidden"
+            className="w-[322px] h-[477px] !rounded-[8px] object-contain max-md:hidden"
           />
         )}
       </section>
