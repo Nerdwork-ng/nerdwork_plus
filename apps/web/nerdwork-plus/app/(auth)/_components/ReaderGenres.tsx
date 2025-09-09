@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 
 const allGenres = [
   "Fantasy",
@@ -24,8 +24,10 @@ const allGenres = [
 
 export function ReaderGenres({
   onSelectGenres,
+  isLoading,
 }: {
   onSelectGenres: (genres: string[]) => void;
+  isLoading: boolean;
 }) {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
@@ -61,12 +63,15 @@ export function ReaderGenres({
             </button>
           ))}
         </div>
-        <Button
+        <LoadingButton
           onClick={handleContinue}
+          isLoading={isLoading}
+          loadingText="Loading..."
+          disabled={isLoading}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
           Continue
-        </Button>
+        </LoadingButton>
       </div>
     </div>
   );

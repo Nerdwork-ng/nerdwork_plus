@@ -199,7 +199,7 @@ const ReaderNav = () => {
                 <MenubarContent className="bg-[#1D1E21] text-white border-0 absolute -right-[30px]">
                   <MenubarItem>
                     <Link
-                      className="flex items-center gap-3"
+                      className="flex items-center gap-3 w-full"
                       href={"/r/comics"}
                     >
                       <Book className="text-white" />
@@ -208,7 +208,7 @@ const ReaderNav = () => {
                   </MenubarItem>
                   <MenubarItem>
                     <Link
-                      className="flex items-center gap-3"
+                      className="flex items-center gap-3 w-full"
                       href={"/r/library"}
                     >
                       <BookOpen className="text-white" />
@@ -216,14 +216,14 @@ const ReaderNav = () => {
                     </Link>
                   </MenubarItem>
                   <MenubarItem>
-                    <Link className="flex items-center gap-3" href={""}>
+                    <Link className="flex items-center gap-3 w-full" href={""}>
                       <User2 className="text-white" />
                       Profile
                     </Link>
                   </MenubarItem>
                   <MenubarItem>
                     <Link
-                      className="flex items-center gap-3"
+                      className="flex items-center gap-3 w-full"
                       href={"/r/wallet"}
                     >
                       <Wallet2 className="text-white" /> Wallet
@@ -304,30 +304,39 @@ const ReaderNav = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-[#1D1E21] text-white border-0 mx-5 w-[250px] mt-2">
               <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={"/r/comics"}>
+                <Link
+                  className="flex items-center gap-3 w-full"
+                  href={"/r/comics"}
+                >
                   <LibraryBig className="text-white" /> Comics
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Link
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-3 w-full"
                   href={"/r/marketplace"}
                 >
                   <ShoppingBag className="text-white" /> Marketplace
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={"/r/library"}>
+                <Link
+                  className="flex items-center gap-3 w-full"
+                  href={"/r/library"}
+                >
                   <Book className="text-white" /> Library
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={""}>
+                <Link className="flex items-center gap-3 w-full" href={""}>
                   <User2 className="text-white" /> Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={"/r/wallet"}>
+                <Link
+                  className="flex items-center gap-3 w-full"
+                  href={"/r/wallet"}
+                >
                   <Wallet2 className="text-white" /> Wallet
                 </Link>
               </DropdownMenuItem>
@@ -344,7 +353,10 @@ const ReaderNav = () => {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={"/onboarding"}>
+                <Link
+                  className="flex items-center gap-3 w-full"
+                  href={"/onboarding"}
+                >
                   <Plus className="text-white" /> Become a Creator
                 </Link>
               </DropdownMenuItem>

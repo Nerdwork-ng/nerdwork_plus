@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../homepage/Navbar";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 export default function ProductHero() {
   return (
@@ -33,9 +34,11 @@ export default function ProductHero() {
               className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4 w-"
               placeholder="Email address"
             />
-            <Button variant={"primary"} className="h-full font-inter">
-              Join Waitlist
-            </Button>
+            <Link href={"/signin"}>
+              <Button variant={"primary"} className="h-full font-inter">
+                Join Waitlist
+              </Button>
+            </Link>
           </form>
         </section>
       </div>

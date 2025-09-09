@@ -7,6 +7,7 @@ import Instagram from "@/assets/socials/instagram.svg";
 import Twitter from "@/assets/socials/twitter.svg";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -20,9 +21,11 @@ export default function Footer() {
             className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4 w-"
             placeholder="Email address"
           />
-          <Button variant={"primary"} className="h-full font-inter">
-            Sign Up
-          </Button>
+          <Link href={"/signin"}>
+            <Button variant={"primary"} className="h-full font-inter">
+              Sign Up
+            </Button>
+          </Link>
         </form>
       </section>
       <Image
@@ -35,9 +38,9 @@ export default function Footer() {
       <section className="flex justify-between lg:w-[36%] text-sm max-md:gap-3 md:gap-10 lg::-ml-10 text-[#DEDEDE9E]">
         <ul className="flex flex-col gap-3">
           <li className="text-white text-nowrap">Quick Links</li>
-          <li>Home</li>
-          <li>Nerdwork+</li>
-          <li>Events</li>
+          <Link href={"/"}>Home</Link>
+          <Link href={"/signin"}>Nerdwork+</Link>
+          <Link href={"/events"}>Events</Link>
           <li>Company</li>
         </ul>
         <ul className="flex flex-col gap-3">

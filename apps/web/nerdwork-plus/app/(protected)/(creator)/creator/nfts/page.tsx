@@ -1,3 +1,5 @@
+"use client";
+import { useUserSession } from "@/lib/api/queries";
 // import NFTsEmptyState from "@/app/(protected)/(creator)/_components/nfts/NFTsEmptyState";
 // import { nftData } from "@/components/data";
 // import { Button } from "@/components/ui/button";
@@ -8,14 +10,15 @@ import React from "react";
 
 const NFTsPage = () => {
   // const NFTs = nftData ?? [];
+  const { profile } = useUserSession();
 
   return (
     <main className="font-inter text-white">
-      <section className="max-w-[1300px] mx-auto px-5 flex max-md:flex-col justify-between gap-4 md:items-center py-8">
+      <section className="max-w-[1300px] mx-auto px-5 flex flex-col gap-4 py-8">
         <div>
           <h3 className="font-semibold text-[28px]">My NFTs</h3>
           <p className="text-sm text-nerd-muted">
-            Welcome back, Creatorba09! Manage your comic series
+            Welcome back, {profile?.createdName}! Manage your comic series
           </p>
         </div>
         {/* <Link href={"/creator/nfts/new"} className="max-md:w-full">

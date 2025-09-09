@@ -3,32 +3,37 @@ export type Comic = {
   image: string;
   title: string;
   description: string;
-  status: "upcoming" | "draft" | "scheduled" | "published";
-  chapters: number;
-  slug: string;
+  comicStatus: "upcoming" | "draft" | "scheduled" | "published";
+  noOfChapters: number;
+  slug?: string;
   updatedAt: string;
   createdAt: string;
-  creatorName: string;
-  genre?: Array<string>;
+  creatorName?: string;
+  genre?: string[];
   ageRating?: string;
   isPaid?: boolean;
   isOngoing?: boolean;
 };
 
 export type Chapter = {
-  id: number;
+  id: string;
+  serialNo: number;
   image: string;
   title: string;
-  description: string;
-  pages: number;
-  status: "published" | "scheduled" | "draft";
+  summary: string;
+  pages: string[];
+  count?: number;
+  chapterStatus: "published" | "scheduled" | "draft";
   date: string;
   views?: number;
   read?: boolean;
   unlocked?: boolean;
-  code?: string;
-  comicSlug?: string;
+  uniqueCode?: string;
+  slug?: string;
   chapterPages: string[];
+  chapterType?: "free" | "paid";
+  price?: number;
+  updatedAt: string;
 };
 
 export type Transaction = {
@@ -41,7 +46,7 @@ export type Transaction = {
 };
 
 export type NFTCollectible = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   image: string;

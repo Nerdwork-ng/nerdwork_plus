@@ -51,6 +51,8 @@ const SortableFileItem = ({
       className="relative w-full aspect-[2/3] group overflow-hidden border-gray-700"
     >
       <Image
+        priority
+        unoptimized
         src={url}
         width={187}
         height={281}
@@ -93,6 +95,7 @@ export function MultiFileUpload({ field }: MultiFileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const pages = (field.value as string[]) || [];
 
   const {
@@ -106,14 +109,16 @@ export function MultiFileUpload({ field }: MultiFileUploadProps) {
 
   useEffect(() => {
     if (isSuccess && uploadResults) {
-      const newUrls = uploadResults
+      const newFullUrls = uploadResults
         .filter((result) => result?.success && result.data)
         .map((result) => result.data);
 
-      const updatedPages = [...pages, ...newUrls];
-      field.onChange(updatedPages);
+      const newCleanUrls = newFullUrls.map((url) => url.split("?")[0]);
 
-      const successfulUploads = newUrls.length;
+      setPreviewUrls((prev) => [...prev, ...newFullUrls]);
+      field.onChange([...pages, ...newCleanUrls]);
+
+      const successfulUploads = newCleanUrls.length;
       const failedUploads = uploadResults.length - successfulUploads;
 
       if (successfulUploads > 0) {
@@ -226,7 +231,7 @@ export function MultiFileUpload({ field }: MultiFileUploadProps) {
           <SortableContext items={pages}>
             <p className="font-semibold">Pages ({pages.length})</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {pages.map((url, index) => (
+              {previewUrls.map((url, index) => (
                 <SortableFileItem
                   key={url}
                   url={url}
