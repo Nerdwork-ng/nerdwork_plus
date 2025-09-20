@@ -11,4 +11,3 @@ router.get("/my-wallet", authenticate, (req: AuthRequest, res: Response) => {
 });
 
 export default router;
-// correct the route name

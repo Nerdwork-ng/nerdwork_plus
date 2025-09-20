@@ -2,12 +2,13 @@ import { eq } from "drizzle-orm";
 import { db } from "../config/db";
 import { userWallets } from "../model/wallet";
 import { creditWallet, debitWallet } from "../services/wallet.service";
+import { getUserJwtFromToken } from "./library.controller";
 
 //create wallet controller
 export async function creditWalletController(req, res) {
   try {
-    const userId = req.user.id; // assuming `authenticate` middleware attaches user
-    const { amount } = req.body;
+    const userId = getUserJwtFromToken(req);
+    const { amount, pin, comicSlug } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });

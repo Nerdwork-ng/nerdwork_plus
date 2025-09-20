@@ -7,26 +7,24 @@ import { authenticate } from "./middleware/common/auth";
 import nftRoutes from "./routes/nft.routes";
 import walletRoutes from "./routes/wallet.routes";
 import profileRoutes from "./routes/profile.routes";
-import fileRoutes from "./routes/file.routes";
 import comicRoutes from "./routes/comic.routes";
-import TransactionRoutes from "./routes/transaction.routes"
-import ChapterRoutes from "./routes/chapter.routes"
-import NftRoutes from "./routes/nft.routes"
+import chapterRoutes from "./routes/chapter.routes";
+import fileRoutes from "./routes/files.routes";
+import libraryRoutes from "./routes/library.routes";
+import transactionRoutes from "./routes/transaction.routes";
 
 app.use("/auth", authRoutes);
-app.use("/payment", authenticate, paymentRoutes);
+app.use("/payment", paymentRoutes);
 app.use("/nft", authenticate, nftRoutes);
 app.use("/wallet", authenticate, walletRoutes);
 app.use("/profile", profileRoutes);
-app.use("/file", fileRoutes);
 app.use("/comics", comicRoutes);
-app.use("/transaction", TransactionRoutes)
-app.use("chapters", ChapterRoutes)
-app.use("nft", NftRoutes)
+app.use("/chapters", chapterRoutes);
+app.use("/file-upload", fileRoutes);
+app.use("/library", libraryRoutes);
+app.use("/transactions", transactionRoutes);
 
-
-const PORT = process.env.PORT || 5000;
-console.log(PORT)
+const PORT = 5000;
 /**
  * @swagger
  * /users:
@@ -39,10 +37,6 @@ console.log(PORT)
  */
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ data: `Hello, world! - ${PORT}` });
-});
-
-app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
 app.use(globalNotFoundHandler);

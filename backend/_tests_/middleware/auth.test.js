@@ -1,36 +1,101 @@
-import request from "supertest";
-import express from "express";
-import jwt from "jsonwebtoken";
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var supertest_1 = __importDefault(require("supertest"));
+var express_1 = __importDefault(require("express"));
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+var auth_1 = require("../../src/middleware/common/auth");
 process.env.JWT_SECRET = "testsecret"; // Use a consistent secret for tests
-import { authenticate } from "../../src/middleware/common/auth";
-const app = express();
-app.use(express.json());
-app.get("/protected", authenticate, (req, res) => {
+var app = (0, express_1.default)();
+app.use(express_1.default.json());
+app.get("/protected", auth_1.authenticate, function (req, res) {
     res
         .status(200)
         .json({ message: "Access granted", userId: req.userId });
 });
-describe("Auth Middleware", () => {
-    it("should return 401 if no token", async () => {
-        const res = await request(app).get("/protected");
-        expect(res.statusCode).toBe(401);
-    });
-    it("should return 401 for invalid token", async () => {
-        const res = await request(app)
-            .get("/protected")
-            .set("Authorization", "Bearer invalidtoken");
-        expect(res.statusCode).toBe(401); // Updated to match actual behavior
-    });
-    it("should pass and return 200 for valid token", async () => {
-        const validToken = jwt.sign({ userId: "test-id" }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
+describe("Auth Middleware", function () {
+    it("should return 401 if no token", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(app).get("/protected")];
+                case 1:
+                    res = _a.sent();
+                    expect(res.statusCode).toBe(401);
+                    return [2 /*return*/];
+            }
         });
-        const res = await request(app)
-            .get("/protected")
-            .set("Authorization", `Bearer ${validToken}`);
-        // This test might still fail if middleware doesn't pick up JWT_SECRET properly
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty("userId", "test-id");
-    });
+    }); });
+    it("should return 401 for invalid token", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(app)
+                        .get("/protected")
+                        .set("Authorization", "Bearer invalidtoken")];
+                case 1:
+                    res = _a.sent();
+                    expect(res.statusCode).toBe(401); // Updated to match actual behavior
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+    it("should pass and return 200 for valid token", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var validToken, res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    validToken = jsonwebtoken_1.default.sign({ userId: "test-id" }, process.env.JWT_SECRET, {
+                        expiresIn: "1h",
+                    });
+                    return [4 /*yield*/, (0, supertest_1.default)(app)
+                            .get("/protected")
+                            .set("Authorization", "Bearer ".concat(validToken))];
+                case 1:
+                    res = _a.sent();
+                    // This test might still fail if middleware doesn't pick up JWT_SECRET properly
+                    expect(res.statusCode).toBe(200);
+                    expect(res.body).toHaveProperty("userId", "test-id");
+                    return [2 /*return*/];
+            }
+        });
+    }); });
 });
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXV0aC50ZXN0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiYXV0aC50ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sT0FBTyxNQUFNLFdBQVcsQ0FBQztBQUNoQyxPQUFPLE9BQThCLE1BQU0sU0FBUyxDQUFDO0FBQ3JELE9BQU8sR0FBRyxNQUFNLGNBQWMsQ0FBQztBQUUvQixPQUFPLENBQUMsR0FBRyxDQUFDLFVBQVUsR0FBRyxZQUFZLENBQUMsQ0FBQyxvQ0FBb0M7QUFDM0UsT0FBTyxFQUFFLFlBQVksRUFBRSxNQUFNLGtDQUFrQyxDQUFDO0FBRWhFLE1BQU0sR0FBRyxHQUFHLE9BQU8sRUFBRSxDQUFDO0FBQ3RCLEdBQUcsQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLElBQUksRUFBRSxDQUFDLENBQUM7QUFFeEIsR0FBRyxDQUFDLEdBQUcsQ0FBQyxZQUFZLEVBQUUsWUFBWSxFQUFFLENBQUMsR0FBWSxFQUFFLEdBQWEsRUFBRSxFQUFFO0lBQ2xFLEdBQUc7U0FDQSxNQUFNLENBQUMsR0FBRyxDQUFDO1NBQ1gsSUFBSSxDQUFDLEVBQUUsT0FBTyxFQUFFLGdCQUFnQixFQUFFLE1BQU0sRUFBRyxHQUFXLENBQUMsTUFBTSxFQUFFLENBQUMsQ0FBQztBQUN0RSxDQUFDLENBQUMsQ0FBQztBQUVILFFBQVEsQ0FBQyxpQkFBaUIsRUFBRSxHQUFHLEVBQUU7SUFDL0IsRUFBRSxDQUFDLCtCQUErQixFQUFFLEtBQUssSUFBSSxFQUFFO1FBQzdDLE1BQU0sR0FBRyxHQUFHLE1BQU0sT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxZQUFZLENBQUMsQ0FBQztRQUNqRCxNQUFNLENBQUMsR0FBRyxDQUFDLFVBQVUsQ0FBQyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztJQUNuQyxDQUFDLENBQUMsQ0FBQztJQUVILEVBQUUsQ0FBQyxxQ0FBcUMsRUFBRSxLQUFLLElBQUksRUFBRTtRQUNuRCxNQUFNLEdBQUcsR0FBRyxNQUFNLE9BQU8sQ0FBQyxHQUFHLENBQUM7YUFDM0IsR0FBRyxDQUFDLFlBQVksQ0FBQzthQUNqQixHQUFHLENBQUMsZUFBZSxFQUFFLHFCQUFxQixDQUFDLENBQUM7UUFDL0MsTUFBTSxDQUFDLEdBQUcsQ0FBQyxVQUFVLENBQUMsQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxtQ0FBbUM7SUFDdkUsQ0FBQyxDQUFDLENBQUM7SUFFSCxFQUFFLENBQUMsNENBQTRDLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDMUQsTUFBTSxVQUFVLEdBQUcsR0FBRyxDQUFDLElBQUksQ0FDekIsRUFBRSxNQUFNLEVBQUUsU0FBUyxFQUFFLEVBQ3JCLE9BQU8sQ0FBQyxHQUFHLENBQUMsVUFBVyxFQUN2QjtZQUNFLFNBQVMsRUFBRSxJQUFJO1NBQ2hCLENBQ0YsQ0FBQztRQUVGLE1BQU0sR0FBRyxHQUFHLE1BQU0sT0FBTyxDQUFDLEdBQUcsQ0FBQzthQUMzQixHQUFHLENBQUMsWUFBWSxDQUFDO2FBQ2pCLEdBQUcsQ0FBQyxlQUFlLEVBQUUsVUFBVSxVQUFVLEVBQUUsQ0FBQyxDQUFDO1FBRWhELCtFQUErRTtRQUMvRSxNQUFNLENBQUMsR0FBRyxDQUFDLFVBQVUsQ0FBQyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNqQyxNQUFNLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLGNBQWMsQ0FBQyxRQUFRLEVBQUUsU0FBUyxDQUFDLENBQUM7SUFDdkQsQ0FBQyxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCByZXF1ZXN0IGZyb20gXCJzdXBlcnRlc3RcIjtcclxuaW1wb3J0IGV4cHJlc3MsIHsgUmVxdWVzdCwgUmVzcG9uc2UgfSBmcm9tIFwiZXhwcmVzc1wiO1xyXG5pbXBvcnQgand0IGZyb20gXCJqc29ud2VidG9rZW5cIjtcclxuXHJcbnByb2Nlc3MuZW52LkpXVF9TRUNSRVQgPSBcInRlc3RzZWNyZXRcIjsgLy8gVXNlIGEgY29uc2lzdGVudCBzZWNyZXQgZm9yIHRlc3RzXHJcbmltcG9ydCB7IGF1dGhlbnRpY2F0ZSB9IGZyb20gXCIuLi8uLi9zcmMvbWlkZGxld2FyZS9jb21tb24vYXV0aFwiO1xyXG5cclxuY29uc3QgYXBwID0gZXhwcmVzcygpO1xyXG5hcHAudXNlKGV4cHJlc3MuanNvbigpKTtcclxuXHJcbmFwcC5nZXQoXCIvcHJvdGVjdGVkXCIsIGF1dGhlbnRpY2F0ZSwgKHJlcTogUmVxdWVzdCwgcmVzOiBSZXNwb25zZSkgPT4ge1xyXG4gIHJlc1xyXG4gICAgLnN0YXR1cygyMDApXHJcbiAgICAuanNvbih7IG1lc3NhZ2U6IFwiQWNjZXNzIGdyYW50ZWRcIiwgdXNlcklkOiAocmVxIGFzIGFueSkudXNlcklkIH0pO1xyXG59KTtcclxuXHJcbmRlc2NyaWJlKFwiQXV0aCBNaWRkbGV3YXJlXCIsICgpID0+IHtcclxuICBpdChcInNob3VsZCByZXR1cm4gNDAxIGlmIG5vIHRva2VuXCIsIGFzeW5jICgpID0+IHtcclxuICAgIGNvbnN0IHJlcyA9IGF3YWl0IHJlcXVlc3QoYXBwKS5nZXQoXCIvcHJvdGVjdGVkXCIpO1xyXG4gICAgZXhwZWN0KHJlcy5zdGF0dXNDb2RlKS50b0JlKDQwMSk7XHJcbiAgfSk7XHJcblxyXG4gIGl0KFwic2hvdWxkIHJldHVybiA0MDEgZm9yIGludmFsaWQgdG9rZW5cIiwgYXN5bmMgKCkgPT4ge1xyXG4gICAgY29uc3QgcmVzID0gYXdhaXQgcmVxdWVzdChhcHApXHJcbiAgICAgIC5nZXQoXCIvcHJvdGVjdGVkXCIpXHJcbiAgICAgIC5zZXQoXCJBdXRob3JpemF0aW9uXCIsIFwiQmVhcmVyIGludmFsaWR0b2tlblwiKTtcclxuICAgIGV4cGVjdChyZXMuc3RhdHVzQ29kZSkudG9CZSg0MDEpOyAvLyBVcGRhdGVkIHRvIG1hdGNoIGFjdHVhbCBiZWhhdmlvclxyXG4gIH0pO1xyXG5cclxuICBpdChcInNob3VsZCBwYXNzIGFuZCByZXR1cm4gMjAwIGZvciB2YWxpZCB0b2tlblwiLCBhc3luYyAoKSA9PiB7XHJcbiAgICBjb25zdCB2YWxpZFRva2VuID0gand0LnNpZ24oXHJcbiAgICAgIHsgdXNlcklkOiBcInRlc3QtaWRcIiB9LFxyXG4gICAgICBwcm9jZXNzLmVudi5KV1RfU0VDUkVUISxcclxuICAgICAge1xyXG4gICAgICAgIGV4cGlyZXNJbjogXCIxaFwiLFxyXG4gICAgICB9XHJcbiAgICApO1xyXG5cclxuICAgIGNvbnN0IHJlcyA9IGF3YWl0IHJlcXVlc3QoYXBwKVxyXG4gICAgICAuZ2V0KFwiL3Byb3RlY3RlZFwiKVxyXG4gICAgICAuc2V0KFwiQXV0aG9yaXphdGlvblwiLCBgQmVhcmVyICR7dmFsaWRUb2tlbn1gKTtcclxuXHJcbiAgICAvLyBUaGlzIHRlc3QgbWlnaHQgc3RpbGwgZmFpbCBpZiBtaWRkbGV3YXJlIGRvZXNuJ3QgcGljayB1cCBKV1RfU0VDUkVUIHByb3Blcmx5XHJcbiAgICBleHBlY3QocmVzLnN0YXR1c0NvZGUpLnRvQmUoMjAwKTtcclxuICAgIGV4cGVjdChyZXMuYm9keSkudG9IYXZlUHJvcGVydHkoXCJ1c2VySWRcIiwgXCJ0ZXN0LWlkXCIpO1xyXG4gIH0pO1xyXG59KTtcclxuIl19

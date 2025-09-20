@@ -6,9 +6,11 @@ import {
   varchar,
   pgEnum,
   uuid,
-  boolean,
+  doublePrecision,
+  unique,
 } from "drizzle-orm/pg-core";
 import { comics, comicStatusEnum } from "./comic"; // assuming you already have comics entity
+import { readerProfile } from "./profile";
 
 // Enum for chapter type
 export const chapterTypeEnum = pgEnum("chapter_type", ["free", "paid"]);
@@ -17,22 +19,56 @@ export const chapters = pgTable("chapters", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: varchar("title", { length: 255 }).notNull(),
   chapterType: chapterTypeEnum("chapter_type").default("free").notNull(),
-  price: integer("price").default(0).notNull(),
+  price: doublePrecision("price").default(0).notNull(),
   summary: text("summary"),
-  pages: text("pages").array().notNull(),
-  chapterNumber: integer("chapter_number").default(1), // User can reorder
-  chapterStatus: comicStatusEnum("chapter_status").default("draft"),
   serialNo: integer("serial_no").notNull().default(0),
-
+  pages: text("pages").array().notNull(),
+  chapterStatus: comicStatusEnum("chapter_status").default("draft"),
   comicId: uuid("comic_id")
     .notNull()
     .references(() => comics.id, { onDelete: "cascade" }),
-    pageCount: integer("page_count").notNull().default(0),
   uniqueCode: varchar("unique_code", { length: 4 }).unique().notNull(),
-  isDraft: boolean("is_draft").notNull().default(true), // Starts as draft
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export type InsertChapter = typeof chapters.$inferInsert;
-export type SelectChapter = typeof chapters.$inferSelect;
+export const paidChapters = pgTable("paid_Chapters", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  readerId: uuid("reader_id")
+    .notNull()
+    .references(() => readerProfile.id, { onDelete: "cascade" }),
+
+  chapterId: uuid("chapter_id")
+    .notNull()
+    .references(() => chapters.id, { onDelete: "cascade" }),
+  paidAt: timestamp("paid_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const chapterViews = pgTable("chapter_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  readerId: uuid("reader_id")
+    .notNull()
+    .references(() => readerProfile.id, { onDelete: "cascade" }),
+
+  chapterId: uuid("chapter_id")
+    .notNull()
+    .references(() => chapters.id, { onDelete: "cascade" }),
+
+  viewedAt: timestamp("viewed_at").defaultNow().notNull(),
+});
+
+export const chapterLikes = pgTable("chapter_likes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  readerId: uuid("reader_id")
+    .notNull()
+    .references(() => readerProfile.id, { onDelete: "cascade" }),
+
+  chapterId: uuid("chapter_id")
+    .notNull()
+    .references(() => chapters.id, { onDelete: "cascade" }),
+
+  viewedAt: timestamp("viewed_at").defaultNow().notNull(),
+});

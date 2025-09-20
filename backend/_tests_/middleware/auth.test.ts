@@ -1,9 +1,9 @@
 import request from "supertest";
 import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { authenticate } from "../../src/middleware/common/auth";
 
 process.env.JWT_SECRET = "testsecret"; // Use a consistent secret for tests
-import { authenticate } from "../../src/middleware/common/auth";
 
 const app = express();
 app.use(express.json());

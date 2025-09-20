@@ -40,27 +40,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var supertest_1 = __importDefault(require("supertest"));
-var src_1 = require("../src");
+var index_1 = require("../src/index");
 var db_1 = require("../src/config/db");
 var wallet_1 = require("../src/model/wallet");
-var drizzle_orm_1 = require("drizzle-orm");
-describe("POST /wallet/debit", function () {
-    var userId = "test-user";
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+// mock secret same as in your auth middleware
+var JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+describe("GET /wallet/balance", function () {
+    var token;
+    var userId;
     beforeAll(function () { return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db_1.db.insert(wallet_1.userWallets).values({
-                        userProfileId: userId,
-                        nwtBalance: 100,
-                        nwtLockedBalance: 0,
-                        kycStatus: "none",
-                        kycLevel: 0,
-                        primaryWalletAddress: null,
-                        spendingLimitDaily: null,
-                        spendingLimitMonthly: null,
-                    })];
+                case 0:
+                    // Create mock user wallet in DB
+                    userId = "11111111-1111-1111-1111-111111111111";
+                    return [4 /*yield*/, db_1.db.insert(wallet_1.userWallets).values({
+                            id: "22222222-2222-2222-2222-222222222222",
+                            userProfileId: userId,
+                            nwtBalance: 500,
+                            nwtLockedBalance: 50,
+                            primaryWalletAddress: "0x123456789",
+                            kycStatus: "none",
+                            kycLevel: 0,
+                            spendingLimitDaily: 1000,
+                            spendingLimitMonthly: 5000,
+                        })];
                 case 1:
                     _a.sent();
+                    // sign JWT
+                    token = jsonwebtoken_1.default.sign({ userId: userId }, JWT_SECRET, { expiresIn: "1h" });
                     return [2 /*return*/];
             }
         });
@@ -68,55 +77,55 @@ describe("POST /wallet/debit", function () {
     afterAll(function () { return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, db_1.db.delete(wallet_1.userWallets).where((0, drizzle_orm_1.eq)(wallet_1.userWallets.userProfileId, userId))];
+                case 0: 
+                // cleanup test wallet
+                return [4 /*yield*/, db_1.db.delete(wallet_1.userWallets).where(wallet_1.userWallets.userProfileId.eq(userId))];
                 case 1:
+                    // cleanup test wallet
                     _a.sent();
                     return [2 /*return*/];
             }
         });
     }); });
-    it("should debit successfully if funds are sufficient", function () { return __awaiter(void 0, void 0, void 0, function () {
+    it("should return wallet balance for authenticated user", function () { return __awaiter(void 0, void 0, void 0, function () {
         var res;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, (0, supertest_1.default)(src_1.app)
-                        .post("/wallet/debit")
-                        .send({ userId: userId, amount: 50 })];
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(index_1.app)
+                        .get("/wallet/balance")
+                        .set("Authorization", "Bearer ".concat(token))];
                 case 1:
                     res = _a.sent();
                     expect(res.status).toBe(200);
-                    expect(res.body.success).toBe(true);
-                    expect(res.body.balance).toBe(50);
+                    expect(res.body).toHaveProperty("balance", 500);
                     return [2 /*return*/];
             }
         });
     }); });
-    it("should fail if insufficient funds", function () { return __awaiter(void 0, void 0, void 0, function () {
+    it("should return 401 if no token is provided", function () { return __awaiter(void 0, void 0, void 0, function () {
         var res;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, (0, supertest_1.default)(src_1.app)
-                        .post("/wallet/debit")
-                        .send({ userId: userId, amount: 200 })];
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(index_1.app).get("/wallet/balance")];
                 case 1:
                     res = _a.sent();
-                    expect(res.status).toBe(400);
-                    expect(res.body.error).toBe("Insufficient funds");
+                    expect(res.status).toBe(401);
                     return [2 /*return*/];
             }
         });
     }); });
-    it("should fail if wallet not found", function () { return __awaiter(void 0, void 0, void 0, function () {
-        var res;
+    it("should return 404 if wallet not found", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var fakeToken, res;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, (0, supertest_1.default)(src_1.app)
-                        .post("/wallet/debit")
-                        .send({ userId: "nonexistent", amount: 10 })];
+                case 0:
+                    fakeToken = jsonwebtoken_1.default.sign({ userId: "33333333-3333-3333-3333-333333333333" }, JWT_SECRET, { expiresIn: "1h" });
+                    return [4 /*yield*/, (0, supertest_1.default)(index_1.app)
+                            .get("/wallet/balance")
+                            .set("Authorization", "Bearer ".concat(fakeToken))];
                 case 1:
                     res = _a.sent();
                     expect(res.status).toBe(404);
-                    expect(res.body.error).toBe("Wallet not found");
                     return [2 /*return*/];
             }
         });
