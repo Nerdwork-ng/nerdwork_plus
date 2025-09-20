@@ -11,7 +11,9 @@
     "test": "jest",
     "generate:dev": "drizzle-kit generate --config=./src/config/drizzle-dev.config.ts",
     "migrate:dev": "drizzle-kit migrate --config=./src/config/drizzle-dev.config.ts",
-    "push:dev": "drizzle-kit push --config=./src/config/drizzle-dev.config.ts"
+    "push:dev": "drizzle-kit push --config=./src/config/drizzle-dev.config.ts",
+    "test:backend": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
