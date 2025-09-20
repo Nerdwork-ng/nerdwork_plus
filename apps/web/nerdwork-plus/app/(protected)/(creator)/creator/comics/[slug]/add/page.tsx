@@ -61,14 +61,14 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     queryKey: ["comic"],
     queryFn: () => getSingleComic(slug),
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
   const comic: Comic = comicData?.data?.comic;
   const comicId = comic?.id;
 
-  const [loading, setLoading] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [draftLoading, setDraftLoading] = useState(false);
 
   const form = useForm<z.infer<typeof chapterSchema>>({
     resolver: zodResolver(chapterSchema),
@@ -82,7 +82,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   });
 
   const handleDraftChapter = async () => {
-    setLoading(true);
+    setDraftLoading(true);
     const data = form.getValues();
     try {
       const response = await createDraftChapter(data, comicId);
@@ -100,13 +100,13 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       toast.error("An unexpected error occurred.");
       console.error(err);
     } finally {
-      setLoading(false);
+      setDraftLoading(false);
     }
   };
 
   const onSubmit = async (data: z.infer<typeof chapterSchema>) => {
     console.log("New Chapter data:", data);
-    setLoading(true);
+    setPublishLoading(true);
     try {
       const response = await createComicChapter(data, comicId);
 
@@ -123,7 +123,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       toast.error("An unexpected error occurred.");
       console.error(err);
     } finally {
-      setLoading(false);
+      setPublishLoading(false);
     }
   };
   return (
@@ -284,18 +284,21 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
           {/* Schedule and Publish */}
           <div className="flex flex-wrap justify-end gap-4 items-center mt-8">
-            <Button variant="outline">
+            <Button variant="outline" disabled={draftLoading || publishLoading}>
               <Eye />
               Preview Chapter
             </Button>
-            <Button
+            <LoadingButton
+              isLoading={draftLoading}
+              loadingText="Saving..."
+              disabled={draftLoading || publishLoading}
               type="button"
               onClick={handleDraftChapter}
               variant="outline"
             >
               <Save />
               Save as Draft
-            </Button>
+            </LoadingButton>
             {/* <div className="p-4 rounded-lg bg-[#1D1E21] border border-[#292A2E]"> */}
             {/* <FormField
               control={form.control}
@@ -351,8 +354,9 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
               <></>
             ) : (
               <LoadingButton
-                isLoading={loading}
+                isLoading={publishLoading}
                 loadingText="Publishing..."
+                disabled={draftLoading || publishLoading}
                 type="submit"
                 variant={"primary"}
                 className=""

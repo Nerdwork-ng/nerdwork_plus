@@ -61,20 +61,16 @@ export default function ReaderOnboardingFlow() {
       case 1:
         return <ReaderForm onNext={handleFinishProfile} />;
       case 2:
-        return <ReaderGenres onSelectGenres={handleSelectGenres} />;
+        return (
+          <ReaderGenres
+            isLoading={loading}
+            onSelectGenres={handleSelectGenres}
+          />
+        );
       default:
         return null;
     }
   };
 
-  return (
-    <div className="relative min-h-[75vh] font-inter">
-      {renderStep()}{" "}
-      {loading && (
-        <p className="absolute bottom-1/5 right-0 left-0 text-center transition fade-in">
-          Processing...
-        </p>
-      )}
-    </div>
-  );
+  return <div className="relative min-h-[75vh] font-inter">{renderStep()}</div>;
 }

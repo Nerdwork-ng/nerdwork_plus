@@ -4,9 +4,14 @@ import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Chapter } from "@/lib/types";
 import { Popover } from "@radix-ui/react-popover";
 import { Info } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import React from "react";
 
-const ComicInfo = ({ chapter }: { chapter: Chapter }) => {
+const ComicInfo = ({ chapter, slug }: { chapter: Chapter; slug: string }) => {
+  const { data: session } = useSession();
+  const userType = session?.cProfile;
+  const route = userType ? "creator" : "r";
   return (
     <>
       <Popover>
@@ -19,9 +24,11 @@ const ComicInfo = ({ chapter }: { chapter: Chapter }) => {
             <Info size={16} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="border-nerd-default flex flex-col items-center gap-2 font-inter text-white bg-[#151515]">
+        <PopoverContent className="border-nerd-default flex flex-col text-sm items-center gap-4 font-inter text-white bg-[#151515]">
           <p className="text-center">{chapter?.title}</p>
-          <Button>Save Progress</Button>
+          <Link href={`/${route}/comics/${slug}`}>
+            <Button>Go back</Button>
+          </Link>
         </PopoverContent>
       </Popover>
     </>

@@ -8,7 +8,7 @@ import {
   HelpCircle,
   LibraryBig,
   Menu,
-  Plus,
+  // Plus,
   Search,
   ShoppingBag,
   User2,
@@ -94,14 +94,14 @@ export default function CreatorNav() {
               </MenubarTrigger>
               <MenubarContent className="bg-[#1D1E21] text-white border-0 absolute -right-[30px]">
                 <MenubarItem>
-                  <Link className="flex items-center gap-3" href={""}>
+                  <Link className="flex items-center gap-3 w-full" href={""}>
                     <User2 className="text-white" />
                     Profile
                   </Link>
                 </MenubarItem>
                 <MenubarItem>
                   <Link
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-3 w-full"
                     href={"/creator/wallet"}
                   >
                     <Wallet2 className="text-white" /> Wallet
@@ -109,12 +109,12 @@ export default function CreatorNav() {
                 </MenubarItem>
                 <MenubarSeparator />
                 <MenubarItem>
-                  <Link className="flex items-center gap-3" href={""}>
+                  <Link className="flex items-center gap-3 w-full" href={""}>
                     <UserCog className="text-white" /> Account Settings
                   </Link>
                 </MenubarItem>
                 <MenubarItem>
-                  <Link className="flex items-center gap-3" href={""}>
+                  <Link className="flex items-center gap-3 w-full" href={""}>
                     <HelpCircle className="text-white" /> Help Centre
                   </Link>
                 </MenubarItem>
@@ -168,7 +168,10 @@ export default function CreatorNav() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={""}>
+                <Link
+                  className="flex items-center gap-3 w-full"
+                  href={"/creator/wallet"}
+                >
                   <Wallet2 className="text-white" /> Wallet
                 </Link>
               </DropdownMenuItem>
@@ -181,12 +184,6 @@ export default function CreatorNav() {
               <DropdownMenuItem>
                 <Link className="flex items-center gap-3" href={""}>
                   <HelpCircle className="text-white" /> Help Centre
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link className="flex items-center gap-3" href={""}>
-                  <Plus className="text-white" /> Become a Creator
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

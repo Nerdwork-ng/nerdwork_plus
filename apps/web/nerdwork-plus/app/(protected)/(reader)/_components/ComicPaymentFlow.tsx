@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,30 +16,31 @@ import { Button } from "@/components/ui/button";
 import SpinLoader from "@/components/loader";
 import { SetPinForm } from "@/app/(protected)/(reader)/_components/SetPinForm";
 import { EnterPinForm } from "./EnterPinForm";
+import { useUserSession } from "@/lib/api/queries";
+import { toast } from "sonner";
+import { setReaderPin } from "@/actions/profile.actions";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-type ModalStep = "form" | "setPin" | "enterPin" | "loading" | "success";
+type ModalStep =
+  | "form"
+  | "setPin"
+  | "enterPin"
+  | "pinLoading"
+  | "loading"
+  | "success";
 
 const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
-  const [balance, setBalance] = useState(true);
   const [step, setStep] = useState<ModalStep>("form");
   const [isOpen, setIsOpen] = useState(false);
-  const [hasPin, setHasPin] = useState(false); // State to check if user has a pin
+  const { profile, refetch } = useUserSession();
+  const pathname = usePathname();
 
-  const walletBalance = 0.108;
-  const chapterPrice = 0.001;
+  const walletBalance = profile.walletBalance;
+  const chapterPrice = chapter?.price ?? 0;
 
-  useEffect(() => {
-    // Simulate fetching hasPin from the server
-    // In a real application, this would be an API call
-    const userHasPinOnServer = false; // Example: This user does not have a pin
-    setHasPin(userHasPinOnServer);
-
-    if (walletBalance < chapterPrice) {
-      setBalance(false);
-    } else {
-      setBalance(true);
-    }
-  }, [walletBalance]);
+  const pinHash = profile.pinHash;
+  const hasPin = pinHash ? true : false;
 
   const handleOpenChange = (open: boolean) => {
     if (!open && step !== "loading") {
@@ -51,8 +52,7 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
   };
 
   const handleContinue = () => {
-    if (!balance) return;
-    // This button click will check if a pin is needed
+    if (walletBalance < chapterPrice) return;
     if (hasPin) {
       setStep("enterPin");
     } else {
@@ -60,17 +60,35 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
     }
   };
 
+  const handleSetPin = async (pin: string) => {
+    setStep("pinLoading");
+    try {
+      const response = await setReaderPin(pin);
+
+      if (!response?.success) {
+        toast.error(
+          response?.message ?? "An error occurred while submitting the form."
+        );
+        setStep("setPin");
+        return;
+      }
+
+      await refetch();
+      toast.success("Pin set successfully!");
+      setStep("enterPin");
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+      setStep("setPin");
+      console.error(err);
+    }
+  };
+
   const handlePinSubmission = () => {
-    // In a real application, you would validate the pin here
-    // If validation passes, proceed to loading
     setStep("loading");
 
     setTimeout(() => {
       setStep("success");
       // After success, you would update the hasPin state if the user just set one.
-      if (step === "setPin") {
-        setHasPin(true);
-      }
     }, 5000);
   };
 
@@ -78,7 +96,8 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
     <>
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger className="flex items-center justify-center cursor-pointer w-full gap-3">
-          Unlock 0.001 <Image src={NWT} width={18} height={18} alt="nwt" />
+          Unlock {chapterPrice}
+          <Image src={NWT} width={18} height={18} alt="nwt" />
         </DialogTrigger>
         <DialogContent className="bg-[#1E1E1E] min-w-[275px] text-white font-inter border-none space-y-3 text-sm">
           <DialogHeader className={`${step !== "form" ? "hidden" : ""}`}>
@@ -95,7 +114,7 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
             <section className="space-y-6">
               <div className="flex items-center justify-between font-semibold p-4 border border-[#FFFFFF1A] rounded-[12px]">
                 <p>
-                  #{chapter.id} {chapter.title}
+                  #{chapter.id.slice(0, 3)} {chapter.title}
                 </p>
                 <p className="flex items-center gap-2">
                   {chapterPrice}{" "}
@@ -119,7 +138,7 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
                 </div>
               </div>
 
-              {!balance && (
+              {walletBalance < chapterPrice && (
                 <p className="text-[#BF6A02]">
                   You do not have enough funds. Buy SOL or deposit from another
                   account
@@ -130,7 +149,7 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
                 onClick={handleContinue}
                 className="w-full"
                 variant={"primary"}
-                disabled={!balance}
+                disabled={walletBalance < chapterPrice}
               >
                 Continue
               </Button>
@@ -139,7 +158,7 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
 
           {step === "setPin" && (
             <SetPinForm
-              onSetPin={handlePinSubmission} // This function will move to the loading state
+              onSetPin={handleSetPin} // This function will move to the loading state
               onBack={() => setStep("form")} // Function to go back to the previous step
             />
           )}
@@ -149,6 +168,16 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
               onVerifyPin={handlePinSubmission}
               onBack={() => setStep("form")}
             />
+          )}
+
+          {step === "pinLoading" && (
+            <div className="flex flex-col items-center text-center py-10 gap-3 max-w-[275px] mx-auto">
+              <SpinLoader />
+              <p className="font-medium text-xl">Setting Pin</p>
+              <p className="text-[#B3B3B3] text-sm">
+                Please wait while we setup your pin.
+              </p>
+            </div>
           )}
 
           {/* Step 3: Loading Screen */}
@@ -171,9 +200,11 @@ const ComicPaymentFlow = ({ chapter }: { chapter: Chapter }) => {
               <p className="text-[#F5F5F5] text-sm">
                 Transaction was successful and comic added to library
               </p>
-              <Button className="w-full" variant={"primary"}>
-                Start Reading
-              </Button>
+              <Link href={`${pathname}/chapter/${chapter.uniqueCode}`}>
+                <Button className="w-full" variant={"primary"}>
+                  Start Reading
+                </Button>
+              </Link>
             </div>
           )}
         </DialogContent>

@@ -3,7 +3,7 @@
 import { Chapter } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import ComicPaymentFlow from "../../../_components/ComicPaymentFlow";
-import Link from "next/link";
+import ReadButton from "../../../_components/ReadButton";
 
 export const columns: ColumnDef<Chapter>[] = [
   {
@@ -12,7 +12,7 @@ export const columns: ColumnDef<Chapter>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-left capitalize text-nerd-muted font-normal">
-          # {row.original.id}
+          # {row.original.serialNo ?? 1}
         </div>
       );
     },
@@ -26,8 +26,8 @@ export const columns: ColumnDef<Chapter>[] = [
       return (
         <div className="text-left text-sm flex flex-col gap-3 capitalize text-white font-normal">
           <p className="font-semibold text-base">{row.original.title}</p>
-          <p>{row.original.description}</p>
-          <p className="text-nerd-muted">{row.original.status}</p>
+          <p>{row.original.summary}</p>
+          {/* <p className="text-nerd-muted">{row.original.chapterStatus}</p> */}
         </div>
       );
     },
@@ -51,13 +51,8 @@ export const columns: ColumnDef<Chapter>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-center">
-          {row.original.read ? (
-            <Link
-              className="cursor-pointer hover:opacity-75"
-              href={`/r/comics/${row.original.comicSlug}/chapter/${row.original.code}`}
-            >
-              Read
-            </Link>
+          {row.original.chapterType == "free" ? (
+            <ReadButton chapterCode={row.original.uniqueCode ?? ""} />
           ) : (
             <ComicPaymentFlow chapter={row.original} />
           )}
