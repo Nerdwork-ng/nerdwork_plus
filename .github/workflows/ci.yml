@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         test-type:
-          - { name: frontend-tests, path: 'apps/**', command: 'test' }
+          - { name: frontend-tests, path: 'apps/web/**', command: 'test' }
           - { name: backend-tests, path: 'backend/**', command: 'test' }
     steps:
       - uses: actions/checkout@v4
