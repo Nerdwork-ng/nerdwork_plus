@@ -5,7 +5,7 @@ export type Comic = {
   description: string;
   comicStatus: "upcoming" | "draft" | "scheduled" | "published";
   noOfChapters: number;
-  slug?: string;
+  slug: string;
   updatedAt: string;
   createdAt: string;
   creatorName?: string;
@@ -22,7 +22,6 @@ export type Chapter = {
   title: string;
   summary: string;
   pages: string[];
-  count?: number;
   chapterStatus: "published" | "scheduled" | "draft";
   date: string;
   views?: number;

@@ -8,7 +8,11 @@ const options = {
       version: "1.0.0",
       description: "API documentation for Comic App",
     },
-    servers: [{ url: "https://double-melitta-uzochukwuv-b8c7e554.koyeb.app" }],
+    servers: [
+      {
+        url: "https://nerdworkbackend-production.up.railway.app/",
+      },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {

@@ -26,7 +26,7 @@ const ComicReader = ({
   params: Promise<{ chapterId: string; slug: string }>;
 }) => {
   const { chapterId, slug } = use(params);
-  const [readingMode, setReadingMode] = useState("vertical");
+  const [readingMode, setReadingMode] = useState("horizontal");
   const [sizing, setSizing] = useState("auto");
   const [currentPage, setCurrentPage] = useState(0);
   const [showFooter, setShowFooter] = useState(true);
@@ -92,14 +92,6 @@ const ComicReader = ({
   const { data: pagesData, isLoading } = useQuery({
     queryKey: ["pages"],
     queryFn: () => getChapterPages(chapterId),
-    placeholderData: keepPreviousData,
-    refetchInterval: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
-  });
-
-  const { data: chaptersData } = useQuery({
-    queryKey: ["chapters"],
-    queryFn: () => getReaderComicChapters(slug),
     placeholderData: keepPreviousData,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,

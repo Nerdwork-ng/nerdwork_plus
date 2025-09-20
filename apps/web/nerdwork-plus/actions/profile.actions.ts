@@ -154,8 +154,7 @@ export const getReaderProfile = async () => {
 
 export const setReaderPin = async (data: string) => {
   try {
-    const response = await axiosPut("/profile/reader/pin", { pin: data });
-
+    const response = await axiosPut("profile/reader/pin", { pin: data });
     return {
       success: true,
       data: response.data,

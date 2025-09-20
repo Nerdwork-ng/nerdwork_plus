@@ -1,54 +1,123 @@
-import request from "supertest";
-import { app } from "../src/index";
-import { describe, expect, it, beforeAll } from '@jest/globals';
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var supertest_1 = __importDefault(require("supertest"));
+var index_1 = require("../src/index");
+var globals_1 = require("@jest/globals");
 // Mock user authentication middleware for tests
-describe("Payment Endpoints", () => {
-    let token;
-    beforeAll(async () => {
-        // Sign up and login to get a token
-        await request(app).post("/auth/signup").send({
-            email: "paytest@example.com",
-            password: "password123",
-            username: "paytester",
+(0, globals_1.describe)("Payment Endpoints", function () {
+    var token;
+    (0, globals_1.beforeAll)(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: 
+                // Sign up and login to get a token
+                return [4 /*yield*/, (0, supertest_1.default)(index_1.app).post("/auth/signup").send({
+                        email: "paytest@example.com",
+                        password: "password123",
+                        username: "paytester",
+                    })];
+                case 1:
+                    // Sign up and login to get a token
+                    _a.sent();
+                    return [4 /*yield*/, (0, supertest_1.default)(index_1.app).post("/auth/login").send({
+                            email: "paytest@example.com",
+                            password: "password123",
+                        })];
+                case 2:
+                    res = _a.sent();
+                    token = res.body.token;
+                    return [2 /*return*/];
+            }
         });
-        const res = await request(app).post("/auth/login").send({
-            email: "paytest@example.com",
-            password: "password123",
+    }); });
+    (0, globals_1.it)("should create a payment link", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(index_1.app)
+                        .post("/payment/helio/link")
+                        .set("Authorization", "Bearer ".concat(token))
+                        .send({
+                        amount: 100,
+                        currency: "6617fa34af7c94b808564aac",
+                        name: "Test Payment"
+                    })];
+                case 1:
+                    res = _a.sent();
+                    (0, globals_1.expect)([200, 201]).toContain(res.statusCode);
+                    (0, globals_1.expect)(res.body).toHaveProperty("success", true);
+                    (0, globals_1.expect)(res.body).toHaveProperty("paymentLink");
+                    (0, globals_1.expect)(res.body).toHaveProperty("paymentId");
+                    return [2 /*return*/];
+            }
         });
-        token = res.body.token;
-    });
-    it("should create a payment link", async () => {
-        const res = await request(app)
-            .post("/payment/helio/link")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-            amount: 100,
-            currency: "6617fa34af7c94b808564aac",
-            name: "Test Payment"
+    }); });
+    (0, globals_1.it)("should create a webhook for payment", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var linkRes, paymentId, res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(index_1.app)
+                        .post("/payment/helio/link")
+                        .set("Authorization", "Bearer ".concat(token))
+                        .send({
+                        amount: 100,
+                        currency: "6617fa34af7c94b808564aac",
+                        name: "Test Payment"
+                    })];
+                case 1:
+                    linkRes = _a.sent();
+                    paymentId = linkRes.body.paymentId;
+                    return [4 /*yield*/, (0, supertest_1.default)(index_1.app)
+                            .post("/payment/helio/webhook/create")
+                            .set("Authorization", "Bearer ".concat(token))
+                            .send({ paymentId: paymentId })];
+                case 2:
+                    res = _a.sent();
+                    (0, globals_1.expect)([200, 201]).toContain(res.statusCode);
+                    (0, globals_1.expect)(res.body).toHaveProperty("success", true);
+                    (0, globals_1.expect)(res.body).toHaveProperty("data");
+                    return [2 /*return*/];
+            }
         });
-        expect([200, 201]).toContain(res.statusCode);
-        expect(res.body).toHaveProperty("success", true);
-        expect(res.body).toHaveProperty("paymentLink");
-        expect(res.body).toHaveProperty("paymentId");
-    });
-    it("should create a webhook for payment", async () => {
-        // First, create a payment link to get a paymentId
-        const linkRes = await request(app)
-            .post("/payment/helio/link")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-            amount: 100,
-            currency: "6617fa34af7c94b808564aac",
-            name: "Test Payment"
-        });
-        const paymentId = linkRes.body.paymentId;
-        const res = await request(app)
-            .post("/payment/helio/webhook/create")
-            .set("Authorization", `Bearer ${token}`)
-            .send({ paymentId });
-        expect([200, 201]).toContain(res.statusCode);
-        expect(res.body).toHaveProperty("success", true);
-        expect(res.body).toHaveProperty("data");
-    });
+    }); });
 });
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGF5bWVudC50ZXN0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsicGF5bWVudC50ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE9BQU8sT0FBTyxNQUFNLFdBQVcsQ0FBQztBQUNoQyxPQUFPLEVBQUUsR0FBRyxFQUFFLE1BQU0sY0FBYyxDQUFDO0FBQ25DLE9BQU8sRUFBRSxRQUFRLEVBQUUsTUFBTSxFQUFFLEVBQUUsRUFBRSxTQUFTLEVBQUUsTUFBTSxlQUFlLENBQUM7QUFFaEUsZ0RBQWdEO0FBQ2hELFFBQVEsQ0FBQyxtQkFBbUIsRUFBRSxHQUFHLEVBQUU7SUFDakMsSUFBSSxLQUFhLENBQUM7SUFFbEIsU0FBUyxDQUFDLEtBQUssSUFBSSxFQUFFO1FBQ25CLG1DQUFtQztRQUNuQyxNQUFNLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLENBQUMsY0FBYyxDQUFDLENBQUMsSUFBSSxDQUFDO1lBQzNDLEtBQUssRUFBRSxxQkFBcUI7WUFDNUIsUUFBUSxFQUFFLGFBQWE7WUFDdkIsUUFBUSxFQUFFLFdBQVc7U0FDdEIsQ0FBQyxDQUFDO1FBQ0gsTUFBTSxHQUFHLEdBQUcsTUFBTSxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsSUFBSSxDQUFDLGFBQWEsQ0FBQyxDQUFDLElBQUksQ0FBQztZQUN0RCxLQUFLLEVBQUUscUJBQXFCO1lBQzVCLFFBQVEsRUFBRSxhQUFhO1NBQ3hCLENBQUMsQ0FBQztRQUNILEtBQUssR0FBRyxHQUFHLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQztJQUN6QixDQUFDLENBQUMsQ0FBQztJQUVILEVBQUUsQ0FBQyw4QkFBOEIsRUFBRSxLQUFLLElBQUksRUFBRTtRQUM1QyxNQUFNLEdBQUcsR0FBRyxNQUFNLE9BQU8sQ0FBQyxHQUFHLENBQUM7YUFDM0IsSUFBSSxDQUFDLHFCQUFxQixDQUFDO2FBQzNCLEdBQUcsQ0FBQyxlQUFlLEVBQUUsVUFBVSxLQUFLLEVBQUUsQ0FBQzthQUN2QyxJQUFJLENBQUM7WUFDSixNQUFNLEVBQUUsR0FBRztZQUNYLFFBQVEsRUFBRSwwQkFBMEI7WUFDcEMsSUFBSSxFQUFFLGNBQWM7U0FDckIsQ0FBQyxDQUFDO1FBQ0wsTUFBTSxDQUFDLENBQUMsR0FBRyxFQUFFLEdBQUcsQ0FBQyxDQUFDLENBQUMsU0FBUyxDQUFDLEdBQUcsQ0FBQyxVQUFVLENBQUMsQ0FBQztRQUM3QyxNQUFNLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLGNBQWMsQ0FBQyxTQUFTLEVBQUUsSUFBSSxDQUFDLENBQUM7UUFDakQsTUFBTSxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQyxjQUFjLENBQUMsYUFBYSxDQUFDLENBQUM7UUFDL0MsTUFBTSxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQyxjQUFjLENBQUMsV0FBVyxDQUFDLENBQUM7SUFDL0MsQ0FBQyxDQUFDLENBQUM7SUFFSCxFQUFFLENBQUMscUNBQXFDLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDbkQsa0RBQWtEO1FBQ2xELE1BQU0sT0FBTyxHQUFHLE1BQU0sT0FBTyxDQUFDLEdBQUcsQ0FBQzthQUMvQixJQUFJLENBQUMscUJBQXFCLENBQUM7YUFDM0IsR0FBRyxDQUFDLGVBQWUsRUFBRSxVQUFVLEtBQUssRUFBRSxDQUFDO2FBQ3ZDLElBQUksQ0FBQztZQUNKLE1BQU0sRUFBRSxHQUFHO1lBQ1gsUUFBUSxFQUFFLDBCQUEwQjtZQUNwQyxJQUFJLEVBQUUsY0FBYztTQUNyQixDQUFDLENBQUM7UUFDTCxNQUFNLFNBQVMsR0FBRyxPQUFPLENBQUMsSUFBSSxDQUFDLFNBQVMsQ0FBQztRQUN6QyxNQUFNLEdBQUcsR0FBRyxNQUFNLE9BQU8sQ0FBQyxHQUFHLENBQUM7YUFDM0IsSUFBSSxDQUFDLCtCQUErQixDQUFDO2FBQ3JDLEdBQUcsQ0FBQyxlQUFlLEVBQUUsVUFBVSxLQUFLLEVBQUUsQ0FBQzthQUN2QyxJQUFJLENBQUMsRUFBRSxTQUFTLEVBQUUsQ0FBQyxDQUFDO1FBQ3ZCLE1BQU0sQ0FBQyxDQUFDLEdBQUcsRUFBRSxHQUFHLENBQUMsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxHQUFHLENBQUMsVUFBVSxDQUFDLENBQUM7UUFDN0MsTUFBTSxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsQ0FBQyxjQUFjLENBQUMsU0FBUyxFQUFFLElBQUksQ0FBQyxDQUFDO1FBQ2pELE1BQU0sQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLENBQUMsY0FBYyxDQUFDLE1BQU0sQ0FBQyxDQUFDO0lBQzFDLENBQUMsQ0FBQyxDQUFDO0FBQ0wsQ0FBQyxDQUFDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgcmVxdWVzdCBmcm9tIFwic3VwZXJ0ZXN0XCI7XHJcbmltcG9ydCB7IGFwcCB9IGZyb20gXCIuLi9zcmMvaW5kZXhcIjtcclxuaW1wb3J0IHsgZGVzY3JpYmUsIGV4cGVjdCwgaXQsIGJlZm9yZUFsbCB9IGZyb20gJ0BqZXN0L2dsb2JhbHMnO1xyXG5cclxuLy8gTW9jayB1c2VyIGF1dGhlbnRpY2F0aW9uIG1pZGRsZXdhcmUgZm9yIHRlc3RzXHJcbmRlc2NyaWJlKFwiUGF5bWVudCBFbmRwb2ludHNcIiwgKCkgPT4ge1xyXG4gIGxldCB0b2tlbjogc3RyaW5nO1xyXG5cclxuICBiZWZvcmVBbGwoYXN5bmMgKCkgPT4ge1xyXG4gICAgLy8gU2lnbiB1cCBhbmQgbG9naW4gdG8gZ2V0IGEgdG9rZW5cclxuICAgIGF3YWl0IHJlcXVlc3QoYXBwKS5wb3N0KFwiL2F1dGgvc2lnbnVwXCIpLnNlbmQoe1xyXG4gICAgICBlbWFpbDogXCJwYXl0ZXN0QGV4YW1wbGUuY29tXCIsXHJcbiAgICAgIHBhc3N3b3JkOiBcInBhc3N3b3JkMTIzXCIsXHJcbiAgICAgIHVzZXJuYW1lOiBcInBheXRlc3RlclwiLFxyXG4gICAgfSk7XHJcbiAgICBjb25zdCByZXMgPSBhd2FpdCByZXF1ZXN0KGFwcCkucG9zdChcIi9hdXRoL2xvZ2luXCIpLnNlbmQoe1xyXG4gICAgICBlbWFpbDogXCJwYXl0ZXN0QGV4YW1wbGUuY29tXCIsXHJcbiAgICAgIHBhc3N3b3JkOiBcInBhc3N3b3JkMTIzXCIsXHJcbiAgICB9KTtcclxuICAgIHRva2VuID0gcmVzLmJvZHkudG9rZW47XHJcbiAgfSk7XHJcblxyXG4gIGl0KFwic2hvdWxkIGNyZWF0ZSBhIHBheW1lbnQgbGlua1wiLCBhc3luYyAoKSA9PiB7XHJcbiAgICBjb25zdCByZXMgPSBhd2FpdCByZXF1ZXN0KGFwcClcclxuICAgICAgLnBvc3QoXCIvcGF5bWVudC9oZWxpby9saW5rXCIpXHJcbiAgICAgIC5zZXQoXCJBdXRob3JpemF0aW9uXCIsIGBCZWFyZXIgJHt0b2tlbn1gKVxyXG4gICAgICAuc2VuZCh7XHJcbiAgICAgICAgYW1vdW50OiAxMDAsXHJcbiAgICAgICAgY3VycmVuY3k6IFwiNjYxN2ZhMzRhZjdjOTRiODA4NTY0YWFjXCIsXHJcbiAgICAgICAgbmFtZTogXCJUZXN0IFBheW1lbnRcIlxyXG4gICAgICB9KTtcclxuICAgIGV4cGVjdChbMjAwLCAyMDFdKS50b0NvbnRhaW4ocmVzLnN0YXR1c0NvZGUpO1xyXG4gICAgZXhwZWN0KHJlcy5ib2R5KS50b0hhdmVQcm9wZXJ0eShcInN1Y2Nlc3NcIiwgdHJ1ZSk7XHJcbiAgICBleHBlY3QocmVzLmJvZHkpLnRvSGF2ZVByb3BlcnR5KFwicGF5bWVudExpbmtcIik7XHJcbiAgICBleHBlY3QocmVzLmJvZHkpLnRvSGF2ZVByb3BlcnR5KFwicGF5bWVudElkXCIpO1xyXG4gIH0pO1xyXG5cclxuICBpdChcInNob3VsZCBjcmVhdGUgYSB3ZWJob29rIGZvciBwYXltZW50XCIsIGFzeW5jICgpID0+IHtcclxuICAgIC8vIEZpcnN0LCBjcmVhdGUgYSBwYXltZW50IGxpbmsgdG8gZ2V0IGEgcGF5bWVudElkXHJcbiAgICBjb25zdCBsaW5rUmVzID0gYXdhaXQgcmVxdWVzdChhcHApXHJcbiAgICAgIC5wb3N0KFwiL3BheW1lbnQvaGVsaW8vbGlua1wiKVxyXG4gICAgICAuc2V0KFwiQXV0aG9yaXphdGlvblwiLCBgQmVhcmVyICR7dG9rZW59YClcclxuICAgICAgLnNlbmQoe1xyXG4gICAgICAgIGFtb3VudDogMTAwLFxyXG4gICAgICAgIGN1cnJlbmN5OiBcIjY2MTdmYTM0YWY3Yzk0YjgwODU2NGFhY1wiLFxyXG4gICAgICAgIG5hbWU6IFwiVGVzdCBQYXltZW50XCJcclxuICAgICAgfSk7XHJcbiAgICBjb25zdCBwYXltZW50SWQgPSBsaW5rUmVzLmJvZHkucGF5bWVudElkO1xyXG4gICAgY29uc3QgcmVzID0gYXdhaXQgcmVxdWVzdChhcHApXHJcbiAgICAgIC5wb3N0KFwiL3BheW1lbnQvaGVsaW8vd2ViaG9vay9jcmVhdGVcIilcclxuICAgICAgLnNldChcIkF1dGhvcml6YXRpb25cIiwgYEJlYXJlciAke3Rva2VufWApXHJcbiAgICAgIC5zZW5kKHsgcGF5bWVudElkIH0pO1xyXG4gICAgZXhwZWN0KFsyMDAsIDIwMV0pLnRvQ29udGFpbihyZXMuc3RhdHVzQ29kZSk7XHJcbiAgICBleHBlY3QocmVzLmJvZHkpLnRvSGF2ZVByb3BlcnR5KFwic3VjY2Vzc1wiLCB0cnVlKTtcclxuICAgIGV4cGVjdChyZXMuYm9keSkudG9IYXZlUHJvcGVydHkoXCJkYXRhXCIpO1xyXG4gIH0pO1xyXG59KTtcclxuXHJcblxyXG4iXX0=

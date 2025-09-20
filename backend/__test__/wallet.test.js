@@ -1,46 +1,124 @@
-import request from "supertest";
-import { app } from "../src";
-import { db } from "../src/config/db";
-import { userWallets } from "../src/model/wallet";
-import { eq } from "drizzle-orm";
-describe("POST /wallet/debit", () => {
-    let userId = "test-user";
-    beforeAll(async () => {
-        await db.insert(userWallets).values({
-            userProfileId: userId,
-            nwtBalance: 100,
-            nwtLockedBalance: 0,
-            kycStatus: "none",
-            kycLevel: 0,
-            primaryWalletAddress: null,
-            spendingLimitDaily: null,
-            spendingLimitMonthly: null,
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var supertest_1 = __importDefault(require("supertest"));
+var src_1 = require("../src");
+var db_1 = require("../src/config/db");
+var wallet_1 = require("../src/model/wallet");
+var drizzle_orm_1 = require("drizzle-orm");
+describe("POST /wallet/debit", function () {
+    var userId = "test-user";
+    beforeAll(function () { return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, db_1.db.insert(wallet_1.userWallets).values({
+                        userProfileId: userId,
+                        nwtBalance: 100,
+                        nwtLockedBalance: 0,
+                        kycStatus: "none",
+                        kycLevel: 0,
+                        primaryWalletAddress: null,
+                        spendingLimitDaily: null,
+                        spendingLimitMonthly: null,
+                    })];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
         });
-    });
-    afterAll(async () => {
-        await db.delete(userWallets).where(eq(userWallets.userProfileId, userId));
-    });
-    it("should debit successfully if funds are sufficient", async () => {
-        const res = await request(app)
-            .post("/wallet/debit")
-            .send({ userId, amount: 50 });
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true);
-        expect(res.body.balance).toBe(50);
-    });
-    it("should fail if insufficient funds", async () => {
-        const res = await request(app)
-            .post("/wallet/debit")
-            .send({ userId, amount: 200 });
-        expect(res.status).toBe(400);
-        expect(res.body.error).toBe("Insufficient funds");
-    });
-    it("should fail if wallet not found", async () => {
-        const res = await request(app)
-            .post("/wallet/debit")
-            .send({ userId: "nonexistent", amount: 10 });
-        expect(res.status).toBe(404);
-        expect(res.body.error).toBe("Wallet not found");
-    });
+    }); });
+    afterAll(function () { return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, db_1.db.delete(wallet_1.userWallets).where((0, drizzle_orm_1.eq)(wallet_1.userWallets.userProfileId, userId))];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+    it("should debit successfully if funds are sufficient", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(src_1.app)
+                        .post("/wallet/debit")
+                        .send({ userId: userId, amount: 50 })];
+                case 1:
+                    res = _a.sent();
+                    expect(res.status).toBe(200);
+                    expect(res.body.success).toBe(true);
+                    expect(res.body.balance).toBe(50);
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+    it("should fail if insufficient funds", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(src_1.app)
+                        .post("/wallet/debit")
+                        .send({ userId: userId, amount: 200 })];
+                case 1:
+                    res = _a.sent();
+                    expect(res.status).toBe(400);
+                    expect(res.body.error).toBe("Insufficient funds");
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+    it("should fail if wallet not found", function () { return __awaiter(void 0, void 0, void 0, function () {
+        var res;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, (0, supertest_1.default)(src_1.app)
+                        .post("/wallet/debit")
+                        .send({ userId: "nonexistent", amount: 10 })];
+                case 1:
+                    res = _a.sent();
+                    expect(res.status).toBe(404);
+                    expect(res.body.error).toBe("Wallet not found");
+                    return [2 /*return*/];
+            }
+        });
+    }); });
 });
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoid2FsbGV0LnRlc3QuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJ3YWxsZXQudGVzdC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxPQUFPLE9BQU8sTUFBTSxXQUFXLENBQUM7QUFDaEMsT0FBTyxFQUFFLEdBQUcsRUFBRSxNQUFNLFFBQVEsQ0FBQztBQUM3QixPQUFPLEVBQUUsRUFBRSxFQUFFLE1BQU0sa0JBQWtCLENBQUM7QUFDdEMsT0FBTyxFQUFFLFdBQVcsRUFBRSxNQUFNLHFCQUFxQixDQUFDO0FBQ2xELE9BQU8sRUFBRSxFQUFFLEVBQUUsTUFBTSxhQUFhLENBQUM7QUFFakMsUUFBUSxDQUFDLG9CQUFvQixFQUFFLEdBQUcsRUFBRTtJQUNsQyxJQUFJLE1BQU0sR0FBRyxXQUFXLENBQUM7SUFFekIsU0FBUyxDQUFDLEtBQUssSUFBSSxFQUFFO1FBQ25CLE1BQU0sRUFBRSxDQUFDLE1BQU0sQ0FBQyxXQUFXLENBQUMsQ0FBQyxNQUFNLENBQUM7WUFDbEMsYUFBYSxFQUFFLE1BQU07WUFDckIsVUFBVSxFQUFFLEdBQUc7WUFDZixnQkFBZ0IsRUFBRSxDQUFDO1lBQ25CLFNBQVMsRUFBRSxNQUFNO1lBQ2pCLFFBQVEsRUFBRSxDQUFDO1lBQ1gsb0JBQW9CLEVBQUUsSUFBSTtZQUMxQixrQkFBa0IsRUFBRSxJQUFJO1lBQ3hCLG9CQUFvQixFQUFFLElBQUk7U0FDM0IsQ0FBQyxDQUFDO0lBQ0wsQ0FBQyxDQUFDLENBQUM7SUFFSCxRQUFRLENBQUMsS0FBSyxJQUFJLEVBQUU7UUFDbEIsTUFBTSxFQUFFLENBQUMsTUFBTSxDQUFDLFdBQVcsQ0FBQyxDQUFDLEtBQUssQ0FBQyxFQUFFLENBQUMsV0FBVyxDQUFDLGFBQWEsRUFBRSxNQUFNLENBQUMsQ0FBQyxDQUFDO0lBQzVFLENBQUMsQ0FBQyxDQUFDO0lBRUgsRUFBRSxDQUFDLG1EQUFtRCxFQUFFLEtBQUssSUFBSSxFQUFFO1FBQ2pFLE1BQU0sR0FBRyxHQUFHLE1BQU0sT0FBTyxDQUFDLEdBQUcsQ0FBQzthQUMzQixJQUFJLENBQUMsZUFBZSxDQUFDO2FBQ3JCLElBQUksQ0FBQyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsRUFBRSxFQUFFLENBQUMsQ0FBQztRQUNoQyxNQUFNLENBQUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUM3QixNQUFNLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUM7UUFDcEMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxJQUFJLENBQUMsT0FBTyxDQUFDLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQyxDQUFDO0lBQ3BDLENBQUMsQ0FBQyxDQUFDO0lBRUgsRUFBRSxDQUFDLG1DQUFtQyxFQUFFLEtBQUssSUFBSSxFQUFFO1FBQ2pELE1BQU0sR0FBRyxHQUFHLE1BQU0sT0FBTyxDQUFDLEdBQUcsQ0FBQzthQUMzQixJQUFJLENBQUMsZUFBZSxDQUFDO2FBQ3JCLElBQUksQ0FBQyxFQUFFLE1BQU0sRUFBRSxNQUFNLEVBQUUsR0FBRyxFQUFFLENBQUMsQ0FBQztRQUNqQyxNQUFNLENBQUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxDQUFDLElBQUksQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUM3QixNQUFNLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxLQUFLLENBQUMsQ0FBQyxJQUFJLENBQUMsb0JBQW9CLENBQUMsQ0FBQztJQUNwRCxDQUFDLENBQUMsQ0FBQztJQUVILEVBQUUsQ0FBQyxpQ0FBaUMsRUFBRSxLQUFLLElBQUksRUFBRTtRQUMvQyxNQUFNLEdBQUcsR0FBRyxNQUFNLE9BQU8sQ0FBQyxHQUFHLENBQUM7YUFDM0IsSUFBSSxDQUFDLGVBQWUsQ0FBQzthQUNyQixJQUFJLENBQUMsRUFBRSxNQUFNLEVBQUUsYUFBYSxFQUFFLE1BQU0sRUFBRSxFQUFFLEVBQUUsQ0FBQyxDQUFDO1FBQy9DLE1BQU0sQ0FBQyxHQUFHLENBQUMsTUFBTSxDQUFDLENBQUMsSUFBSSxDQUFDLEdBQUcsQ0FBQyxDQUFDO1FBQzdCLE1BQU0sQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQyxDQUFDLElBQUksQ0FBQyxrQkFBa0IsQ0FBQyxDQUFDO0lBQ2xELENBQUMsQ0FBQyxDQUFDO0FBQ0wsQ0FBQyxDQUFDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgcmVxdWVzdCBmcm9tIFwic3VwZXJ0ZXN0XCI7XHJcbmltcG9ydCB7IGFwcCB9IGZyb20gXCIuLi9zcmNcIjtcclxuaW1wb3J0IHsgZGIgfSBmcm9tIFwiLi4vc3JjL2NvbmZpZy9kYlwiO1xyXG5pbXBvcnQgeyB1c2VyV2FsbGV0cyB9IGZyb20gXCIuLi9zcmMvbW9kZWwvd2FsbGV0XCI7XHJcbmltcG9ydCB7IGVxIH0gZnJvbSBcImRyaXp6bGUtb3JtXCI7XHJcblxyXG5kZXNjcmliZShcIlBPU1QgL3dhbGxldC9kZWJpdFwiLCAoKSA9PiB7XHJcbiAgbGV0IHVzZXJJZCA9IFwidGVzdC11c2VyXCI7XHJcblxyXG4gIGJlZm9yZUFsbChhc3luYyAoKSA9PiB7XHJcbiAgICBhd2FpdCBkYi5pbnNlcnQodXNlcldhbGxldHMpLnZhbHVlcyh7XHJcbiAgICAgIHVzZXJQcm9maWxlSWQ6IHVzZXJJZCxcclxuICAgICAgbnd0QmFsYW5jZTogMTAwLFxyXG4gICAgICBud3RMb2NrZWRCYWxhbmNlOiAwLFxyXG4gICAgICBreWNTdGF0dXM6IFwibm9uZVwiLFxyXG4gICAgICBreWNMZXZlbDogMCxcclxuICAgICAgcHJpbWFyeVdhbGxldEFkZHJlc3M6IG51bGwsXHJcbiAgICAgIHNwZW5kaW5nTGltaXREYWlseTogbnVsbCxcclxuICAgICAgc3BlbmRpbmdMaW1pdE1vbnRobHk6IG51bGwsXHJcbiAgICB9KTtcclxuICB9KTtcclxuXHJcbiAgYWZ0ZXJBbGwoYXN5bmMgKCkgPT4ge1xyXG4gICAgYXdhaXQgZGIuZGVsZXRlKHVzZXJXYWxsZXRzKS53aGVyZShlcSh1c2VyV2FsbGV0cy51c2VyUHJvZmlsZUlkLCB1c2VySWQpKTtcclxuICB9KTtcclxuXHJcbiAgaXQoXCJzaG91bGQgZGViaXQgc3VjY2Vzc2Z1bGx5IGlmIGZ1bmRzIGFyZSBzdWZmaWNpZW50XCIsIGFzeW5jICgpID0+IHtcclxuICAgIGNvbnN0IHJlcyA9IGF3YWl0IHJlcXVlc3QoYXBwKVxyXG4gICAgICAucG9zdChcIi93YWxsZXQvZGViaXRcIilcclxuICAgICAgLnNlbmQoeyB1c2VySWQsIGFtb3VudDogNTAgfSk7XHJcbiAgICBleHBlY3QocmVzLnN0YXR1cykudG9CZSgyMDApO1xyXG4gICAgZXhwZWN0KHJlcy5ib2R5LnN1Y2Nlc3MpLnRvQmUodHJ1ZSk7XHJcbiAgICBleHBlY3QocmVzLmJvZHkuYmFsYW5jZSkudG9CZSg1MCk7XHJcbiAgfSk7XHJcblxyXG4gIGl0KFwic2hvdWxkIGZhaWwgaWYgaW5zdWZmaWNpZW50IGZ1bmRzXCIsIGFzeW5jICgpID0+IHtcclxuICAgIGNvbnN0IHJlcyA9IGF3YWl0IHJlcXVlc3QoYXBwKVxyXG4gICAgICAucG9zdChcIi93YWxsZXQvZGViaXRcIilcclxuICAgICAgLnNlbmQoeyB1c2VySWQsIGFtb3VudDogMjAwIH0pO1xyXG4gICAgZXhwZWN0KHJlcy5zdGF0dXMpLnRvQmUoNDAwKTtcclxuICAgIGV4cGVjdChyZXMuYm9keS5lcnJvcikudG9CZShcIkluc3VmZmljaWVudCBmdW5kc1wiKTtcclxuICB9KTtcclxuXHJcbiAgaXQoXCJzaG91bGQgZmFpbCBpZiB3YWxsZXQgbm90IGZvdW5kXCIsIGFzeW5jICgpID0+IHtcclxuICAgIGNvbnN0IHJlcyA9IGF3YWl0IHJlcXVlc3QoYXBwKVxyXG4gICAgICAucG9zdChcIi93YWxsZXQvZGViaXRcIilcclxuICAgICAgLnNlbmQoeyB1c2VySWQ6IFwibm9uZXhpc3RlbnRcIiwgYW1vdW50OiAxMCB9KTtcclxuICAgIGV4cGVjdChyZXMuc3RhdHVzKS50b0JlKDQwNCk7XHJcbiAgICBleHBlY3QocmVzLmJvZHkuZXJyb3IpLnRvQmUoXCJXYWxsZXQgbm90IGZvdW5kXCIpO1xyXG4gIH0pO1xyXG59KTtcclxuIl19

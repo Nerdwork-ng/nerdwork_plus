@@ -1,18 +1,34 @@
-import { pgTable, uuid, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
-import { creatorProfile } from "./profile";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  integer,
+  pgEnum,
+} from "drizzle-orm/pg-core";
+import { creatorProfile, readerProfile } from "./profile";
+
+export const comicStatusEnum = pgEnum("comic_status_enum", [
+  "published",
+  "pending",
+  "scheduled",
+  "draft",
+]);
 
 export const comics = pgTable("comics", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: varchar("title", { length: 255 }).notNull(),
   language: varchar("language", { length: 50 }).notNull(),
   ageRating: varchar("age_rating", { length: 10 }).notNull(),
+  noOfChapters: integer("no_of_chapters").notNull().default(0),
+  noOfDrafts: integer("no_of_drafts").notNull().default(0),
   description: text("description").notNull(),
-  image: text("image_url").notNull(), // Cover image from S3
+  image: text("image_url").notNull(),
+  comicStatus: comicStatusEnum("comic_status").default("draft"),
   genre: text("genre").array().notNull(),
   tags: text("tags").array(),
   slug: varchar("slug", { length: 300 }).notNull().unique(),
-  isDraft: boolean("is_draft").notNull().default(true), // Starts as draft
-  publishedAt: timestamp("published_at", { mode: "date" }),
   creatorId: uuid("creator_id")
     .notNull()
     .references(() => creatorProfile.id, { onDelete: "cascade" }),
@@ -20,5 +36,16 @@ export const comics = pgTable("comics", {
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export type InsertComic = typeof comics.$inferInsert;
-export type SelectComic = typeof comics.$inferSelect;
+export const comicSubscribers = pgTable("comic_subscribers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  readerId: uuid("reader_id")
+    .notNull()
+    .references(() => readerProfile.id, { onDelete: "cascade" }),
+
+  comicId: uuid("comic_id")
+    .notNull()
+    .references(() => comics.id, { onDelete: "cascade" }),
+
+  subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
+});

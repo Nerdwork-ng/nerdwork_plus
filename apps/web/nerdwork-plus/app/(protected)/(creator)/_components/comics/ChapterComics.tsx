@@ -64,7 +64,7 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
             </div>
           </div>
           <div className="md:w-[20%] md:justify-end flex gap-2">
-            <Link href={`/creator/comics/${slug}/view/${chapter?.uniqueCode}`}>
+            <Link href={`/r/comics/${slug}/chapter/${chapter?.uniqueCode}`}>
               <Button className="bg-nerd-default">
                 <Eye />
                 View

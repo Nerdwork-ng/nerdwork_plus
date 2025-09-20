@@ -42,9 +42,8 @@ export const googleAuthController = async (req, res) => {
         .values({
           email,
           username: email.split("@")[0],
-          emailVerified: true,
+          emailVerified: false,
           isActive: true,
-          passwordHash: "",
         })
         .returning();
 
@@ -63,9 +62,7 @@ export const googleAuthController = async (req, res) => {
       .where(eq(readerProfile.userId, user.id));
 
     const cProfile = !!creator;
-    console.log("cProfile", cProfile);
     const rProfile = !!reader;
-    console.log("rProfile", rProfile);
 
     // ✅ Generate JWT
     const token = jwt.sign(
@@ -89,6 +86,27 @@ export const googleAuthController = async (req, res) => {
       .json({ message: err.message || "Internal Server Error" });
   }
 };
+
+console.log(jwt?.sign);
+
+// export const googleLoginController = async (req: any, res: any) => {
+//   try {
+//     const { idToken } = req.body;
+
+//     if (!idToken) {
+//       return res.status(400).json({ error: "Google ID token required" });
+//     }
+
+//     // ✅ verify token with Google
+//     const googleUser = await verifyGoogleToken(idToken);
+
+//     // proceed with login
+//     const { token, user } = await loginWithGoogle(googleUser);
+//     return res.status(200).json({ token, user });
+//   } catch (err: any) {
+//     return res.status(400).json({ message: err.message });
+//   }
+// };
 
 export async function verifyGoogleToken(idToken: string) {
   try {

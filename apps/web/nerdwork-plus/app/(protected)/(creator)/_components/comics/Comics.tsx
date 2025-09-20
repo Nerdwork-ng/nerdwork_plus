@@ -32,6 +32,7 @@ const Comics = () => {
     draft: comics.filter((b) => b.comicStatus === "draft").length,
     published: comics.filter((b) => b.comicStatus === "published").length,
     scheduled: comics.filter((b) => b.comicStatus === "scheduled").length,
+    upcoming: comics.filter((b) => b.comicStatus === "upcoming").length,
   };
 
   const filteredComics = comics.filter((comic) =>

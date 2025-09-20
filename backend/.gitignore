@@ -1,32 +1,11 @@
-.env.local
+# dependencies
+node_modules/
+dist/
+
+# env files
 .env
-.env.production
-.env.test
-.env.development
-.env.staging
-.env.production
-.env.test
-.env.development
-.env.staging
-.env.production
-.env.test
-.env.development
-.env.staging
-
-
-node_modules
-.next
-.turbo
-.vscode
-.idea
-.DS_Store
+.env.*.local
 .env.local
-.env
-.env.production
-.env.test
-.env.development
-.env.staging# TypeScript compiled files in src
-src/**/*.js
-src/**/*.d.ts
 
-.serverless
+*.pem
+ 

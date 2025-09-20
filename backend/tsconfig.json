@@ -11,17 +11,15 @@
     "skipLibCheck": true,
     // "strict": true,
     "outDir": "./dist"
-  },
-  "exclude": [
-    "services/**/*",
-    "node_modules",
-    "dist",
-    "_test_/**/*",
-    "_test_/*",
-    "api-gateway/**/*",
-    "api-gateway/*",
-    "api-gateway",
-    "deployment"
-
-  ]
+  }
 }
+
+// {
+//   "compilerOptions": {
+//     "esModuleInterop": true,
+//     "allowSyntheticDefaultImports": true,
+//     "moduleResolution": "node",
+//     "resolveJsonModule": true,
+//     "isolatedModules": true
+//   }
+// }

@@ -3,8 +3,10 @@ import { db } from "../config/db";
 import { userWallets } from "../model/wallet";
 
 export async function creditWallet(userId: string, amount: number) {
-  const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userProfileId, userId)).limit(1);
-  
+  const [wallet] = await db
+    .select()
+    .from(userWallets)
+    .where(eq(userWallets.userProfileId, userId));
 
   if (!wallet) {
     throw new Error("Wallet not found");
@@ -19,8 +21,10 @@ export async function creditWallet(userId: string, amount: number) {
 }
 
 export async function debitWallet(userId: string, amount: number) {
-  const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userProfileId, userId)).limit(1);
-   
+  const [wallet] = await db
+    .select()
+    .from(userWallets)
+    .where(eq(userWallets.userProfileId, userId));
 
   if (!wallet) {
     throw new Error("Wallet not found");

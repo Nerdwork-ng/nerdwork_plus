@@ -168,6 +168,36 @@ export const getSingleComicReader = async (slug: string) => {
   }
 };
 
+export const getSingleComicReader = async (slug: string) => {
+  try {
+    const response = await axiosGet(`comics/reader/${slug}`);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Comic retrieved successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Comic retrieval failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to retrieve creator comics. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to retrieve creator comics. Please try again.",
+    };
+  }
+};
+
 export const getAllComicsForReader = async () => {
   try {
     const response = await axiosGet("/comics/all-comics");
@@ -284,8 +314,7 @@ export const createComicChapter = async (
 
 export const getComicChaptersBySlug = async (slug: string) => {
   try {
-    const response = await axiosGet(`/chapters/by-comic/creator/${slug}`);
-
+    const response = await axiosGet(`chapters/by-comic/creator/${slug}`);
     return {
       success: true,
       data: response.data,
@@ -314,8 +343,7 @@ export const getComicChaptersBySlug = async (slug: string) => {
 
 export const getReaderComicChapters = async (slug: string) => {
   try {
-    const response = await axiosGet(`/chapters/by-comic/reader/${slug}`);
-
+    const response = await axiosGet(`chapters/by-comic/reader/${slug}`);
     return {
       success: true,
       data: response.data,

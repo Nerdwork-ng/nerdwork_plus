@@ -1,29 +1,70 @@
-import { eq, desc, asc, and } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../config/db";
-import { comics } from "../model/comic";
-import { chapters } from "../model/chapter";
-import jwt from "jsonwebtoken";
-import { creatorProfile } from "../model/profile";
-import { Request, Response } from "express";
-import { AuthRequest } from "../middleware/common/auth";
+import { comics, comicSubscribers } from "../model/comic";
+import { creatorProfile, readerProfile } from "../model/profile";
+import { library } from "../model/library";
+import { generateFileUrl } from "./file.controller";
+import { chapterLikes, chapters, chapterViews } from "../model/chapter";
+import { getUserJwtFromToken } from "./library.controller";
 
-// ===============================
-// COMIC CRUD OPERATIONS
-// ===============================
+async function getComicViews(comicId: string) {
+  const [{ totalViews }] = await db
+    .select({
+      totalViews: sql`COUNT(${chapterViews.id})`,
+    })
+    .from(chapterViews)
+    .innerJoin(chapters, eq(chapterViews.chapterId, chapters.id))
+    .where(eq(chapters.comicId, comicId));
 
-// Create comic (basic info only, no chapters)
-export const createComic = async (req:any, res:any) => {
+  return Number(totalViews) || 0;
+}
+
+export async function getComicSubscribers(comicId, readerId?) {
+  // Count likes
+  const [{ subscribeCount }] = await db
+    .select({ subscribeCount: sql`COUNT(${comicSubscribers.id})` })
+    .from(comicSubscribers)
+    .where(eq(comicSubscribers.comicId, comicId));
+
+  let hasSubscribed = false;
+  if (readerId) {
+    const [existingSubscriber] = await db
+      .select()
+      .from(comicSubscribers)
+      .where(
+        and(
+          eq(comicSubscribers.comicId, comicId),
+          eq(comicSubscribers.readerId, readerId)
+        )
+      );
+
+    hasSubscribed = !!existingSubscriber;
+  }
+
+  return {
+    subscribeCount: Number(subscribeCount) || 0,
+    hasSubscribed,
+  };
+}
+
+async function getComicLikes(comicId: string) {
+  const [{ totalLikes }] = await db
+    .select({
+      totalLikes: sql`COUNT(${chapterLikes.id})`,
+    })
+    .from(chapterLikes)
+    .innerJoin(chapters, eq(chapterLikes.chapterId, chapters.id))
+    .where(eq(chapters.comicId, comicId));
+
+  return Number(totalLikes) || 0;
+}
+
+export const createComic = async (req, res) => {
   try {
-    const { title, language, ageRating, description, image, genre, tags } = req.body;
-    
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    const { title, language, ageRating, description, image, genre, tags } =
+      req.body;
 
-    const token = authHeader.split(" ")[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.userId;
+    const userId = getUserJwtFromToken(req);
 
     const [creator] = await db
       .select()
@@ -31,11 +72,25 @@ export const createComic = async (req:any, res:any) => {
       .where(eq(creatorProfile.userId, userId));
 
     if (!creator) {
-      return res.status(404).json({ message: "Creator profile not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate slug from title + email
-    const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${decoded.email}`;
+    // 🔥 Extract only the file path (if frontend sends full CloudFront URL)
+    let imagePath = image;
+    if (image && image.startsWith("http")) {
+      try {
+        const url = new URL(image);
+        imagePath = url.pathname.startsWith("/")
+          ? url.pathname.substring(1) // remove leading "/"
+          : url.pathname;
+      } catch (err) {
+        console.warn("Invalid image URL provided, storing raw value:", image);
+      }
+    }
+
+    const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${
+      creator.creatorName
+    }`;
 
     const [comic] = await db
       .insert(comics)
@@ -44,135 +99,163 @@ export const createComic = async (req:any, res:any) => {
         language,
         ageRating,
         description,
-        image, // Pre-uploaded S3 URL
+        image: imagePath,
         slug,
         genre,
         tags,
+        comicStatus: "draft",
         creatorId: creator.id,
-        isDraft: true, // Always starts as draft
       })
       .returning();
 
-    return res.status(201).json({
-      success: true,
-      message: "Comic created successfully",
-      data: { comic, slug },
-    });
+    return res.status(200).json({ comic, slug });
   } catch (err) {
     console.error(err);
     return res.status(400).json({ message: "Failed to create comic" });
   }
 };
 
-// Publish comic (change from draft to published)
-export const publishComic = async (req:any, res:any) => {
+export const fetchAllComicByJwt = async (req, res) => {
   try {
-    const { comicId } = req.params;
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.userId;
-
-    // Get creator profile
+    const userId = getUserJwtFromToken(req);
     const [creator] = await db
       .select()
       .from(creatorProfile)
       .where(eq(creatorProfile.userId, userId));
-
     if (!creator) {
-      return res.status(404).json({ message: "Creator not found" });
-    }
-
-    // Update comic to published
-    const [updatedComic] = await db
-      .update(comics)
-      .set({
-        isDraft: false,
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(comics.id, comicId))
-      .returning();
-
-    if (!updatedComic) {
-      return res.status(404).json({ message: "Comic not found" });
-    }
-
-    return res.json({
-      success: true,
-      message: "Comic published successfully",
-      data: { comic: updatedComic },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to publish comic" });
-  }
-};
-
-// Get creator's comics (drafts and published)
-export const fetchAllComicByJwt = async (req:any, res:any) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.userId;
-
-    const [creator] = await db
-      .select()
-      .from(creatorProfile)
-      .where(eq(creatorProfile.userId, userId));
-    
-    if (!creator) {
-      return res.status(404).json({ message: "Creator not found" });
+      return res.status(404).json({ message: "Creator With Jwt not found" });
     }
 
     const userComics = await db
       .select()
       .from(comics)
-      .where(eq(comics.creatorId, creator.id))
-      .orderBy(desc(comics.createdAt));
+      .where(eq(comics.creatorId, creator.id));
 
-    return res.json({
-      success: true,
-      data: { comics: userComics },
-    });
+    const data = await Promise.all(
+      userComics.map(async (comic) => {
+        const { subscribeCount } = await getComicSubscribers(comic.id);
+        return {
+          id: comic.id,
+          title: comic.title,
+          language: comic.language,
+          ageRating: comic.ageRating,
+          noOfChapters: comic.noOfChapters,
+          noOfDrafts: comic.noOfDrafts,
+          description: comic.description,
+          image: generateFileUrl(comic.image),
+          comicStatus: comic.comicStatus,
+          genre: comic.genre,
+          tags: comic.tags,
+          slug: comic.slug,
+          creatorName: creator.creatorName,
+          createdAt: comic.createdAt,
+          updatedAt: comic.updatedAt,
+          viewsCount: await getComicViews(comic.id),
+          likesCount: await getComicLikes(comic.id),
+          subscribeCount,
+        };
+      })
+    );
+    return res.json({ comics: data });
   } catch (err) {
     console.error(err);
     return res.status(400).json({ message: "Failed to fetch comics" });
   }
 };
 
-// Get comic by slug (public endpoint)
-export const fetchComicBySlug = async (req: any, res: any) => {
+export const fetchComicBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const [comic] = await db
+    const [comic] = await db.select().from(comics).where(eq(comics.slug, slug));
+
+    if (!comic) return res.status(404).json({ message: "Comic not found" });
+
+    const { subscribeCount } = await getComicSubscribers(comic.id);
+    const data = {
+      id: comic.id,
+      title: comic.title,
+      language: comic.language,
+      ageRating: comic.ageRating,
+      noOfChapters: comic.noOfChapters,
+      noOfDrafts: comic.noOfDrafts,
+      description: comic.description,
+      image: generateFileUrl(comic.image),
+      comicStatus: comic.comicStatus,
+      genre: comic.genre,
+      tags: comic.tags,
+      slug: comic.slug,
+      createdAt: comic.createdAt,
+      updatedAt: comic.updatedAt,
+      viewsCount: await getComicViews(comic.id),
+      likesCount: await getComicLikes(comic.id),
+      subscribeCount,
+    };
+
+    return res.json({ data });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ message: "Failed to fetch comic" });
+  }
+};
+
+export const fetchComicBySlugForReaders = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const userId = getUserJwtFromToken(req);
+
+    const [reader] = await db
       .select()
-      .from(comics)
-      .where(eq(comics.slug, slug));
+      .from(readerProfile)
+      .where(eq(readerProfile.userId, userId));
 
-    if (!comic) {
-      return res.status(404).json({ message: "Comic not found" });
-    }
+    const [comic] = await db.select().from(comics).where(eq(comics.slug, slug));
+    if (!comic) return res.status(404).json({ message: "Comic not found" });
 
-    // Only return published comics for public access
-    if (comic.isDraft) {
-      return res.status(404).json({ message: "Comic not found" });
-    }
+    const [creator] = await db
+      .select()
+      .from(creatorProfile)
+      .where(eq(creatorProfile.id, comic.creatorId));
+
+    const [libraries] = await db
+      .select()
+      .from(library)
+      .where(
+        and(eq(library.comicId, comic.id), eq(library.readerId, reader.id))
+      );
+
+    const inLibrary = !!libraries;
+
+    const { subscribeCount, hasSubscribed } = await getComicSubscribers(
+      comic.id,
+      reader.id
+    );
+
+    const data = {
+      id: comic.id,
+      title: comic.title,
+      language: comic.language,
+      ageRating: comic.ageRating,
+      noOfChapters: comic.noOfChapters,
+      noOfDrafts: comic.noOfDrafts,
+      description: comic.description,
+      image: generateFileUrl(comic.image),
+      comicStatus: comic.comicStatus,
+      genre: comic.genre,
+      tags: comic.tags,
+      slug: comic.slug,
+      createdAt: comic.createdAt,
+      updatedAt: comic.updatedAt,
+      creatorName: creator.creatorName,
+      inLibrary,
+      viewsCount: await getComicViews(comic.id),
+      likesCount: await getComicLikes(comic.id),
+      subscribeCount,
+      hasSubscribed,
+    };
 
     return res.json({
-      success: true,
-      data: { comic },
+      data,
     });
   } catch (err) {
     console.error(err);
@@ -180,280 +263,160 @@ export const fetchComicBySlug = async (req: any, res: any) => {
   }
 };
 
-// Get all published comics (reader endpoint)
-export const fetchAllComics = async (req: any, res: any) => {
+export const fetchAllComics = async (req, res) => {
   try {
-    const allComics = await db
+    const userId = getUserJwtFromToken(req);
+
+    const [reader] = await db
+      .select()
+      .from(readerProfile)
+      .where(eq(readerProfile.userId, userId));
+
+    if (!reader) {
+      return res.status(404).json({ message: "Reader not found" });
+    }
+
+    const publishedComics = await db
       .select()
       .from(comics)
-      .where(eq(comics.isDraft, false)) // Only published comics
-      .orderBy(desc(comics.publishedAt));
+      .where(eq(comics.comicStatus, "published"));
 
-    return res.json({
-      success: true,
-      data: { comics: allComics },
-    });
+    const data = await Promise.all(
+      publishedComics.map(async (chapter) => {
+        const [creator] = await db
+          .select()
+          .from(creatorProfile)
+          .where(eq(creatorProfile.id, chapter.creatorId));
+
+        const { subscribeCount, hasSubscribed } = await getComicSubscribers(
+          chapter.id,
+          reader.id
+        );
+
+        return {
+          ...chapter,
+          image: generateFileUrl(chapter.image),
+          creatorName: creator?.creatorName || "Unknown",
+          viewsCount: await getComicViews(chapter.id),
+          likesCount: await getComicLikes(chapter.id),
+          subscribeCount,
+          hasSubscribed,
+        };
+      })
+    );
+
+    return res.json({ comics: data });
   } catch (err) {
     console.error(err);
     return res.status(400).json({ message: "Failed to fetch comics" });
   }
 };
 
-// ===============================
-// CHAPTER CRUD OPERATIONS
-// ===============================
-
-// Create chapter for a comic
-export const createChapter = async (req:any, res:any) => {
+export const deleteComicBySlug = async (req, res) => {
   try {
+    const { slug } = req.params;
+
+    const [comic] = await db.select().from(comics).where(eq(comics.slug, slug));
+
+    if (!comic) return res.status(404).json({ message: "Comic not found" });
+
+    await db.delete(comics).where(eq(comics.slug, slug));
+
+    return res.json({ message: "Comic deleted Successfully" });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ message: "Failed to fetch comic" });
+  }
+};
+
+export const subscribeForcomic = async (req, res) => {
+  try {
+    const userId = getUserJwtFromToken(req);
     const { comicId } = req.params;
-    const { title, chapterNumber, description, pages } = req.body;
 
-    // Verify user owns the comic
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.userId;
-
-    const [creator] = await db
+    const [reader] = await db
       .select()
-      .from(creatorProfile)
-      .where(eq(creatorProfile.userId, userId));
-
-    if (!creator) {
-      return res.status(404).json({ message: "Creator not found" });
+      .from(readerProfile)
+      .where(eq(readerProfile.userId, userId));
+    if (!reader) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Reader not found" });
     }
 
-    // Check if comic exists and belongs to creator
-    const [comic] = await db
+    // check if already liked
+    const [existingSubscriber] = await db
       .select()
-      .from(comics)
-      .where(eq(comics.id, comicId));
+      .from(comicSubscribers)
+      .where(
+        and(
+          eq(comicSubscribers.comicId, comicId),
+          eq(comicSubscribers.readerId, reader.id)
+        )
+      );
 
-    if (!comic || comic.creatorId !== creator.id) {
-      return res.status(404).json({ message: "Comic not found or unauthorized" });
-    }
+    if (existingSubscriber) {
+      // Unlike (delete row)
+      await db
+        .delete(comicSubscribers)
+        .where(eq(comicSubscribers.id, existingSubscriber.id));
 
-    const [chapter] = await db
-      .insert(chapters)
-      .values({
-        comicId,
-        title,
-        chapterNumber,
-        description: description || null,
-        pages: pages || [], // Array of S3 URLs
-        pageCount: pages?.length || 0,
-        isDraft: true,
-      })
-      .returning();
+      const [{ subscribeCount }] = await db
+        .select({ subscribeCount: sql`COUNT(${comicSubscribers.id})` })
+        .from(comicSubscribers)
+        .where(eq(comicSubscribers.comicId, comicId));
 
-    return res.status(201).json({
-      success: true,
-      message: "Chapter created successfully",
-      data: { chapter },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to create chapter" });
-  }
-};
-
-// Update chapter (reorder pages, update info)
-export const updateChapter = async (req:any, res:any) => {
-  try {
-    const { chapterId } = req.params;
-    const { title, chapterNumber, description, pages } = req.body;
-
-    // Verify ownership through comic
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const userId = decoded.userId;
-
-    const [creator] = await db
-      .select()
-      .from(creatorProfile)
-      .where(eq(creatorProfile.userId, userId));
-
-    if (!creator) {
-      return res.status(404).json({ message: "Creator not found" });
-    }
-
-    const [updatedChapter] = await db
-      .update(chapters)
-      .set({
-        title: title || undefined,
-        chapterNumber: chapterNumber || undefined,
-        description: description || undefined,
-        pages: pages || undefined,
-        pageCount: pages?.length || undefined,
-        updatedAt: new Date(),
-      })
-      .where(eq(chapters.id, chapterId))
-      .returning();
-
-    if (!updatedChapter) {
-      return res.status(404).json({ message: "Chapter not found" });
-    }
-
-    return res.json({
-      success: true,
-      message: "Chapter updated successfully",
-      data: { chapter: updatedChapter },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to update chapter" });
-  }
-};
-
-// Publish chapter
-export const publishChapter = async (req:any, res:any) => {
-  try {
-    const { chapterId } = req.params;
-
-    const [updatedChapter] = await db
-      .update(chapters)
-      .set({
-        isDraft: false,
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(chapters.id, chapterId))
-      .returning();
-
-    if (!updatedChapter) {
-      return res.status(404).json({ message: "Chapter not found" });
-    }
-
-    return res.json({
-      success: true,
-      message: "Chapter published successfully",
-      data: { chapter: updatedChapter },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to publish chapter" });
-  }
-};
-
-// Get chapters for a comic
-export const getComicChapters = async (req: any, res: any) => {
-  try {
-    const { comicId } = req.params;
-    const { includePages = 'false' } = req.query;
-
-    // Get comic first to check if it exists
-    const [comic] = await db
-      .select()
-      .from(comics)
-      .where(eq(comics.id, comicId));
-
-    if (!comic) {
-      return res.status(404).json({ message: "Comic not found" });
-    }
-
-    let query = db
-      .select()
-      .from(chapters)
-      .where(eq(chapters.comicId, comicId))
-      .orderBy(asc(chapters.chapterNumber));
-
-    // For public access, only show published chapters
-    const authHeader = req.headers.authorization;
-    const isOwner = false; // You can implement owner check here if needed
-    
-    if (!isOwner) {
-      query = db
-      .select()
-      .from(chapters)
-      .where(and(eq(chapters.comicId, comicId), eq(chapters.isDraft, false)))
-      .orderBy(asc(chapters.chapterNumber))
-    }
-
-    const comicChapters = await query;
-
-    // Optionally exclude pages from response for performance
-    if (includePages === 'false') {
-      const chaptersWithoutPages = comicChapters.map(chapter => {
-        const { pages, ...chapterWithoutPages } = chapter;
-        return chapterWithoutPages;
-      });
-      
-      return res.json({
+      return res.status(200).json({
         success: true,
-        data: { chapters: chaptersWithoutPages },
+        message: "Comic Unsubscribed",
+        data: {
+          comicId: comicId,
+          liked: false,
+          subscribeCount: Number(subscribeCount) || 0,
+        },
+      });
+    } else {
+      // Like (insert row)
+      await db.insert(comicSubscribers).values({
+        comicId: comicId,
+        readerId: reader.id,
+      });
+
+      const [{ subscribeCount }] = await db
+        .select({ subscribeCount: sql`COUNT(${comicSubscribers.id})` })
+        .from(comicSubscribers)
+        .where(eq(comicSubscribers.comicId, comicId));
+
+      return res.status(200).json({
+        success: true,
+        message: "Comic Subscribed",
+        data: {
+          comicId,
+          Subscribed: true,
+          subscribeCount: Number(subscribeCount) || 0,
+        },
       });
     }
-
-    return res.json({
-      success: true,
-      data: { chapters: comicChapters },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to fetch chapters" });
+  } catch (err: any) {
+    console.error("Toggle Subscription Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Get single chapter with all pages
-export const getChapter = async (req: any, res: any) => {
-  try {
-    const { chapterId } = req.params;
+// ✅ Search comics by title
+// export const searchComics = async (req, res) => {
+//   try {
+//     const { q } = req.query;
+//     if (!q) return res.status(400).json({ message: "Search query required" });
 
-    const [chapter] = await db
-      .select()
-      .from(chapters)
-      .where(eq(chapters.id, chapterId));
+//     const results = await db
+//       .select()
+//       .from(comics)
+//       .where(ilike(comics.title, `%${q}%`));
 
-    if (!chapter) {
-      return res.status(404).json({ message: "Chapter not found" });
-    }
-
-    // For public access, only show published chapters
-    if (chapter.isDraft) {
-      return res.status(404).json({ message: "Chapter not found" });
-    }
-
-    return res.json({
-      success: true,
-      data: { chapter },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to fetch chapter" });
-  }
-};
-
-// Delete chapter
-export const deleteChapter = async (req:any, res:any) => {
-  try {
-    const { chapterId } = req.params;
-
-    const [deletedChapter] = await db
-      .delete(chapters)
-      .where(eq(chapters.id, chapterId))
-      .returning();
-
-    if (!deletedChapter) {
-      return res.status(404).json({ message: "Chapter not found" });
-    }
-
-    return res.json({
-      success: true,
-      message: "Chapter deleted successfully",
-      data: { deletedChapter },
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({ message: "Failed to delete chapter" });
-  }
-};
+//     return res.json({ results });
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(400).json({ message: "Failed to search comics" });
+//   }
+// };

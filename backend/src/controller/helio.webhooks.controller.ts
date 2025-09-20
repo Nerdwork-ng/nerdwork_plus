@@ -24,7 +24,7 @@ export const helioWebhook = async (req, res) => {
     }
 
     // Issue ticket after successful payment
-    const ticket = await issueTicket(userId, eventId, paymentType, amount);
+    const ticket = await issueTicket(userId, eventId, txId);
 
     return res.status(200).json({ success: true, ticketId: ticket.id });
   } catch (error: any) {
