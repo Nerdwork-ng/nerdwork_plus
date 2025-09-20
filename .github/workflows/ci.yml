@@ -31,8 +31,8 @@ jobs:
     strategy:
       matrix:
         test-type:
-          - { name: frontend-tests, path: 'apps/**', command: 'test:frontend' }
-          - { name: backend-tests, path: 'backend/**', command: 'test:backend' }
+          - { name: frontend-tests, path: 'apps/**', command: 'test' }
+          - { name: backend-tests, path: 'backend/**', command: 'test' }
     steps:
       - uses: actions/checkout@v4
       - name: Setup pnpm
