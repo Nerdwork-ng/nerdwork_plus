@@ -67,7 +67,7 @@ jobs:
           node-version: '18'
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Run tasks with turbo
         if: needs.changed-files.outputs.changed-packages == 'all' || contains(needs.changed-files.outputs.changed-packages, matrix.package.name)
         working-directory: ${{ matrix.package.name }}
