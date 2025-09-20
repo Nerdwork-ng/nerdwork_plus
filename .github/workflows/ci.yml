@@ -78,7 +78,7 @@ jobs:
         with:
           sarif_file: trivy-results-${{ matrix.test-type.name }}.sarif
       - name: Build (only on main - dry run for readiness)
-        if: github.ref == 'refs/heads/main' && (needs('changed-files').outputs.frontend-tests > 0 || needs('changed-files').outputs.backend-tests > 0)
+        if: github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
         run: |
           built_services=0
           for service in docker/*; do
