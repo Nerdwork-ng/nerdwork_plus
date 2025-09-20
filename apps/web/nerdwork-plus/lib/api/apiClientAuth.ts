@@ -91,7 +91,11 @@ async function axiosPost<T = any, D = any>(
     const response = await axios.post<T>(fullUrl, body, config);
     return response;
   } catch (error) {
-    console.error(`Error in POST request to ${fullUrl}:`, error);
+    console.error(
+      "Error in POST request to %s:",
+      encodeURIComponent(fullUrl),
+      error
+    );
     throw error;
   }
 }
@@ -114,7 +118,38 @@ async function axiosPatch<T = any, D = any>(
     const response = await axios.patch<T>(fullUrl, body, config);
     return response;
   } catch (error) {
-    console.error(`Error in PATCH request to ${fullUrl}:`, error);
+    console.error(
+      "Error in PATCH request to %s:",
+      encodeURIComponent(fullUrl),
+      error
+    );
+    throw error;
+  }
+}
+
+async function axiosPut<T = any, D = any>(
+  url: string,
+  body: D,
+  params = {}
+): Promise<AxiosResponse<T>> {
+  const headers = await getAuthHeader();
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    params,
+  };
+  const fullUrl = `${apiUrl}${url}`;
+  try {
+    const response = await axios.put<T>(fullUrl, body, config);
+    return response;
+  } catch (error) {
+    console.error(
+      "Error in PUT request to %s:",
+      encodeURIComponent(fullUrl),
+      error
+    );
     throw error;
   }
 }
@@ -160,7 +195,11 @@ async function axiosPostData<T = any>(
     const response = await axios.post<T>(fullUrl, body, config);
     return response;
   } catch (error) {
-    console.error(`Error in FormData POST request to ${fullUrl}:`, error);
+    console.error(
+      "Error in FormData Post request to %s:",
+      encodeURIComponent(fullUrl),
+      error
+    );
     throw error;
   }
 }
@@ -182,7 +221,11 @@ async function axiosDelete<T = any>(
     const response = await axios.delete<T>(fullUrl, config);
     return response;
   } catch (error) {
-    console.error(`Error in DELETE request to ${fullUrl}:`, error);
+    console.error(
+      "Error in DELETE request to %s:",
+      encodeURIComponent(fullUrl),
+      error
+    );
     throw error;
   }
 }

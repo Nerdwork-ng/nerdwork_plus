@@ -135,7 +135,9 @@ const ComicInterface = ({ params }: { params: Promise<{ slug: string }> }) => {
               </div>
 
               <div className="space-x-4 flex items-stretch">
-                <Link href={`/r/comics/${slug}/chapters/`}>
+                <Link
+                  href={`/r/comics/${slug}/chapter/${chapters[0].uniqueCode}`}
+                >
                   <Button variant={"primary"}>Start Reading</Button>
                 </Link>
                 {isInLibrary ? (

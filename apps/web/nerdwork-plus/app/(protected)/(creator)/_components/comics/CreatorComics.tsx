@@ -40,7 +40,12 @@ const CreatorComics = ({ data }: { data: Comic[] }) => {
               </Menubar>
             </div>
             <div className="p-5">
-              <p className="mb-3 font-semibold">{comic.title}</p>
+              <Link
+                href={`/creator/comics/${comic.slug}`}
+                className="hover:underline transition duration-300"
+              >
+                <p className="mb-3 font-semibold">{comic.title}</p>
+              </Link>
               <div className="text-sm text-[#707073] flex flex-col gap-1">
                 <p className="flex items-center gap-3">
                   <BookOpen size={16} /> {comic.noOfChapters ?? 0} Chapters

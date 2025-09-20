@@ -5,7 +5,6 @@ import axios from "axios";
 export const getLibraryComics = async () => {
   try {
     const response = await axiosGet("library");
-
     return {
       success: true,
       data: response.data,
@@ -35,7 +34,6 @@ export const getLibraryComics = async () => {
 export const addToLibrary = async (data: string) => {
   try {
     const response = await axiosPost("library", { comicId: data });
-
     return {
       success: true,
       data: response.data,

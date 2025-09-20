@@ -8,8 +8,8 @@ export type Comic = {
   slug: string;
   updatedAt: string;
   createdAt: string;
-  creatorName: string;
-  genre?: Array<string>;
+  creatorName?: string;
+  genre?: string[];
   ageRating?: string;
   isPaid?: boolean;
   isOngoing?: boolean;
@@ -45,7 +45,7 @@ export type Transaction = {
 };
 
 export type NFTCollectible = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   image: string;
