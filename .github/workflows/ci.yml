@@ -269,10 +269,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Replace with your AWS region
 
-      - name: Copy staging environment file
+      - name: Create staging environment file
         run: |
-          echo "Copying .env.staging file for deployment..."
-          cp .env.staging .env
+          echo "Creating .env file for staging deployment..."
+          echo "DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}" > .env
+          echo "API_KEY=${{ secrets.STAGING_API_KEY }}" >> .env
+          echo "SERVICE_URL=${{ secrets.STAGING_SERVICE_URL || 'https://staging.nerdwork-plus.example.com' }}" >> .env
+          echo "JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "S3_BUCKET=${{ secrets.STAGING_S3_BUCKET || 'nerdwork-staging-assets' }}" >> .env
+          
+          # Log non-sensitive environment variables
+          echo "Environment file created with the following variables:"
+          cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
 
       - name: Deploy to staging environment
         run: |
@@ -385,10 +396,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Replace with your AWS region
 
-      - name: Copy production environment file
+      - name: Create production environment file
         run: |
-          echo "Copying .env.production file for deployment..."
-          cp .env.production .env
+          echo "Creating .env file for production deployment..."
+          echo "DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" > .env
+          echo "API_KEY=${{ secrets.PRODUCTION_API_KEY }}" >> .env
+          echo "SERVICE_URL=${{ secrets.PRODUCTION_SERVICE_URL || 'https://nerdwork-plus.example.com' }}" >> .env
+          echo "JWT_SECRET=${{ secrets.PRODUCTION_JWT_SECRET }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "S3_BUCKET=${{ secrets.PRODUCTION_S3_BUCKET || 'nerdwork-production-assets' }}" >> .env
+          
+          # Log non-sensitive environment variables
+          echo "Environment file created with the following variables:"
+          cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
 
       - name: Deploy to production environment
         run: |
