@@ -280,7 +280,7 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=${{ secrets.STAGING_S3_BUCKET || 'nerdwork-staging-assets' }}" >> .env
-          
+
           # Log non-sensitive environment variables
           echo "Environment file created with the following variables:"
           cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
@@ -395,7 +395,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Replace with your AWS region
-x
       - name: Create production environment file
         run: |
           echo "Creating .env file for production deployment..."
@@ -407,7 +406,7 @@ x
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=${{ secrets.PRODUCTION_S3_BUCKET || 'nerdwork-production-assets' }}" >> .env
-          
+
           # Log non-sensitive environment variables
           echo "Environment file created with the following variables:"
           cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
