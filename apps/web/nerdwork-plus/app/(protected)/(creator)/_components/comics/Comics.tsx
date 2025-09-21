@@ -58,12 +58,6 @@ const Comics = () => {
               </TabsTrigger>
               <TabsTrigger
                 className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"
-                value="upcoming"
-              >
-                Upcoming ({counts.upcoming})
-              </TabsTrigger>
-              <TabsTrigger
-                className="data-[state=active]:border-b !data-[state=active]:border-white pb-5 max-md:font-normal border-white !data-[state=active]:shadow-none text-white rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none !data-[state=active]:shadow-none"
                 value="published"
               >
                 Live ({counts.published})
