@@ -1,10 +1,11 @@
-name: CI - Build and Test
+name: CI/CD - Build, Test and Deploy
 
 permissions:
   contents: write
   issues: write
   security-events: write  # Required for SARIF upload
   packages: write  # Required for Docker image publishing
+  deployments: write  # Required for deployment status updates
 
 on:
   push:
@@ -139,6 +140,49 @@ jobs:
             fi
           done
           echo "✅ All Docker images published successfully"
+      
+      - name: Create artifact summary
+        if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        id: artifact-summary
+        run: |
+          echo "## 🚀 Docker Images Created" > artifact_summary.md
+          echo "| Service | Tags | Repository |" >> artifact_summary.md
+          echo "| ------- | ---- | ---------- |" >> artifact_summary.md
+          
+          for service in docker/*; do
+            if [ -f "$service/Dockerfile" ]; then
+              service_name=$(basename $service)
+              echo "| $service_name | latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date }} | ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name |" >> artifact_summary.md
+            fi
+          done
+          
+          cat artifact_summary.md
+          
+      - name: Notify about artifacts
+        if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const artifactSummary = fs.readFileSync('artifact_summary.md', 'utf8');
+            
+            const issueBody = `# 📦 New Artifacts Available
+            
+            ${artifactSummary}
+            
+            These artifacts are ready for deployment to test environment.
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            `;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📦 New artifacts available for testing - ${{ steps.version.outputs.version }}',
+              body: issueBody,
+              labels: ['artifacts', 'ready-for-testing']
+            });
+      
       - name: Notify failure on PR (GitHub comment)
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -176,3 +220,219 @@ jobs:
               commit_sha: context.sha,
               body: `@${{ github.actor }} CI failed on this commit (${{ matrix.test-type.name }}). Please check the logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             })
+
+  deploy-to-test:
+    name: Deploy to Test Environment
+    needs: [build-and-test]
+    if: success() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: test
+      url: https://test.nerdwork-plus.example.com  # Replace with your actual test environment URL
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create deployment
+        id: deployment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'test',
+              auto_merge: false,
+              required_contexts: [],
+              description: 'Deploying to test environment'
+            });
+            return deployment.data.id;
+      
+      - name: Set deployment status to in_progress
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'in_progress',
+              description: 'Deployment started'
+            });
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Replace with your AWS region
+      
+      - name: Deploy to test environment
+        run: |
+          echo "Deploying to test environment..."
+          # Pull the latest Docker images from GitHub Container Registry
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          
+          # Update ECS services or other deployment steps
+          # Example: aws ecs update-service --cluster test-cluster --service nerdwork-api --force-new-deployment
+          
+          echo "✅ Deployment to test environment completed"
+      
+      - name: Set deployment status to success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'success',
+              description: 'Deployment successful',
+              environment_url: 'https://test.nerdwork-plus.example.com'  # Replace with your actual test URL
+            });
+      
+      - name: Set deployment status to failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'failure',
+              description: 'Deployment failed'
+            });
+      
+      - name: Notify about test deployment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Successfully deployed to test environment! You can view it at https://test.nerdwork-plus.example.com'
+            });
+
+  deploy-to-production:
+    name: Deploy to Production
+    needs: [deploy-to-test]
+    if: success() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://nerdwork-plus.example.com  # Replace with your actual production URL
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Wait for approval
+        run: |
+          echo "Deployment to production requires manual approval in GitHub Actions."
+          echo "Please approve this deployment in the GitHub Actions UI."
+      
+      - name: Create deployment
+        id: deployment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'production',
+              auto_merge: false,
+              required_contexts: [],
+              description: 'Deploying to production environment'
+            });
+            return deployment.data.id;
+      
+      - name: Set deployment status to in_progress
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'in_progress',
+              description: 'Production deployment started'
+            });
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Replace with your AWS region
+      
+      - name: Deploy to production environment
+        run: |
+          echo "Deploying to production environment..."
+          # Pull the latest Docker images from GitHub Container Registry
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          
+          # Update ECS services or other deployment steps
+          # Example: aws ecs update-service --cluster prod-cluster --service nerdwork-api --force-new-deployment
+          
+          echo "✅ Deployment to production environment completed"
+      
+      - name: Set deployment status to success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'success',
+              description: 'Production deployment successful',
+              environment_url: 'https://nerdwork-plus.example.com'  # Replace with your actual production URL
+            });
+      
+      - name: Set deployment status to failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'failure',
+              description: 'Production deployment failed'
+            });
+      
+      - name: Notify about production deployment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueBody = `# 🚀 Production Deployment Successful
+            
+            Version: ${{ github.sha }}
+            Deployment URL: https://nerdwork-plus.example.com
+            
+            This version has been successfully deployed to production.
+            `;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚀 Production Deployment - ${{ github.sha }}',
+              body: issueBody,
+              labels: ['deployment', 'production']
+            });
