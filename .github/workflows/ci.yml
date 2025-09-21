@@ -337,10 +337,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.issues.create({
-              issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🚀 Successfully deployed to staging environment! https://staging.nerdwork-plus.example.com'
+              title: '🚀 Staging Deployment Successful - ' + context.sha.substring(0, 7),
+              body: message + '\n\nWorkflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+              labels: ['deployment', 'staging']
             });
 
   deploy-to-production:
