@@ -4,6 +4,7 @@ permissions:
   contents: write
   issues: write
   security-events: write  # Required for SARIF upload
+  packages: write  # Required for Docker image publishing
 
 on:
   push:
@@ -83,7 +84,7 @@ jobs:
           built_services=0
           for service in docker/*; do
             if [ -f "$service/Dockerfile" ]; then
-              docker build --no-cache -t nerdwork-$service:test $service
+              docker build --no-cache -t nerdwork-$(basename $service):test $service
               ((built_services++))
             fi
           done
@@ -92,6 +93,52 @@ jobs:
             exit 1
           fi
           echo "✅ Build successful - $built_services services ready for deployment"
+      
+      - name: Set version variables
+        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        id: version
+        run: |
+          # Get short SHA for the commit
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          
+          # Check if this commit has a tag
+          GIT_TAG=$(git tag --points-at HEAD | head -n 1)
+          if [ -n "$GIT_TAG" ]; then
+            echo "version=$GIT_TAG" >> $GITHUB_OUTPUT
+            echo "Using git tag: $GIT_TAG"
+          else
+            echo "version=$SHORT_SHA" >> $GITHUB_OUTPUT
+            echo "No git tag found, using commit SHA: $SHORT_SHA"
+          fi
+          
+          # Get current date in YYYYMMDD format
+          BUILD_DATE=$(date +'%Y%m%d')
+          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
+
+      - name: Publish Docker images (only on main)
+        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          for service in docker/*; do
+            if [ -f "$service/Dockerfile" ]; then
+              service_name=$(basename $service)
+              echo "Publishing $service_name to GitHub Container Registry"
+              
+              # Tag with version info
+              docker tag nerdwork-$service_name:test ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.version }}
+              docker tag nerdwork-$service_name:test ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
+              docker tag nerdwork-$service_name:test ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:latest
+              
+              # Push all tags
+              docker push ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.version }}
+              docker push ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
+              docker push ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:latest
+              
+              echo "✅ Published $service_name with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date }}"
+            fi
+          done
+          echo "✅ All Docker images published successfully"
       - name: Notify failure on PR (GitHub comment)
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
