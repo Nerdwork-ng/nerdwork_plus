@@ -289,7 +289,7 @@ jobs:
         run: |
           echo "Deploying to staging environment..."
           # Pull the latest Docker images from GitHub Container Registry
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
 
           # Load environment variables from .env.staging
           set -a
