@@ -313,7 +313,7 @@ jobs:
               deployment_id: ${{ steps.deployment.outputs.result }},
               state: 'success',
               description: 'Deployment successful',
-              environment_url: 'https://staging.nerdwork-plus.example.com'  # Replace with your actual staging URL
+              environment_url: 'https://staging.nerdwork-plus.example.com'
             });
 
       - name: Set deployment status to failure
@@ -340,7 +340,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🚀 Successfully deployed to staging environment! You can view it at https://staging.nerdwork-plus.example.com'
+              body: '🚀 Successfully deployed to staging environment! https://staging.nerdwork-plus.example.com'
             });
 
   deploy-to-production:
