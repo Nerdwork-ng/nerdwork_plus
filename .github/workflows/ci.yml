@@ -424,7 +424,7 @@ jobs:
 
           # Update ECS services or other deployment steps
           # Example:
-          aws ecs update-service --cluster prod-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
+          aws ecs update-service --Clusters prod-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
 
           echo "✅ Deployment to production environment completed"
 
@@ -440,7 +440,7 @@ jobs:
               deployment_id: ${{ steps.deployment.outputs.result }},
               state: 'success',
               description: 'Production deployment successful',
-              environment_url: 'https://nerdwork-plus.example.com'  # Replace with your actual production URL
+              environment_url: 'https://nerdwork-plus.example.com'
             });
 
       - name: Set deployment status to failure
