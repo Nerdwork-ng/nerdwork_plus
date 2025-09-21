@@ -215,3 +215,90 @@
   font-family: "text-security-disc", sans-serif;
   -webkit-text-security: disc;
 }
+
+/* Prevent Helio checkout embed from floating bottom-right */
+[data-hel-embed-instance-id] {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Lock WalletConnect modal so it doesn’t float bottom-right */
+#wcm-modal,
+.wcm-modal,
+wcm-modal {
+  position: static !important;
+  inset: auto !important;
+  margin: 0 auto !important;
+  transform: none !important;
+  max-width: 100% !important;
+}
+
+/* Add this to your app/globals.css */
+html {
+  transform: none !important;
+  transition: none !important;
+}
+
+html[style*="--wcm"] {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Prevent any WCM modals from animating strangely */
+div[id*="wcm-modal"],
+div[class*="wcm-modal"],
+wcm-modal {
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ensure your checkout modal stays in place */
+.helio-checkout-container {
+  position: relative;
+  z-index: 1000;
+}
+
+@keyframes like-heart {
+  0% {
+    transform: scale(0, 0);
+  }
+  30% {
+    transform: scale(0, 0);
+  }
+  65% {
+    transform: scale(1.4, 1.4);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes sparkle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    /* Use the new random --x and --y values */
+    transform: translate(var(--x), var(--y)) scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-like-heart {
+  animation: like-heart 0.5s ease-in-out;
+}
+
+.animate-sparkle {
+  animation: sparkle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards
+    var(--delay, 0s);
+  background: white; /* The color of the sparkles */
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}

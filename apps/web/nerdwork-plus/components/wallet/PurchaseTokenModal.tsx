@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import {
   Dialog,
@@ -24,16 +25,13 @@ const PurchaseTokenModal = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(false);
   const [helioModalOpen, setHelioModalOpen] = React.useState(false);
-  const [helioModalMinimized, setHelioModalMinimized] = React.useState(false);
   const [paymentData, setPaymentData] = React.useState<{
     paymentLink?: string;
     paylinkId?: string;
   }>({});
 
-  // Hardcoded values for demonstration
-  const usdPerNwt = 0.05105; // 100 NWT for $140.50
-  const transactionFeeRate = 0.01; // 1%
-
+  const usdPerNwt = 0.1;
+  const transactionFeeRate = 0.01;
   const suggestedAmounts = [50, 100, 200, 500];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,48 +56,41 @@ const PurchaseTokenModal = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
-      // Create payment link
       toast.info("Creating payment link...");
       const paymentResponse = await createPaymentLink({
         amount: nwtAmount * usdPerNwt,
         name: "NWT_Purchase",
-        // cannot use localhost as redirect url
-        redirectUrl: "http://nerdwork.ng/helio/webhook/handle"
+        redirectUrl: "http://nerdwork.ng/helio/webhook/handle",
       });
 
       if (!paymentResponse.success) {
         throw new Error("Failed to create payment link");
       }
 
-      console.log(paymentResponse)
+      console.log(paymentResponse);
 
-      // Create webhook for payment notifications
       const webhook = await createPaymentWebhook({
-        paymentId: paymentResponse.paylinkId
+        paymentId: paymentResponse.paylinkId,
       });
 
-      console.log(webhook)
+      console.log(webhook);
 
-      // Store payment data and open Helio modal
       setPaymentData({
         paymentLink: paymentResponse.payment.url,
-        paylinkId: paymentResponse.paylinkId
+        paylinkId: paymentResponse.paylinkId,
       });
 
-      console.log(paymentResponse)
-
-      // Close purchase modal and open Helio modal
       setIsOpen(false);
       setHelioModalOpen(true);
       toast.success("Payment form ready!");
-
-      
-      
     } catch (error: unknown) {
       console.error("Payment error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to create payment. Please try again.";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to create payment. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -197,14 +188,7 @@ const PurchaseTokenModal = () => {
       {/* Helio Payment Modal */}
       <HelioModal
         isOpen={helioModalOpen}
-        onOpenChange={(open) => {
-          setHelioModalOpen(open);
-          if (!open) {
-            setHelioModalMinimized(false);
-          }
-        }}
-        isMinimized={helioModalMinimized}
-        onMinimize={setHelioModalMinimized}
+        onOpenChange={setHelioModalOpen}
         paymentLink={paymentData.paymentLink}
         paylinkId={paymentData.paylinkId}
         amount={nwtAmount}

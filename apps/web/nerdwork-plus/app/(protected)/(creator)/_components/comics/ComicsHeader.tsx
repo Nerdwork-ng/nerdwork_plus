@@ -7,6 +7,7 @@ import { useUserSession } from "@/lib/api/queries";
 
 const ComicsHeader = () => {
   const { profile } = useUserSession();
+  const creatorProfile = profile?.creatorProfile;
 
   return (
     <section className="!mx-auto max-w-[1300px] font-inter flex max-md:flex-col max-md:gap-6 justify-between md:items-center mt-10 mb-6 max-2xl:px-5">
@@ -15,7 +16,7 @@ const ComicsHeader = () => {
           My Comics
         </h3>
         <p className="font-medium text-sm text-[#707073]">
-          Welcome back, {profile?.creatorName}! Manage your comic series
+          Welcome back, {creatorProfile?.creatorName}! Manage your comic series
         </p>
       </div>
       <Link href={"/creator/comics/new"} className="max-md:w-full">

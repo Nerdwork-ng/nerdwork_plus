@@ -12,21 +12,51 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/data-table";
 import { columns } from "./columns";
-import { creatorTransactions } from "@/components/data";
 import WithdrawEarningsModal from "@/components/wallet/WithdrawEarningsModal";
+import { useUserSession } from "@/lib/api/queries";
+import { ConnectWalletModal } from "../../../../../components/wallet/ConnectWalletModal";
+import { getCreatorTransactionHistory } from "@/actions/transaction.action";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { CreatorTransaction } from "@/lib/types";
+import LoaderScreen from "@/components/loading-screen";
 
 const WalletPage = () => {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sort, setSort] = useState("");
+  const { profile } = useUserSession();
+  const creatorProfile = profile?.creatorProfile;
 
-  const transactionData = creatorTransactions ?? [];
+  const usdPerNwt = 0.1;
+  const calculateUSD = (amount: number) => amount * usdPerNwt;
+  const usdEquivalent = calculateUSD(creatorProfile?.walletBalance);
+
+  const {
+    data: transactions,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["creator-transactions"],
+    queryFn: getCreatorTransactionHistory,
+    placeholderData: keepPreviousData,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  if (error)
+    toast.error(error?.message || "Error getting transactions details");
+
+  const transactionData: CreatorTransaction[] =
+    transactions?.data.transaction ?? [];
 
   const filteredAndSortedData = useMemo(() => {
     let filteredData = transactionData;
 
     if (typeFilter !== "all" && typeFilter !== "") {
-      filteredData = filteredData.filter((item) => item.type === typeFilter);
+      filteredData = filteredData.filter(
+        (item) => item.transactionType === typeFilter
+      );
     }
     if (statusFilter !== "all" && statusFilter !== "") {
       filteredData = filteredData.filter(
@@ -36,15 +66,17 @@ const WalletPage = () => {
 
     if (sort !== "all" && sort !== "") {
       filteredData = [...filteredData].sort((a, b) => {
-        if (sort === "amount") {
-          return a.amount - b.amount;
+        if (sort === "nwtAmount") {
+          return a.nwtAmount - b.nwtAmount;
         }
-        if (sort === "date") {
+        if (sort === "updatedAt") {
           // Assuming date is a string that can be compared or converted to a Date object
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
+          return (
+            new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+          );
         }
         if (sort === "type") {
-          return a.type.localeCompare(b.type);
+          return a.earningSource.localeCompare(b.earningSource);
         }
         return 0;
       });
@@ -52,6 +84,8 @@ const WalletPage = () => {
 
     return filteredData;
   }, [transactionData, typeFilter, statusFilter, sort]);
+
+  if (isLoading) return <LoaderScreen />;
 
   return (
     <main className="text-white font-inter">
@@ -64,7 +98,6 @@ const WalletPage = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            {/* <PurchaseTokenModal /> */}
             <WithdrawEarningsModal />
           </div>
         </div>
@@ -75,11 +108,11 @@ const WalletPage = () => {
               <p className="text-sm">Available Balance</p>
               <p className="text-[64px] text-[#09FFFF] flex items-center gap-3 font-bold">
                 <Image src={NWT} width={64} height={64} alt="" />
-                100
+                {creatorProfile?.walletBalance}
               </p>
             </div>
             <p className="text-right font-bold text-[#598EE2] opacity-55 text-5xl">
-              ≈ $427.05
+              ≈ ${usdEquivalent.toFixed(2) ?? 0.0}
             </p>
           </div>
 
@@ -88,13 +121,20 @@ const WalletPage = () => {
               <p>Wallet Information</p>
               <p className="text-nerd-muted">Manage your payout destination</p>
             </div>
-            <div className="flex flex-col gap-5">
-              <div>
-                <p>Solflare (Solana Wallet)</p>
-                <p className="text-nerd-muted">0xDEAF...fB8B</p>
+            {creatorProfile?.walletAddress ? (
+              <div className="flex flex-col gap-5">
+                <div>
+                  <p>Solflare (Solana Wallet)</p>
+                  <p className="text-nerd-muted">
+                    {creatorProfile?.walletAddress.slice(0, 4)}...
+                    {creatorProfile?.walletAddress.slice(-4)}
+                  </p>
+                </div>
+                <Button className="bg-nerd-default w-fit">Edit Wallet</Button>
               </div>
-              <Button className="bg-nerd-default w-fit">Edit Wallet</Button>
-            </div>
+            ) : (
+              <ConnectWalletModal />
+            )}
             <p className="text-nerd-muted text-xs">
               Payouts are completed every 3 working days
             </p>
@@ -110,15 +150,15 @@ const WalletPage = () => {
               </div>
               <div className="font-medium">
                 <p className="flex justify-between">
-                  1 NWT <span>$10.05</span>
+                  1 NWT <span>$0.1</span>
                 </p>
-                <p className="flex justify-between">
+                {/* <p className="flex justify-between">
                   1 SOL <span>$10.05</span>
-                </p>
+                </p> */}
               </div>
             </div>
             <hr className="!text-[#292A2E] h-0 border-t border-[#292A2E]" />
-            <div className="p-6 text-xs text-nerd-muted flex flex-col gap-1 mt-4">
+            <div className="p-6 text-xs text-nerd-muted flex flex-col gap-1">
               <p className="flex justify-between">
                 Fees: <span>1% on all transactions.</span>
               </p>
@@ -149,8 +189,7 @@ const WalletPage = () => {
             <SelectContent className="bg-[#1D1E21] border-none text-white">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="earning">Earning</SelectItem>
-              <SelectItem value="gift">Gift</SelectItem>
-              <SelectItem value="purchase">Purchase</SelectItem>
+              <SelectItem value="bonus">Bonus</SelectItem>
               <SelectItem value="withdrawal">Withdrawal</SelectItem>
             </SelectContent>
           </Select>
@@ -173,8 +212,8 @@ const WalletPage = () => {
             <SelectContent className="bg-[#1D1E21] border-none text-white">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="type">Type</SelectItem>
-              <SelectItem value="amount">Amount</SelectItem>
-              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="nwtAmount">Amount</SelectItem>
+              <SelectItem value="updatedAt">Date</SelectItem>
             </SelectContent>
           </Select>
         </div>

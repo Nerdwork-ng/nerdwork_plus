@@ -54,11 +54,10 @@ export default function ComicCon() {
               Meet your favorite creators, cosplay icons, and fellow fans
             </p>
             <div className="flex flex-col gap-4">
-              <Link target="_blank" href={"https://www.straqa.events/nerdworkcomiccon"}>
-                <Button variant={"primary"} className="md:w-fit">
-                  Register for comic con 2025
-                </Button>
-              </Link>
+              <Link
+                target="_blank"
+                href={"https://www.straqa.events/nerdworkcomiccon"}
+              ></Link>
               <Link href={"/events"}>
                 <Button className="md:w-fit">
                   See last year&apos;s comic con

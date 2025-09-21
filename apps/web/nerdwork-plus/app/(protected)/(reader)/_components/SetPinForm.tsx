@@ -75,26 +75,26 @@ export function SetPinForm({
                   <FormControl>
                     <InputOTP
                       pattern={REGEXP_ONLY_DIGITS}
-                      data-type="password"
+                      datatype="password"
                       maxLength={4}
                       {...field}
                     >
                       <InputOTPGroup className="mx-auto gap-3">
                         <InputOTPSlot
                           index={0}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                         <InputOTPSlot
                           index={1}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                         <InputOTPSlot
                           index={2}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                         <InputOTPSlot
                           index={3}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                       </InputOTPGroup>
                     </InputOTP>
@@ -116,19 +116,19 @@ export function SetPinForm({
                       <InputOTPGroup className="mx-auto gap-3">
                         <InputOTPSlot
                           index={0}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                         <InputOTPSlot
                           index={1}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                         <InputOTPSlot
                           index={2}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                         <InputOTPSlot
                           index={3}
-                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl"
+                          className="bg-[#1D1E21] border border-[#292A2E] h-16 w-16 text-2xl password-font"
                         />
                       </InputOTPGroup>
                     </InputOTP>

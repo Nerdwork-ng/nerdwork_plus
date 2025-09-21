@@ -28,14 +28,14 @@ import {
   Book,
   BookOpen,
   CreditCard,
-  HelpCircle,
+  // HelpCircle,
+  // UserCog,
+  // ShoppingBag,
   LibraryBig,
   Menu,
   Plus,
   Search,
-  ShoppingBag,
   User2,
-  UserCog,
   Wallet2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -52,9 +52,9 @@ const ReaderNav = () => {
 
   const navItems = [
     { title: "Comics", path: "/r/comics" },
-    { title: "Marketplace", path: "/r/marketplace" },
+    // { title: "Marketplace", path: "/r/marketplace" },
     { title: "Library", path: "/r/library" },
-    // { title: "Create", path: "/onboarding" },
+    { title: "Create", path: "/onboarding" },
   ];
 
   const isActive = (path: string) => {
@@ -76,7 +76,7 @@ const ReaderNav = () => {
   const user = session?.user;
   const { profile } = useUserSession();
 
-  const readerProfile: Profile = profile;
+  const readerProfile: Profile = profile?.readerProfile;
 
   useEffect(() => {
     if (!isReadingRoute) {
@@ -168,8 +168,8 @@ const ReaderNav = () => {
               <CreditCard size={16} /> {readerProfile?.walletBalance ?? ""}
               <Image src={NWT} width={16} height={16} alt="nwt" />
             </Link>
-            <button
-              type="button"
+            <Link
+              href={"/r/profile"}
               className="bg-[#1D1E21] cursor-pointer px-3 py-1.5 rounded-md flex items-center gap-1"
             >
               <Avatar>
@@ -190,61 +190,72 @@ const ReaderNav = () => {
                   "..." +
                   readerProfile?.walletId.slice(-3)
                 : ""}
-            </button>
-            <Menubar className="bg-[#1D1E21] font-inter outline-none border-none ring-0 rounded-full">
+            </Link>
+            <Menubar className="bg-[#1D1E21] self-center font-inter outline-none border-none ring-0 rounded-full">
               <MenubarMenu>
                 <MenubarTrigger className="bg-[#1D1E21] data-[state=open]:bg-none h-8 w-8 flex justify-center items-center cursor-pointer rounded-full">
                   <Menu size={16} strokeWidth={2} absoluteStrokeWidth={true} />
                 </MenubarTrigger>
                 <MenubarContent className="bg-[#1D1E21] text-white border-0 absolute -right-[30px]">
-                  <MenubarItem>
+                  <div className="text-sm p-2">
+                    <p>{readerProfile?.fullName}</p>
+                    <p className="text-nerd-muted">{user?.email}</p>
+                  </div>
+                  <MenubarSeparator />
+                  <MenubarItem asChild>
                     <Link
-                      className="flex items-center gap-3 w-full"
+                      className="cursor-pointer flex items-center gap-3 w-full"
                       href={"/r/comics"}
                     >
                       <Book className="text-white" />
                       Comics
                     </Link>
                   </MenubarItem>
-                  <MenubarItem>
+                  <MenubarItem asChild>
                     <Link
-                      className="flex items-center gap-3 w-full"
+                      className="cursor-pointer flex items-center gap-3 w-full"
                       href={"/r/library"}
                     >
                       <BookOpen className="text-white" />
                       Library
                     </Link>
                   </MenubarItem>
-                  <MenubarItem>
-                    <Link className="flex items-center gap-3 w-full" href={""}>
+                  <MenubarItem asChild>
+                    <Link
+                      className="cursor-pointer flex items-center gap-3 w-full"
+                      href={"/r/profile"}
+                    >
                       <User2 className="text-white" />
                       Profile
                     </Link>
                   </MenubarItem>
-                  <MenubarItem>
+                  <MenubarItem asChild>
                     <Link
-                      className="flex items-center gap-3 w-full"
+                      className="cursor-pointer flex items-center gap-3 w-full"
                       href={"/r/wallet"}
                     >
                       <Wallet2 className="text-white" /> Wallet
                     </Link>
                   </MenubarItem>
                   <MenubarSeparator />
-                  <MenubarItem>
+                  <MenubarItem asChild>
                     <Link
-                      className="flex items-center gap-3"
+                      className="cursor-pointer flex items-center gap-3"
                       href={"/onboarding"}
                     >
-                      <Plus className="text-white" /> Become a Creator
+                      {!user?.cProfile && <Plus className="text-white" />}
+                      {user?.cProfile
+                        ? "Switch to Creator Mode"
+                        : "Become a Creator"}
                     </Link>
                   </MenubarItem>
                   <MenubarSeparator />
-                  {/* <MenubarItem>
+                  {/* <MenubarItem asChild>
                     <Link className="flex items-center gap-3" href={""}>
                       <UserCog className="text-white" /> Account Settings
                     </Link>
                   </MenubarItem>
-                  <MenubarItem>
+                  <MenubarItem asChild>
                     <Link className="flex items-center gap-3" href={""}>
                       <HelpCircle className="text-white" /> Help Centre
                     </Link>
@@ -294,67 +305,78 @@ const ReaderNav = () => {
             </PopoverContent>
           </Popover>
 
-          <p className="bg-[#1D1E21] px-3 py-1.5 rounded-[20px] text-sm flex items-center gap-1">
+          <Link
+            href={"/r/wallet"}
+            className="bg-[#1D1E21] px-3 py-1.5 rounded-[20px] text-sm flex items-center gap-1"
+          >
             {readerProfile?.walletBalance ?? ""}
             <Image src={NWT} width={16} height={16} alt="nwt" />
-          </p>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger className="bg-[#1D1E21] h-8 w-8 flex justify-center items-center cursor-pointer rounded-full outline-none border-none ring-0">
               <Menu size={16} strokeWidth={2} absoluteStrokeWidth={true} />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-[#1D1E21] text-white border-0 mx-5 w-[250px] mt-2">
-              <DropdownMenuItem>
+              <div className="text-sm p-2">
+                <p>{readerProfile?.fullName}</p>
+                <p className="text-nerd-muted">{user?.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
                 <Link
-                  className="flex items-center gap-3 w-full"
+                  className="cursor-pointer flex items-center gap-3 w-full"
                   href={"/r/comics"}
                 >
                   <LibraryBig className="text-white" /> Comics
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem asChild>
                 <Link
-                  className="flex items-center gap-3 w-full"
+                  className="cursor-pointer flex items-center gap-3 w-full"
                   href={"/r/marketplace"}
                 >
                   <ShoppingBag className="text-white" /> Marketplace
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              </DropdownMenuItem> */}
+              <DropdownMenuItem asChild>
                 <Link
-                  className="flex items-center gap-3 w-full"
+                  className="cursor-pointer flex items-center gap-3 w-full"
                   href={"/r/library"}
                 >
                   <Book className="text-white" /> Library
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link className="flex items-center gap-3 w-full" href={""}>
+              <DropdownMenuItem asChild>
+                <Link
+                  className="cursor-pointer flex items-center gap-3 w-full"
+                  href={"/r/profile"}
+                >
                   <User2 className="text-white" /> Profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link
-                  className="flex items-center gap-3 w-full"
+                  className="cursor-pointer flex items-center gap-3 w-full"
                   href={"/r/wallet"}
                 >
                   <Wallet2 className="text-white" /> Wallet
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem asChild>
                 <Link className="flex items-center gap-3" href={""}>
                   <UserCog className="text-white" /> Account Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link className="flex items-center gap-3" href={""}>
                   <HelpCircle className="text-white" /> Help Centre
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuSeparator /> */}
+              <DropdownMenuItem asChild>
                 <Link
-                  className="flex items-center gap-3 w-full"
+                  className="cursor-pointer flex items-center gap-3 w-full"
                   href={"/onboarding"}
                 >
                   <Plus className="text-white" /> Become a Creator

@@ -58,17 +58,19 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params);
 
   const { data: comicData } = useQuery({
-    queryKey: ["comic"],
+    queryKey: ["comic", slug],
     queryFn: () => getSingleComic(slug),
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: true,
+    enabled: !!slug,
   });
 
-  const comic: Comic = comicData?.data?.comic;
+  const comic: Comic = comicData?.data?.data;
   const comicId = comic?.id;
 
   const [publishLoading, setPublishLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const form = useForm<z.infer<typeof chapterSchema>>({
     resolver: zodResolver(chapterSchema),
@@ -77,7 +79,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       chapterNumber: 1,
       summary: "",
       chapterPages: [],
-      price: 0,
+      price: 2,
     },
   });
 
@@ -222,16 +224,20 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                         Price *{" "}
                         <span className="text-nerd-muted">(In NWT)</span>
                       </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                          value={field.value}
-                          className="bg-[#1D1E21] border-[#292A2E] text-white"
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full bg-[#1D1E21] border-[#292A2E] text-white">
+                            <Globe />
+                            <SelectValue placeholder="Choose Chapter Price" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-[#1D1E21] border-none text-white">
+                          <SelectItem value={"2"}>2 NWT</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -258,7 +264,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
             />
           </div>
 
-          {/* Chapter Pages (Placeholder for custom component) */}
+          {/* Chapter Pages */}
           <div className="space-y-5 border border-[#292A2E] rounded-[12.75px] p-6">
             <div className="flex flex-col gap-1">
               <h2 className="text-lg font-semibold">Chapter Pages</h2>
@@ -274,7 +280,10 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <MultiFileUpload field={field} />
+                    <MultiFileUpload
+                      setImageUploading={setImageUploading}
+                      field={field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -284,14 +293,17 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
           {/* Schedule and Publish */}
           <div className="flex flex-wrap justify-end gap-4 items-center mt-8">
-            <Button variant="outline" disabled={draftLoading || publishLoading}>
+            <Button
+              variant="outline"
+              disabled={draftLoading || publishLoading || imageUploading}
+            >
               <Eye />
               Preview Chapter
             </Button>
             <LoadingButton
               isLoading={draftLoading}
               loadingText="Saving..."
-              disabled={draftLoading || publishLoading}
+              disabled={draftLoading || publishLoading || imageUploading}
               type="button"
               onClick={handleDraftChapter}
               variant="outline"
@@ -356,7 +368,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
               <LoadingButton
                 isLoading={publishLoading}
                 loadingText="Publishing..."
-                disabled={draftLoading || publishLoading}
+                disabled={draftLoading || publishLoading || imageUploading}
                 type="submit"
                 variant={"primary"}
                 className=""

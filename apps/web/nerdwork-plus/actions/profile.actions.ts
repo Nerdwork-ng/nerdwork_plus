@@ -154,7 +154,8 @@ export const getReaderProfile = async () => {
 
 export const setReaderPin = async (data: string) => {
   try {
-    const response = await axiosPut("profile/reader/pin", { pin: data });
+    const response = await axiosPut("/profile/reader/pin", { pin: data });
+
     return {
       success: true,
       data: response.data,
@@ -177,6 +178,39 @@ export const setReaderPin = async (data: string) => {
       success: false,
       status: 500,
       message: "Failed to set reader pin. Please try again.",
+    };
+  }
+};
+
+export const setCreatorAddress = async (data: string, type: string) => {
+  try {
+    const response = await axiosPut("/profile/creator", {
+      address: data,
+      walletType: type,
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Creator wallet set successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Creator wallet set failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to set creator wallet address. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to set creator wallet address. Please try again.",
     };
   }
 };
