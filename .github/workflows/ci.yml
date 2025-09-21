@@ -269,11 +269,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Replace with your AWS region
       
+      - name: Copy test environment file
+        run: |
+          echo "Copying .env.test file for deployment..."
+          cp .env.test .env
+          
       - name: Deploy to test environment
         run: |
           echo "Deploying to test environment..."
           # Pull the latest Docker images from GitHub Container Registry
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          
+          # Load environment variables from .env.test
+          set -a
+          source .env
+          set +a
           
           # Update ECS services or other deployment steps
           # Example: aws ecs update-service --cluster test-cluster --service nerdwork-api --force-new-deployment
@@ -375,11 +385,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Replace with your AWS region
       
+      - name: Copy production environment file
+        run: |
+          echo "Copying .env.production file for deployment..."
+          cp .env.production .env
+          
       - name: Deploy to production environment
         run: |
           echo "Deploying to production environment..."
           # Pull the latest Docker images from GitHub Container Registry
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          
+          # Load environment variables from .env.production
+          set -a
+          source .env
+          set +a
           
           # Update ECS services or other deployment steps
           # Example: aws ecs update-service --cluster prod-cluster --service nerdwork-api --force-new-deployment
