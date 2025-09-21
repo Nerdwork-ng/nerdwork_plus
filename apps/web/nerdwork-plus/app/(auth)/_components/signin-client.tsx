@@ -24,17 +24,12 @@ const SignUpClient = () => {
 
   return (
     <main className="bg-[#171719] min-h-screen w-full font-inter text-white flex flex-col items-center justify-between py-20 px-5">
-           {" "}
       <Link href={"/"}>
-                <Image src={Logo} width={146} height={40} alt="nerdwork logo" />
-             {" "}
+        <Image src={Logo} width={146} height={40} alt="nerdwork logo" />
       </Link>
-           {" "}
       <section className="w-full max-w-[400px] text-center flex flex-col items-center">
-                <h4 className="text-2xl font-semibold">Welcome to Nerdwork+</h4>
-               {" "}
-        <p className="text-[#707073] text-sm mt-3">New here or coming back?</p> 
-             {" "}
+        <h4 className="text-2xl font-semibold">Welcome to Nerdwork+</h4>
+        <p className="text-[#707073] text-sm mt-3">New here or coming back?</p>
         <LoadingButton
           type="button"
           variant={"secondary"}
@@ -53,32 +48,26 @@ const SignUpClient = () => {
             }
           }}
         >
-                   {" "}
-          <Image src={Google} width={18} height={18} alt="Google logo" />       
-            Continue with Google        {" "}
+          <Image src={Google} width={18} height={18} alt="Google logo" />
+          Continue with Google
         </LoadingButton>
-             {" "}
       </section>
-           {" "}
       <p className="text-xs text-[#707073]">
-                By continuing, you acknowledge that you have read and agree to
-        Nerdwork        {" "}
+        By continuing, you acknowledge that you have read and agree to Nerdwork
         <Link
           href={""}
           className="underline hover:no-underline px-1 transition duration-300 hover:ease-in-out"
         >
-                    Terms and Conditions        {" "}
-        </Link>{" "}
-                and        {" "}
-        <Link
-          href={""}
-          className="underline hover:no-underline px-1 transition duration-300 hover:ease-in-out"
-        >
-                    Privacy Policy        {" "}
+          Terms and Conditions
         </Link>
-             {" "}
+        and
+        <Link
+          href={""}
+          className="underline hover:no-underline px-1 transition duration-300 hover:ease-in-out"
+        >
+          Privacy Policy
+        </Link>
       </p>
-         {" "}
     </main>
   );
 };

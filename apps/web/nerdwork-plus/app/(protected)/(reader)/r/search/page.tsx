@@ -41,7 +41,7 @@ const ComicSearch = () => {
     queryKey: ["comics"],
     queryFn: getAllComicsForReader,
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
@@ -84,6 +84,9 @@ const ComicSearch = () => {
         // Add other sort options here (e.g., 'newest', 'relevant')
         if (sortFilter === "newest") {
           return b.createdAt.localeCompare(a.createdAt);
+        }
+        if (sortFilter === "relevant") {
+          return b.viewsCount - a.viewsCount;
         }
         return 0;
       });

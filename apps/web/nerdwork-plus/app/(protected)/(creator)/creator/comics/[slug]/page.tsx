@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, EllipsisVertical, Plus } from "lucide-react";
+import { ArrowLeft, EllipsisVertical, Eye, Heart, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { use, useState } from "react";
@@ -30,17 +30,19 @@ const ComicDetailsPage = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [tab, setTab] = useState<string>("all");
   const { profile } = useUserSession();
+  const creatorProfile = profile?.creatorProfile;
 
   const {
     data: comicData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["comic"],
+    queryKey: ["comic", slug],
     queryFn: () => getSingleComic(slug),
     placeholderData: keepPreviousData,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
+    enabled: !!slug,
   });
 
   const {
@@ -48,11 +50,12 @@ const ComicDetailsPage = ({
     isLoading: isChaptersLoading,
     error: chapterError,
   } = useQuery({
-    queryKey: ["chapters"],
+    queryKey: ["creator-chapters", slug],
     queryFn: () => getComicChaptersBySlug(slug),
     placeholderData: keepPreviousData,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
+    enabled: !!slug,
   });
 
   if (isLoading || isChaptersLoading) return <LoaderScreen />;
@@ -62,7 +65,7 @@ const ComicDetailsPage = ({
       error?.message || chapterError?.message || "Error getting chapter details"
     );
 
-  const comic: Comic = comicData?.data?.comic;
+  const comic: Comic = comicData?.data?.data;
   const chapters: Chapter[] = chaptersData?.data?.data ?? [];
 
   const truncatedText = comic?.description.substring(0, 200);
@@ -147,7 +150,6 @@ const ComicDetailsPage = ({
                   </span>
                 ))}
               </li>
-              {/* <li>10 SOL</li> */}
               <li>
                 Released{" "}
                 <span className="text-white">
@@ -156,7 +158,16 @@ const ComicDetailsPage = ({
               </li>
               <li className="capitalize">{comic?.noOfChapters} chapters</li>
               <li className="capitalize">{comic?.ageRating} Rating</li>
-              <li>Creator: {profile?.creatorName ?? ""}</li>
+              <li>Creator: {creatorProfile?.creatorName ?? ""}</li>
+              <li>Subscribers: {comic?.subscribeCount}</li>
+              <li className="flex gap-4">
+                <span className="flex items-center gap-1 text-nerd-muted">
+                  <Eye size={16} /> {comic?.viewsCount}
+                </span>
+                <span className="flex items-center gap-1 text-nerd-muted">
+                  <Heart size={16} /> {comic?.likesCount}
+                </span>
+              </li>
             </ul>
             <button
               className="md:hidden cursor-pointer text-left text-[#707073] font-normal"

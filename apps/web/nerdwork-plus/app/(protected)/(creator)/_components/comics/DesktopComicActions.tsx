@@ -3,10 +3,11 @@ import {
   MenubarItem,
   MenubarSeparator,
 } from "@/components/ui/menubar";
-import { ChartLine, Edit2Icon, Eye, Trash } from "lucide-react";
+import { ChartLine, Edit2Icon, Eye } from "lucide-react";
 import React from "react";
 import Link from "next/link";
 import { Comic } from "@/lib/types";
+import DeleteResource from "./DeleteResource";
 
 const ComicActions = ({
   comic,
@@ -33,8 +34,8 @@ const ComicActions = ({
           <ChartLine /> View Stats
         </MenubarItem>
         <MenubarSeparator />
-        <MenubarItem>
-          <Trash /> Delete Series
+        <MenubarItem asChild>
+          <DeleteResource data={comic} resource={"comic"} />
         </MenubarItem>
       </MenubarContent>
     </>

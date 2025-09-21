@@ -1,19 +1,16 @@
 "use client";
 
-import { Transaction } from "@/lib/types";
+import { CreatorTransaction } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-
-export const columns: ColumnDef<Transaction>[] = [
+export const columns: ColumnDef<CreatorTransaction>[] = [
   {
     accessorKey: "type",
     header: () => <div className="text-left text-nerd-muted">Type</div>,
     cell: ({ row }) => {
       return (
         <div className="text-left capitalize text-white font-normal">
-          {row.original.type}
+          {row.original.earningSource}
         </div>
       );
     },
@@ -24,7 +21,7 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-left capitalize text-white font-normal">
-          {row.original.type}
+          {row.original.description}
         </div>
       );
     },
@@ -36,13 +33,13 @@ export const columns: ColumnDef<Transaction>[] = [
       return (
         <div
           className={`text-left font-normal ${
-            row.original.type == "withdrawal"
+            row.original.transactionType == "spend"
               ? "text-[#C52B2B]"
               : "text-[#25D448]"
           }`}
         >
-          {row.original.type == "withdrawal" ? "-" : "+"} {row.original.amount}{" "}
-          NWT
+          {row.original.transactionType == "spend" ? "-" : "+"}{" "}
+          {Number(row.original.nwtAmount).toFixed(2)} NWT
         </div>
       );
     },
@@ -70,7 +67,7 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-left text-white font-normal">
-          {row.original.date}
+          {new Date(row.original.updatedAt).toLocaleDateString()}
         </div>
       );
     },
