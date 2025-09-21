@@ -289,7 +289,7 @@ jobs:
         run: |
           echo "Deploying to staging environment..."
           # Pull the latest Docker images from GitHub Container Registry
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
 
           # Load environment variables from .env.staging
           set -a
@@ -297,7 +297,8 @@ jobs:
           set +a
 
           # Update ECS services or other deployment steps
-          # Example: aws ecs update-service --cluster staging-cluster --service nerdwork-api --force-new-deployment
+          # Example:
+          aws ecs update-service --cluster staging-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
 
           echo "✅ Deployment to staging environment completed"
 
