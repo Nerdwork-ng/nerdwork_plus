@@ -12,6 +12,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
   debug: isDevelopment,
   callbacks: {
@@ -85,6 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/signin",
+    error: "/error",
   },
   trustHost: true,
   secret: process.env.AUTH_SECRET,

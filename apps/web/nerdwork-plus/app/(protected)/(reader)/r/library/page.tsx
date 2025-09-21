@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { comicData } from "@/components/data";
 import RComics from "../../_components/RComics";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,20 +22,39 @@ import {
 } from "@/components/ui/select";
 import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
 import { LucideChevronDown } from "lucide-react";
+import { getLibraryComics } from "@/actions/library.actions";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import LoaderScreen from "@/components/loading-screen";
+import { Comic } from "@/lib/types";
+import { toast } from "sonner";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
 const LibraryPage = () => {
   const [tab, setTab] = React.useState<string>("all");
-
-  const comics = comicData ?? [];
-
   const [showFree, setShowFree] = React.useState<Checked>(false);
   const [showPaid, setShowPaid] = React.useState<Checked>(false);
   const [showOngoing, setShowOngoing] = React.useState<Checked>(false);
   const [showCompleted, setShowCompleted] = React.useState<Checked>(false);
   const [sortFilter, setSortFilter] = React.useState("");
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  const {
+    data: libraryData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["library"],
+    queryFn: getLibraryComics,
+    placeholderData: keepPreviousData,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const comics: Comic[] = libraryData?.data?.comics ?? [];
+
+  if (error)
+    toast.error(error?.message || "Error getting transactions details");
 
   const filteredComics = React.useMemo(() => {
     let tempComics = [...comics];
@@ -50,7 +68,13 @@ const LibraryPage = () => {
 
     // Apply Tabs Filter
     if (tab !== "all") {
-      tempComics = tempComics.filter((comic) => comic.status === tab);
+      if (tab == "new") {
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        tempComics.filter((comic) => new Date(comic.createdAt) > threeDaysAgo);
+      } else {
+        tempComics = tempComics.filter((comic) => comic.comicStatus === tab);
+      }
     }
 
     // Apply Dropdown Filters
@@ -76,6 +100,12 @@ const LibraryPage = () => {
           return b.title.localeCompare(a.title);
         }
         // Add other sort options here (e.g., 'newest', 'relevant')
+        if (sortFilter === "newest") {
+          return b.createdAt.localeCompare(a.createdAt);
+        }
+        if (sortFilter === "relevant") {
+          return b.viewsCount - a.viewsCount;
+        }
         return 0;
       });
     }
@@ -91,6 +121,8 @@ const LibraryPage = () => {
     showCompleted,
     sortFilter,
   ]);
+
+  if (isLoading) return <LoaderScreen />;
 
   return (
     <main className="pt-20">
@@ -126,7 +158,7 @@ const LibraryPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex items-center gap-3 -mt-3">
+          <div className="flex items-center gap-3 -mt-3 max-md:hidden">
             <Input
               placeholder="Search library"
               className="h- max-w-[400px]  border-[#292A2E] rounded-md"
@@ -208,8 +240,91 @@ const LibraryPage = () => {
             </Select>
           </div>
         </div>
+
         <hr className="!text-[#292A2E] h-0 border-t border-[#292A2E]" />
-        <div className=" max-w-[1160px] mx-auto w-full mt-8">
+
+        <div className="flex items-center gap-3 md:hidden mt-5">
+          <Input
+            placeholder="Search library"
+            className="h- max-w-[400px]  border-[#292A2E] rounded-md"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex gap-1 text-sm items-center cursor-pointer"
+              >
+                Filters <LucideChevronDown size={16} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[#1D1E21] text-white border-0 mx-5  mt-2">
+              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={showFree}
+                onCheckedChange={(checked) => {
+                  setShowFree(checked);
+                  if (checked) {
+                    setShowPaid(false);
+                  }
+                }}
+              >
+                Free Comics
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showPaid}
+                onCheckedChange={(checked) => {
+                  setShowPaid(checked);
+                  if (checked) {
+                    setShowFree(false);
+                  }
+                }}
+              >
+                Paid Comics
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showOngoing}
+                onCheckedChange={(checked) => {
+                  setShowOngoing(checked);
+                  if (checked) {
+                    setShowCompleted(false);
+                  }
+                }}
+              >
+                Ongoing
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showCompleted}
+                onCheckedChange={(checked) => {
+                  setShowCompleted(checked);
+                  if (checked) {
+                    setShowOngoing(false);
+                  }
+                }}
+              >
+                Completed
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Select onValueChange={setSortFilter} value={sortFilter}>
+            <SelectTrigger className="outline-none border-none !text-white">
+              <SelectValue placeholder="Sort:" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1D1E21] border-none text-white">
+              <SelectGroup>
+                <SelectLabel>Sort by</SelectLabel>
+                <SelectItem value="asc">A - Z</SelectItem>
+                <SelectItem value="dsc">Z - A</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="relevant">Most Relevant</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className=" max-w-[1160px] mx-auto w-full mt-3 md:mt-8">
           <TabsContent value={tab}>
             <RComics data={filteredComics} />
           </TabsContent>

@@ -58,17 +58,19 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params);
 
   const { data: comicData } = useQuery({
-    queryKey: ["comic"],
+    queryKey: ["comic", slug],
     queryFn: () => getSingleComic(slug),
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
+    enabled: !!slug,
   });
 
-  const comic: Comic = comicData?.data?.comic;
+  const comic: Comic = comicData?.data?.data;
   const comicId = comic?.id;
 
-  const [loading, setLoading] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const form = useForm<z.infer<typeof chapterSchema>>({
     resolver: zodResolver(chapterSchema),
@@ -77,12 +79,12 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       chapterNumber: 1,
       summary: "",
       chapterPages: [],
-      price: 0,
+      price: 2,
     },
   });
 
   const handleDraftChapter = async () => {
-    setLoading(true);
+    setDraftLoading(true);
     const data = form.getValues();
     try {
       const response = await createDraftChapter(data, comicId);
@@ -100,13 +102,13 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       toast.error("An unexpected error occurred.");
       console.error(err);
     } finally {
-      setLoading(false);
+      setDraftLoading(false);
     }
   };
 
   const onSubmit = async (data: z.infer<typeof chapterSchema>) => {
     console.log("New Chapter data:", data);
-    setLoading(true);
+    setPublishLoading(true);
     try {
       const response = await createComicChapter(data, comicId);
 
@@ -123,7 +125,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       toast.error("An unexpected error occurred.");
       console.error(err);
     } finally {
-      setLoading(false);
+      setPublishLoading(false);
     }
   };
   return (
@@ -222,16 +224,20 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                         Price *{" "}
                         <span className="text-nerd-muted">(In NWT)</span>
                       </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                          value={field.value}
-                          className="bg-[#1D1E21] border-[#292A2E] text-white"
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full bg-[#1D1E21] border-[#292A2E] text-white">
+                            <Globe />
+                            <SelectValue placeholder="Choose Chapter Price" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-[#1D1E21] border-none text-white">
+                          <SelectItem value={"2"}>2 NWT</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -258,7 +264,7 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
             />
           </div>
 
-          {/* Chapter Pages (Placeholder for custom component) */}
+          {/* Chapter Pages */}
           <div className="space-y-5 border border-[#292A2E] rounded-[12.75px] p-6">
             <div className="flex flex-col gap-1">
               <h2 className="text-lg font-semibold">Chapter Pages</h2>
@@ -274,7 +280,10 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <MultiFileUpload field={field} />
+                    <MultiFileUpload
+                      setImageUploading={setImageUploading}
+                      field={field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -284,18 +293,24 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
           {/* Schedule and Publish */}
           <div className="flex flex-wrap justify-end gap-4 items-center mt-8">
-            <Button variant="outline">
+            <Button
+              variant="outline"
+              disabled={draftLoading || publishLoading || imageUploading}
+            >
               <Eye />
               Preview Chapter
             </Button>
-            <Button
+            <LoadingButton
+              isLoading={draftLoading}
+              loadingText="Saving..."
+              disabled={draftLoading || publishLoading || imageUploading}
               type="button"
               onClick={handleDraftChapter}
               variant="outline"
             >
               <Save />
               Save as Draft
-            </Button>
+            </LoadingButton>
             {/* <div className="p-4 rounded-lg bg-[#1D1E21] border border-[#292A2E]"> */}
             {/* <FormField
               control={form.control}
@@ -351,8 +366,9 @@ const NewChapterPage = ({ params }: { params: Promise<{ slug: string }> }) => {
               <></>
             ) : (
               <LoadingButton
-                isLoading={loading}
+                isLoading={publishLoading}
                 loadingText="Publishing..."
+                disabled={draftLoading || publishLoading || imageUploading}
                 type="submit"
                 variant={"primary"}
                 className=""

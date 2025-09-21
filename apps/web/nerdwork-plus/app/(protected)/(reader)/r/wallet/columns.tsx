@@ -1,19 +1,15 @@
 "use client";
-
-import { Transaction } from "@/lib/types";
+import { ReaderTransaction } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-
-export const columns: ColumnDef<Transaction>[] = [
+export const columns: ColumnDef<ReaderTransaction>[] = [
   {
     accessorKey: "type",
     header: () => <div className="text-left text-nerd-muted">Type</div>,
     cell: ({ row }) => {
       return (
         <div className="text-left capitalize text-white font-normal">
-          {row.original.type}
+          {row.original.spendCategory ?? row.original.transactionType}
         </div>
       );
     },
@@ -24,32 +20,36 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-left capitalize text-white font-normal">
-          {row.original.type}
+          {row.original.description}
         </div>
       );
     },
   },
   {
     accessorKey: "amount",
-    header: () => <div className="text-left text-nerd-muted">Amount</div>,
+    header: () => (
+      <div className="max-md:text-center text-nerd-muted">Amount</div>
+    ),
     cell: ({ row }) => {
       return (
         <div
           className={`text-left font-normal ${
-            row.original.type == "withdrawal"
+            row.original.transactionType == "spend"
               ? "text-[#C52B2B]"
               : "text-[#25D448]"
           }`}
         >
-          {row.original.type == "withdrawal" ? "-" : "+"} {row.original.amount}{" "}
-          NWT
+          {row.original.transactionType == "spend" ? "-" : "+"}{" "}
+          {Number(row.original.nwtAmount).toFixed(2)} NWT
         </div>
       );
     },
   },
   {
     accessorKey: "status",
-    header: () => <div className="text-left text-nerd-muted">Status</div>,
+    header: () => (
+      <div className="max-md:text-center text-nerd-muted">Status</div>
+    ),
     cell: ({ row }) => {
       return (
         <div
@@ -66,11 +66,13 @@ export const columns: ColumnDef<Transaction>[] = [
   },
   {
     accessorKey: "date",
-    header: () => <div className="text-left text-nerd-muted">Date</div>,
+    header: () => (
+      <div className="max-md:text-center text-nerd-muted">Date</div>
+    ),
     cell: ({ row }) => {
       return (
         <div className="text-left text-white font-normal">
-          {row.original.date}
+          {new Date(row.original.updatedAt).toLocaleDateString()}
         </div>
       );
     },

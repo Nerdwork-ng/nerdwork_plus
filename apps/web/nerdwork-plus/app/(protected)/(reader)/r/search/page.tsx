@@ -1,5 +1,5 @@
 "use client";
-import { comicData } from "@/components/data";
+// import { comicData } from "@/components/data";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import RComics from "../../_components/RComics";
@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/select";
 import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
 import { LucideChevronDown } from "lucide-react";
+import { Comic } from "@/lib/types";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getAllComicsForReader } from "@/actions/comic.actions";
+import LoaderScreen from "@/components/loading-screen";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
@@ -29,7 +33,24 @@ const ComicSearch = () => {
   const searchParams = useSearchParams();
   const search = searchParams.get("q");
 
-  const comics = comicData ?? [];
+  const {
+    data: comicData,
+    isLoading,
+    // error,
+  } = useQuery({
+    queryKey: ["comics"],
+    queryFn: getAllComicsForReader,
+    placeholderData: keepPreviousData,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const comics: Comic[] = comicData?.data?.comics ?? [];
+
+  const data = comics.filter(
+    (comic) =>
+      search && comic.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   const [showFree, setShowFree] = React.useState<Checked>(false);
   const [showPaid, setShowPaid] = React.useState<Checked>(false);
@@ -38,7 +59,7 @@ const ComicSearch = () => {
   const [sortFilter, setSortFilter] = React.useState("");
 
   const filteredComics = React.useMemo(() => {
-    let tempComics = [...comics];
+    let tempComics = [...data];
 
     if (showFree) {
       tempComics = tempComics.filter((comic) => !comic.isPaid);
@@ -61,6 +82,12 @@ const ComicSearch = () => {
           return b.title.localeCompare(a.title);
         }
         // Add other sort options here (e.g., 'newest', 'relevant')
+        if (sortFilter === "newest") {
+          return b.createdAt.localeCompare(a.createdAt);
+        }
+        if (sortFilter === "relevant") {
+          return b.viewsCount - a.viewsCount;
+        }
         return 0;
       });
     }
@@ -68,13 +95,15 @@ const ComicSearch = () => {
     return tempComics;
   }, [comics, showFree, showPaid, showOngoing, showCompleted, sortFilter]);
 
+  if (isLoading) return <LoaderScreen />;
+
   return (
     <main className="pt-20">
       <section className=" border-b border-[#FFFFFF0D]">
         <section className="max-w-[1200px] mx-auto mt-6 px-5 pb-4 flex max-md:flex-col justify-between md:items-center">
           <h3 className="text-2xl font-semibold capitalize">{search}</h3>
           <div className="flex items-center gap-4 text-sm">
-            <p className="mr-4">{comics.length} Results</p>
+            <p className="mr-4">{data.length} Results</p>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button

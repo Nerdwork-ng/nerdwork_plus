@@ -1,6 +1,11 @@
 "use server";
 
-import { axiosGet, axiosPost, axiosPostData } from "@/lib/api/apiClientAuth";
+import {
+  axiosDelete,
+  axiosGet,
+  axiosPost,
+  axiosPostData,
+} from "@/lib/api/apiClientAuth";
 import { ChapterFormData, ComicSeriesFormData } from "@/lib/schema";
 import axios from "axios";
 
@@ -11,11 +16,11 @@ export const uploadImage = async (data: FormData) => {
     if (!file) {
       return { error: "No file provided." };
     }
-    const response = await axiosPostData("file-upload/media", data);
+    const response = await axiosPostData("/file-upload/media", data);
 
     return {
       success: true,
-      data: "https://" + response.data.url,
+      data: response.data.url,
       message: "Image uploaded successfully",
     };
   } catch (error: unknown) {
@@ -50,7 +55,7 @@ export const createComicAction = async (data: ComicSeriesFormData) => {
       tags: data.tags,
     };
 
-    const response = await axiosPost("comics/create", requestBody);
+    const response = await axiosPost("/comics/create", requestBody);
 
     return {
       success: true,
@@ -80,7 +85,7 @@ export const createComicAction = async (data: ComicSeriesFormData) => {
 
 export const getCreatorComics = async () => {
   try {
-    const response = await axiosGet("comics/mine");
+    const response = await axiosGet("/comics/mine");
 
     return {
       success: true,
@@ -110,7 +115,37 @@ export const getCreatorComics = async () => {
 
 export const getSingleComic = async (slug: string) => {
   try {
-    const response = await axiosGet(`comics/${slug}`);
+    const response = await axiosGet(`/comics/${slug}`);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Comic retrieved successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Comic retrieval failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to retrieve creator comics. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to retrieve creator comics. Please try again.",
+    };
+  }
+};
+
+export const getSingleComicReader = async (slug: string) => {
+  try {
+    const response = await axiosGet(`/comics/reader/${slug}`);
 
     return {
       success: true,
@@ -140,7 +175,7 @@ export const getSingleComic = async (slug: string) => {
 
 export const getAllComicsForReader = async () => {
   try {
-    const response = await axiosGet("comics/all-comics");
+    const response = await axiosGet("/comics/all-comics");
 
     return {
       success: true,
@@ -182,7 +217,7 @@ export const createDraftChapter = async (
       comicId: comicId,
     };
 
-    const response = await axiosPost("chapters/draft", requestBody);
+    const response = await axiosPost("/chapters/draft", requestBody);
 
     return {
       success: true,
@@ -224,7 +259,7 @@ export const createComicChapter = async (
       comicId: comicId,
     };
 
-    const response = await axiosPost("chapters/create", requestBody);
+    const response = await axiosPost("/chapters/create", requestBody);
 
     return {
       success: true,
@@ -254,7 +289,37 @@ export const createComicChapter = async (
 
 export const getComicChaptersBySlug = async (slug: string) => {
   try {
-    const response = await axiosGet(`chapters/by-comic/${slug}`);
+    const response = await axiosGet(`/chapters/by-comic/creator/${slug}`);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Comic chapters retrieved successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Comic chapters retrieval failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to retrieve creator comics. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to retrieve creator comics. Please try again.",
+    };
+  }
+};
+
+export const getReaderComicChapters = async (slug: string) => {
+  try {
+    const response = await axiosGet(`/chapters/by-comic/reader/${slug}`);
 
     return {
       success: true,
@@ -284,7 +349,7 @@ export const getComicChaptersBySlug = async (slug: string) => {
 
 export const getChapterPages = async (code: string) => {
   try {
-    const response = await axiosGet(`chapters/by-code/${code}`);
+    const response = await axiosGet(`/chapters/by-code/${code}`);
 
     return {
       success: true,
@@ -308,6 +373,234 @@ export const getChapterPages = async (code: string) => {
       success: false,
       status: 500,
       message: "Failed to retrieve creator comics. Please try again.",
+    };
+  }
+};
+
+export const purchaseChapterComic = async (
+  nwtAmount: number,
+  pin: string,
+  chapterId: string
+) => {
+  try {
+    const requestBody = {
+      nwtAmount,
+      pin,
+      chapterId,
+    };
+
+    const response = await axiosPost("/chapters/purchase", requestBody);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Chapter purchased successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Chapter purchased failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to purchased comic. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to purchase comics. Please try again.",
+    };
+  }
+};
+
+export const addViewCountAction = async (chapterId: string) => {
+  try {
+    const response = await axiosPost("/chapters/view", { chapterId });
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Chapter view added successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Chapter view added failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to add chapter view. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to add chapter view comics. Please try again.",
+    };
+  }
+};
+
+export const likeChapterAction = async (chapterId: string) => {
+  try {
+    const response = await axiosPost(`/chapters/${chapterId}/like`, {});
+
+    return {
+      success: true,
+      data: response.data,
+      message: response.data.message,
+    };
+  } catch (error: unknown) {
+    console.error("Chapter like failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to like chapter. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to like chapter. Please try again.",
+    };
+  }
+};
+
+export const subscribeToComicAction = async (comicId: string) => {
+  try {
+    const response = await axiosPost(`/comics/subscribe/${comicId}`, {});
+
+    return {
+      success: true,
+      data: response.data,
+      message: response.data.message,
+    };
+  } catch (error: unknown) {
+    console.error("Chapter like failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to like chapter. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to like chapter. Please try again.",
+    };
+  }
+};
+
+export const deleteComicSeries = async (slug?: string) => {
+  try {
+    const response = await axiosDelete(`/comics/delete/${slug}`);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Comic series deleted successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Comic series deletion failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to delete comic series. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to delete comic series. Please try again.",
+    };
+  }
+};
+
+export const deleteChapterAction = async (code?: string) => {
+  try {
+    const response = await axiosDelete(`/chapters/delete/${code}`);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Chapter deleted successfully.",
+    };
+  } catch (error: unknown) {
+    console.error("Chapter deletion failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to delete comic series. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to delete comic series. Please try again.",
+    };
+  }
+};
+
+export const publishDraft = async (
+  draftUniqCode: string,
+  comicSlug: string
+) => {
+  try {
+    console.log(draftUniqCode, comicSlug);
+    const response = await axiosPost(`/chapters/draft/publish`, {
+      draftUniqCode,
+      comicSlug,
+    });
+    console.log(response.data);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Draft chapter published successfully",
+    };
+  } catch (error: unknown) {
+    console.error("Chapter publish failed:", error);
+
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        status: error?.status,
+        message:
+          error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Failed to publish chapter. Please try again.",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Failed to publish chapter. Please try again.",
     };
   }
 };

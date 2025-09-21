@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { ImageIcon, Trash } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ControllerRenderProps } from "react-hook-form";
 import { ComicSeriesFormData, NFTFormData } from "@/lib/schema";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ interface ImageUploadProps {
 export const ImageUpload = ({ field }: ImageUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const [previewURL, setPreviewURL] = useState("");
 
   const {
     mutate,
@@ -32,7 +33,10 @@ export const ImageUpload = ({ field }: ImageUploadProps) => {
     if (isSuccess && uploadedData) {
       if (uploadedData.success) {
         toast.success("Image uploaded successfully!");
-        field.onChange(uploadedData.data);
+        setPreviewURL(uploadedData.data);
+
+        const cleanUrl = uploadedData.data.split("?")[0];
+        field.onChange(cleanUrl);
       } else {
         toast.error(uploadedData.message || "Upload failed.");
         field.onChange(null);
@@ -109,11 +113,11 @@ export const ImageUpload = ({ field }: ImageUploadProps) => {
       ) : (
         <div className="relative flex flex-col items-center">
           <Image
-            src={field.value}
+            src={previewURL}
             width={335}
             height={496}
             alt="Cover Preview"
-            className="rounded-md max-md:w-[335px] max-md:h-[496] md:w-[352px] md:h-[521px] object-cover"
+            className="rounded-md max-md:w-[335px] max-md:h-[496] md:w-[352px] md:h-[521px] object-contain"
           />
           <Button
             onClick={handleDelete}

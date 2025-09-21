@@ -3,32 +3,45 @@ export type Comic = {
   image: string;
   title: string;
   description: string;
-  status: "upcoming" | "draft" | "scheduled" | "published";
-  chapters: number;
+  comicStatus: "upcoming" | "draft" | "scheduled" | "published";
+  noOfChapters: number;
+  noOfDrafts: number;
   slug: string;
   updatedAt: string;
   createdAt: string;
-  creatorName: string;
-  genre?: Array<string>;
+  creatorName?: string;
+  genre?: string[];
   ageRating?: string;
+  viewsCount: number;
+  likesCount?: number;
   isPaid?: boolean;
   isOngoing?: boolean;
+  isSubscribed?: boolean;
+  subscribeCount?: number;
 };
 
 export type Chapter = {
-  id: number;
+  id: string;
+  serialNo: number;
   image: string;
   title: string;
-  description: string;
-  pages: number;
-  status: "published" | "scheduled" | "draft";
+  summary: string;
+  pages: string[];
+  count?: number;
+  chapterStatus: "published" | "scheduled" | "draft";
   date: string;
-  views?: number;
   read?: boolean;
-  unlocked?: boolean;
-  code?: string;
-  comicSlug?: string;
+  hasPaid?: boolean;
+  uniqueCode: string;
+  comicSlug: string;
   chapterPages: string[];
+  chapterType?: "free" | "paid";
+  price?: number;
+  updatedAt: string;
+  viewsCount?: number;
+  likesCount?: number;
+  hasLiked?: boolean;
+  comicTitle?: string;
 };
 
 export type Transaction = {
@@ -40,8 +53,30 @@ export type Transaction = {
   date: string;
 };
 
+export type ReaderTransaction = {
+  id: string;
+  transactionType: string;
+  status: string;
+  description: string;
+  nwtAmount: number;
+  spendCategory: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreatorTransaction = {
+  id: string;
+  transactionType: string;
+  status: string;
+  description: string;
+  nwtAmount: number;
+  earningSource: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type NFTCollectible = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   image: string;

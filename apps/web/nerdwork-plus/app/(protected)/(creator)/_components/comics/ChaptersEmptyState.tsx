@@ -20,7 +20,7 @@ const ChaptersEmptyState = ({ comicId }: { comicId: string }) => {
         <Link href={""} className="max-md:w-full max-lg:hidden">
           <Button
             variant={"outline"}
-            className="bg-transparent border-[#292A2E] hover:bg-[#292A2E] min-w-[262px] max-md:w-full"
+            className="bg-transparent hidden border-[#292A2E] hover:bg-[#292A2E] min-w-[262px] max-md:w-full"
           >
             <Plus />
             Bulk Upload
