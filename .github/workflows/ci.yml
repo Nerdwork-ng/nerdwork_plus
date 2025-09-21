@@ -171,7 +171,7 @@ jobs:
 
             ${artifactSummary}
 
-            These artifacts are ready for deployment to test environment.
+            These artifacts are ready for deployment to staging environment.
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             `;
 
@@ -242,10 +242,10 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: context.sha,
-              environment: 'test',
+              environment: 'staging',
               auto_merge: false,
               required_contexts: [],
-              description: 'Deploying to test environment'
+              description: 'Deploying to staging environment'
             });
             return deployment.data.id;
 
@@ -286,9 +286,9 @@ jobs:
           set +a
 
           # Update ECS services or other deployment steps
-          # Example: aws ecs update-service --cluster test-cluster --service nerdwork-api --force-new-deployment
+          # Example: aws ecs update-service --cluster staging-cluster --service nerdwork-api --force-new-deployment
 
-          echo "✅ Deployment to test environment completed"
+          echo "✅ Deployment to staging environment completed"
 
       - name: Set deployment status to success
         if: success()
