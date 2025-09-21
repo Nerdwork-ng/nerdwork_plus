@@ -424,7 +424,7 @@ jobs:
 
           # Update ECS services or other deployment steps
           # Example:
-          aws ecs update-service --cluster prod-cluster --service nerdwork-api --force-new-deployment
+          aws ecs update-service --cluster prod-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
 
           echo "✅ Deployment to production environment completed"
 
