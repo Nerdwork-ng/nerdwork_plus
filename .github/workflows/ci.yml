@@ -340,7 +340,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: '🚀 Staging Deployment Successful - ' + context.sha.substring(0, 7),
-              body: message + '\n\nWorkflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
               labels: ['deployment', 'staging']
             });
 
