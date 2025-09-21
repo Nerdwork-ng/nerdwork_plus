@@ -1,16 +1,17 @@
 # Stage 1: Builder
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Enable corepack (so pnpm works)
-RUN corepack enable
+# RUN corepack enable
 
 WORKDIR /app
 
+
 # Copy only package manager files first
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 # Install deps at root
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy the full project (after deps)
 COPY . .
@@ -21,7 +22,7 @@ RUN pnpm build
 
 
 # Stage 2: Runner
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -29,7 +30,7 @@ WORKDIR /app
 COPY --from=builder /app/apps/web/nerdwork-plus/.next ./.next
 COPY --from=builder /app/apps/web/nerdwork-plus/public ./public
 COPY --from=builder /app/apps/web/nerdwork-plus/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/web/nerdwork-plus/node_modules ./node_modules
 
 EXPOSE 3000
 
