@@ -1,11 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Chapter } from "@/lib/types";
-import { Calendar, Edit2, Eye, ImageIcon, Send } from "lucide-react";
+import { Calendar, Edit2, Eye, Heart, ImageIcon, Send } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import ChapterActions from "./ChapterActions";
 import Link from "next/link";
+import PublishDraft from "./PublishDraft";
 
 const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
   return (
@@ -17,7 +18,7 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
         >
           <div className="md:w-[80%] text-nerd-muted flex gap-8">
             <Image
-              src={chapter.image ?? null}
+              src={chapter.pages[0] ?? null}
               width={92}
               height={132}
               alt="Chapter cover"
@@ -41,7 +42,7 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
               <p>{chapter.summary}</p>
 
               <div className="flex gap-5 text-sm">
-                <span className="flex items-center gap-1">
+                <span className="flex text-nowrap items-center gap-1">
                   <ImageIcon size={16} />
                   {chapter.pages.length} pages
                 </span>
@@ -54,27 +55,38 @@ const ChapterComics = ({ data, slug }: { data: Chapter[]; slug: string }) => {
                     : "last edited"}{" "}
                   {new Date(chapter.updatedAt).toLocaleDateString()}
                 </span>
-                {chapter.views && (
+                <span className="flex items-center gap-1">
+                  <Eye size={16} />
+                  {chapter?.viewsCount ?? 0}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Heart size={16} />
+                  {chapter?.likesCount ?? 0}
+                </span>
+                {chapter.chapterType == "paid" && (
                   <span className="flex items-center gap-1">
-                    <Eye size={16} />
-                    {chapter.views}
+                    {chapter?.price} NWT
                   </span>
                 )}
               </div>
             </div>
           </div>
           <div className="md:w-[20%] md:justify-end flex gap-2">
-            <Link href={`/r/comics/${slug}/chapter/${chapter?.uniqueCode}`}>
+            <Link href={`/creator/comics/${slug}/view/${chapter?.uniqueCode}`}>
               <Button className="bg-nerd-default">
                 <Eye />
                 View
               </Button>
             </Link>
-            <Button className="bg-nerd-default">
-              {chapter.chapterStatus == "published" ? <Edit2 /> : <Send />}
+            {chapter.chapterStatus == "draft" ? (
+              <PublishDraft data={chapter} />
+            ) : (
+              <Button className="bg-nerd-default">
+                {chapter.chapterStatus == "published" ? <Edit2 /> : <Send />}
 
-              {chapter.chapterStatus == "published" ? "Edit" : "Publish"}
-            </Button>
+                {chapter.chapterStatus == "published" ? "Edit" : "Publish"}
+              </Button>
+            )}
             <ChapterActions chapter={chapter} />
           </div>
         </section>

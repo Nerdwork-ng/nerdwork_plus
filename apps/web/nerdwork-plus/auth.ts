@@ -12,6 +12,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
   debug: isDevelopment,
   callbacks: {
@@ -26,9 +28,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!account?.id_token) {
           return token;
         }
-        console.log(account.id_token)
+
         const response = await googleAuth(account.id_token);
-        console.log(response)
+
         if (!response || response.success === false || !response.data) {
           console.error("Backend response was unsuccessful or missing data.");
           return null;
@@ -85,6 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/signin",
+    error: "/error",
   },
   trustHost: true,
   secret: process.env.AUTH_SECRET,

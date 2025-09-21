@@ -4,7 +4,6 @@ import ComicCon from "@/assets/events/comic-con.jpg";
 import TechSummit from "@/assets/events/tech-summit.jpg";
 import ArtsFair from "@/assets/events/arts-fair.jpg";
 import Image from "next/image";
-import Link from "next/link";
 
 const events = [
   {
@@ -19,7 +18,7 @@ const events = [
   },
   {
     id: 2,
-    src: TechSummit,  
+    src: TechSummit,
     alt: "tech summit",
     link: "",
     date: "---",
@@ -68,17 +67,9 @@ export default function EventLists() {
               </p>
               <p className="text-[#FFFFFFCC]">{event.subtitle}</p>
             </div>
-            {event.date == "---" ? (
-              <Button disabled className="disabled:cursor-not-allowed w-fit">
-                Coming Soon
-              </Button>
-            ) : (
-              <Link target="_blank" href={`${event.link}`}>
-                <Button variant={"primary"} className="w-fit">
-                  Register
-                </Button>
-              </Link>
-            )}
+            <Button disabled className="disabled:cursor-not-allowed w-fit">
+              Not Available
+            </Button>
           </div>
         ))}
       </div>

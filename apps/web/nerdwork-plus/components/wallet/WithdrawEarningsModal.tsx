@@ -15,12 +15,18 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Helio from "@/assets/helio.svg";
 import { toast } from "sonner";
+import { useUserSession } from "@/lib/api/queries";
 
 const WithdrawEarningsModal = () => {
   const [withdrawAmount, setWithdrawAmount] = React.useState(0);
+  const { profile } = useUserSession();
+  const creatorProfile = profile?.creatorProfile;
 
-  const availableBalance = 100; // NWT
-  const usdEquivalent = 427.05; // USD
+  const usdPerNwt = 0.1;
+  const calculateUSD = (amount: number) => amount * usdPerNwt;
+  const availableBalance = creatorProfile?.walletBalance; // NWT
+  const usdEquivalent = calculateUSD(availableBalance);
+
   const transactionFee = 0.01; // 1%
 
   const handleWithdrawAmountChange = (
@@ -60,7 +66,7 @@ const WithdrawEarningsModal = () => {
               <Send /> Withdraw Money
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#171719] text-white border-none">
+          <DialogContent className="bg-[#171719] font-inter text-white border-none">
             <DialogHeader>
               <DialogTitle className="text-2xl">Withdraw Earnings</DialogTitle>
               <DialogDescription className="text-nerd-muted">
@@ -72,7 +78,8 @@ const WithdrawEarningsModal = () => {
               <div className={`py-3 px-3 border border-[#292A2E] rounded-md`}>
                 <p>Available Balance</p>
                 <p className="text-nerd-muted flex items-center justify-between">
-                  100 NWT <span>$427.05</span>
+                  {availableBalance ?? 0} NWT{" "}
+                  <span>${usdEquivalent.toFixed(2) ?? 0.0}</span>
                 </p>
               </div>
 
@@ -81,11 +88,17 @@ const WithdrawEarningsModal = () => {
               >
                 <div>
                   <p>Solflare (Solana Wallet)</p>
-                  <p className="text-nerd-muted flex items-center justify-between">
-                    0xDEAF...fB8B
+                  <p className="text-nerd-muted">
+                    {creatorProfile?.walletAddress?.slice(0, 4)}...
+                    {creatorProfile?.walletAddress?.slice(-4)}
                   </p>
+                  {!creatorProfile?.walletAddress && (
+                    <span className="text-xs text-red-400">
+                      Please connect a wallet to enable withdrawal
+                    </span>
+                  )}
                 </div>
-                <Button className="bg-nerd-default w-fit">Edit Wallet</Button>
+                {/* <Button className="bg-nerd-default w-fit">Edit Wallet</Button> */}
               </div>
 
               <div className="relative flex items-center space-x-2">
@@ -93,7 +106,7 @@ const WithdrawEarningsModal = () => {
                   type="number"
                   value={withdrawAmount === 0 ? "" : withdrawAmount}
                   onChange={handleWithdrawAmountChange}
-                  placeholder="$0"
+                  placeholder="0 NWT"
                   className="bg-[#1D1E21] border-[#292A2E] text-white placeholder:text-nerd-muted"
                 />
                 <Button
@@ -104,7 +117,9 @@ const WithdrawEarningsModal = () => {
                   Max
                 </Button>
               </div>
-              <p className="text-sm text-[#E8794A]">Minimum amount is $25.00</p>
+              <p className="text-sm text-[#E8794A]">
+                Minimum amount is 25.00 NWT
+              </p>
             </div>
             <div className="space-y-2 text-sm text-nerd-muted border-t pt-4 border-[#292A2E]">
               <div className="flex justify-between">
@@ -130,6 +145,7 @@ const WithdrawEarningsModal = () => {
                 onClick={handleSubmit}
                 variant={"primary"}
                 className="w-full mt-3"
+                disabled={!creatorProfile?.walletAddress}
               >
                 Continue to Payment
               </Button>

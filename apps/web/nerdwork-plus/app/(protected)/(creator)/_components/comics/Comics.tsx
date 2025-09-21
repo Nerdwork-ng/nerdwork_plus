@@ -19,20 +19,19 @@ const Comics = () => {
     queryKey: ["comics"],
     queryFn: getCreatorComics,
     placeholderData: keepPreviousData,
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
-  const comics: Comic[] = comicData?.data.comics ?? [];
+  const comics: Comic[] = comicData?.data?.comics ?? [];
 
-  if (!comics || isLoading) return <MyComicsEmptyState />;
+  if (comics.length == 0 || isLoading) return <MyComicsEmptyState />;
 
   const counts = {
     all: comics.length,
     draft: comics.filter((b) => b.comicStatus === "draft").length,
     published: comics.filter((b) => b.comicStatus === "published").length,
     scheduled: comics.filter((b) => b.comicStatus === "scheduled").length,
-    upcoming: comics.filter((b) => b.comicStatus === "upcoming").length,
   };
 
   const filteredComics = comics.filter((comic) =>

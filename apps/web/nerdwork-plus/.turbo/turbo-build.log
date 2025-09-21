@@ -1,289 +1,34 @@
 
-> nerdwork-plus@0.1.0 build E:\apps\nerdwork_plus\apps\web\nerdwork-plus
+> nerdwork-plus@0.1.0 build C:\Users\georg\Documents\work\Saas-Products\nerdwork_plus\apps\web\nerdwork-plus
 > next build
 
    ▲ Next.js 15.3.3
-   - Environments: .env.local, .env.production
 
    Creating an optimized production build ...
- ⚠ Compiled with warnings in 4.0s
-
-../../../node_modules/axios/lib/utils.js
-A Node.js API is used (setImmediate at line: 693) which is not supported in the Edge Runtime.
-Learn more: https://nextjs.org/docs/api-reference/edge-runtime
-
-Import trace for requested module:
-../../../node_modules/axios/lib/utils.js
-../../../node_modules/axios/lib/axios.js
-../../../node_modules/axios/index.js
-./actions/auth.actions.ts
-./auth.ts
-
-../../../node_modules/axios/lib/utils.js
-A Node.js API is used (setImmediate at line: 709) which is not supported in the Edge Runtime.
-Learn more: https://nextjs.org/docs/api-reference/edge-runtime
-
-Import trace for requested module:
-../../../node_modules/axios/lib/utils.js
-../../../node_modules/axios/lib/axios.js
-../../../node_modules/axios/index.js
-./actions/auth.actions.ts
-./auth.ts
-
-../../../node_modules/axios/lib/utils.js
-A Node.js API is used (process.nextTick at line: 714) which is not supported in the Edge Runtime.
-Learn more: https://nextjs.org/docs/api-reference/edge-runtime
-
-Import trace for requested module:
-../../../node_modules/axios/lib/utils.js
-../../../node_modules/axios/lib/axios.js
-../../../node_modules/axios/index.js
-./actions/auth.actions.ts
-./auth.ts
-
- ✓ Compiled successfully in 43s
+ ✓ Compiled successfully in 2000ms
    Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+   Generating static pages (6/8) 
+ ✓ Generating static pages (8/8)
+   Finalizing page optimization ...
+   Collecting build traces ...
 
-Failed to compile.
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    5.91 kB         130 kB
+├ ○ /_not-found                            977 B         103 kB
+├ ○ /communities                         3.57 kB         128 kB
+├ ○ /events                              7.56 kB         132 kB
+├ ƒ /events/[eventId]                     6.5 kB         131 kB
+└ ○ /nerdwork+                           3.72 kB         128 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/620-eabf33edb837b7aa.js       46.5 kB
+  ├ chunks/69c23a04-e03072e0b6b476eb.js  53.2 kB
+  └ other shared chunks (total)          1.98 kB
 
-./app/(auth)/onboarding/layout.js
-7:35  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
 
-./app/(auth)/onboarding/page.js
-7:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:22  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:7  Error: 'react_2' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-10:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
 
-./app/(auth)/onboarding/[userRole]/page.js
-39:30  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-40:44  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-41:45  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/signin/page.js
-40:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-41:30  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-42:40  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-43:38  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-44:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-45:25  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-46:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-47:22  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/AuthNav.js
-6:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-8:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:40  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/CreatorOnboarding.js
-5:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-6:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:30  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/CreatorProfileForm.js
-5:27  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-6:15  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:15  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:16  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:20  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:27  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-13:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-14:25  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-15:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-16:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/PaymentSetup.js
-8:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:40  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:39  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-13:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-14:22  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-15:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/ReaderForm.js
-5:27  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-6:15  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:15  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:16  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/ReaderGenres.js
-5:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-6:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(auth)/_components/ReaderOnboarding.js
-5:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-6:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:22  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:22  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:27  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(external)/communities/page.js
-7:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:21  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-13:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-13:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-14:43  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-15:37  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-16:38  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-17:37  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-18:37  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-19:38  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-20:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(external)/events/page.js
-7:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:31  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-12:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(external)/events/[eventId]/page.js
-40:16  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-41:31  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-42:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-43:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-44:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-45:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-46:21  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-47:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-48:30  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-49:40  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-50:36  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-51:41  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-52:37  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-53:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(external)/nerdwork+/page.js
-7:31  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:35  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:36  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-12:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/creator/nfts/page.tsx
-10:9  Error: 'NFTs' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-
-./app/(protected)/(creator)/creator/wallet/page.tsx
-23:9  Warning: The 'transactionData' logical expression could make the dependencies of useMemo Hook (at line 54) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'transactionData' in its own useMemo() Hook.  react-hooks/exhaustive-deps
-
-./app/(protected)/(creator)/layout.js
-8:38  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/_components/comics/ChapterActions.js
-6:19  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-9:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/_components/comics/ChapterComics.js
-6:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-10:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:42  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/_components/comics/ChaptersEmptyState.js
-6:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-8:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/_components/comics/Comics.js
-40:30  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-41:16  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-42:16  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-43:41  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-44:23  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/_components/comics/ComicsHeader.js
-6:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-6:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(creator)/_components/comics/CreatorComics.js
-6:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:19  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:24  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-10:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:47  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-13:46  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-14:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/(protected)/(reader)/r/library/page.tsx
-32:9  Warning: The 'comics' logical expression could make the dependencies of useMemo Hook (at line 84) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'comics' in its own useMemo() Hook.  react-hooks/exhaustive-deps
-
-./app/(protected)/(reader)/r/search/page.tsx
-32:9  Warning: The 'comics' logical expression could make the dependencies of useMemo Hook (at line 69) change on every render. To fix this, wrap the initialization of 'comics' in its own useMemo() Hook.  react-hooks/exhaustive-deps
-
-./app/(protected)/(reader)/r/wallet/page.tsx
-22:9  Warning: The 'transactionData' logical expression could make the dependencies of useMemo Hook (at line 53) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'transactionData' in its own useMemo() Hook.  react-hooks/exhaustive-deps
-
-./app/(protected)/(reader)/_components/SearchResultsPanel.tsx
-49:6  Warning: React Hook useEffect has a missing dependency: 'comics'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-
-./app/(protected)/layout.js
-7:31  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:47  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/layout.js
-8:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:1  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:43  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-13:41  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-14:17  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/not-found.js
-6:7  Error: 'react_1' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-6:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-7:40  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:33  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:18  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./app/page.js
-7:36  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-8:37  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-9:31  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-10:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-11:32  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-12:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-13:36  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-14:34  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
- ELIFECYCLE  Command failed with exit code 1.

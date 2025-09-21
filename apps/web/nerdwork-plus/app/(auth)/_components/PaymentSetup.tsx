@@ -4,58 +4,70 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import solflareLogo from "@/assets/creator/solflare.svg";
-import phantomLogo from "@/assets/creator/phantom.svg";
+// import phantomLogo from "@/assets/creator/phantom.svg";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Solflare from '@solflare-wallet/sdk';
+import Solflare from "@solflare-wallet/sdk";
+import { useUserSession } from "@/lib/api/queries";
+import { setCreatorAddress } from "@/actions/profile.actions";
 
 const wallet = new Solflare();
 
-
 export function PaymentDetailsForm() {
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const [selectedWallet, setSelectedWallet] = useState<string>("");
   const router = useRouter();
-  
+  const { refetch } = useUserSession();
 
-  // A function to simulate wallet detection. In a real app, you would
-  // use a library like @solana/wallet-adapter to check for installed wallets.
-  const walletDetected = (walletName: string) => {
-    console.log(walletName)
-    return wallet.isConnected // or false based on the check
-  };
+  // const walletDetected = (walletName: string) => {
+  //   console.log(walletName);
+  //   return wallet.isConnected;
+  // };
 
   const handleContinue = async () => {
     console.log("Selected wallet:", selectedWallet);
-    await wallet.connect()
-    // Proceed to the next step, e.g., connect to the wallet
-    if(wallet!.publicKey!.toString()){
-      toast.info("Wallet Connected... " + wallet!.publicKey!.toString());
-    }else{
+    await wallet.connect();
+
+    if (wallet!.publicKey!.toString()) {
+      toast.info("Wallet Detected..");
+    } else {
       toast.info("Wallet not  Connected... ");
     }
-   
-    // proceed to update user wallte address
 
+    console.log(wallet!.publicKey!.toString());
+    try {
+      const response = await setCreatorAddress(
+        wallet!.publicKey!.toString(),
+        selectedWallet
+      );
+      console.log(response);
 
-    setTimeout(() => {
+      if (!response?.success) {
+        toast.error(
+          response?.message ?? "An error occurred while submitting the form."
+        );
+        return;
+      }
+
+      await refetch();
+      toast.success("Wallet address set successfully!");
       router.push("/creator/comics");
-    }, 3000);
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+      console.error(err);
+    }
   };
 
   useEffect(() => {
-    
-    wallet.on('connect', () => {
-      toast.info("Wallet Connected... " + wallet!.publicKey!.toString());
-      console.log('connected', wallet!.publicKey!.toString());
-
+    wallet.on("connect", () => {
+      toast.info("Wallet Connected.");
+      console.log("connected", wallet!.publicKey!.toString());
     });
-    wallet.on('disconnect', () => {
+    wallet.on("disconnect", () => {
       toast.info("Wallet Disconnected... ");
-      console.log('disconnected');
+      console.log("disconnected");
     });
-  }, [])
-
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center px-5 text-white min-h-[75vh]">
@@ -70,10 +82,11 @@ export function PaymentDetailsForm() {
 
         <div className="space-y-4 mt-10">
           <div
-            className={`py-2 px-3 flex items-center justify-between cursor-pointer transition-colors ${selectedWallet === "solflare"
+            className={`py-2 px-3 flex items-center justify-between cursor-pointer transition-colors ${
+              selectedWallet === "solflare"
                 ? "rounded-[12px] bg-[#25262A]"
                 : "hover:bg-neutral-800 rounded-[12px]"
-              }`}
+            }`}
             onClick={() => setSelectedWallet("solflare")}
           >
             <div className="flex items-center space-x-4">
@@ -87,16 +100,17 @@ export function PaymentDetailsForm() {
                 <span className="text-sm">Solflare Wallet</span>
               </div>
             </div>
-            {walletDetected("solflare") && (
+            {/* {walletDetected("solflare") && (
               <span className="text-[#D9D9D9] text-sm">Detected</span>
-            )}
+            )} */}
           </div>
 
-          <div
-            className={`py-2 px-3 flex items-center justify-between cursor-pointer transition-colors ${selectedWallet === "phantom"
+          {/* <div
+            className={`py-2 px-3 flex items-center justify-between cursor-pointer transition-colors ${
+              selectedWallet === "phantom"
                 ? "rounded-[12px] bg-[#25262A]"
                 : "hover:bg-neutral-800 rounded-[12px]"
-              }`}
+            }`}
             onClick={() => setSelectedWallet("phantom")}
           >
             <div className="flex items-center space-x-4">
@@ -113,7 +127,7 @@ export function PaymentDetailsForm() {
             {walletDetected("phantom") && (
               <span className="text-[#D9D9D9] text-sm">Detected</span>
             )}
-          </div>
+          </div> */}
         </div>
 
         <Button

@@ -1,4 +1,4 @@
-import { ChartLine, Edit2Icon, Trash } from "lucide-react";
+import { ChartLine, Edit2Icon } from "lucide-react";
 import React from "react";
 import {
   SheetContent,
@@ -6,6 +6,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Comic } from "@/lib/types";
+import DeleteResource from "./DeleteResource";
 
 const MobileComicActions = ({ comic }: { comic: Comic }) => {
   return (
@@ -26,9 +27,7 @@ const MobileComicActions = ({ comic }: { comic: Comic }) => {
         <button className="flex items-center gap-2 cursor-pointer hover:bg-[#25262A] p-4 rounded-[8px]">
           <ChartLine size={16} /> View Stats
         </button>
-        <button className="flex items-center gap-2 cursor-pointer hover:bg-[#25262A] p-4 rounded-[8px]">
-          <Trash size={16} /> Delete Series
-        </button>
+        <DeleteResource resource="comic" data={comic} />
       </SheetContent>
     </>
   );
