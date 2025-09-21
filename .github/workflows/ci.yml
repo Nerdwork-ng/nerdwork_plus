@@ -223,6 +223,7 @@ jobs:
 
   deploy-to-staging:
     name: Deploy to Staging Environment
+    environment: staging
     needs: [build-and-test]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -334,6 +335,7 @@ jobs:
 
   deploy-to-production:
     name: Deploy to Production
+    environment: production
     needs: [deploy-to-staging]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
