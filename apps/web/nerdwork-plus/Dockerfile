@@ -2,7 +2,7 @@
 FROM node:22-alpine AS builder
 
 # Enable corepack (so pnpm works)
-RUN corepack enable
+# RUN corepack enable
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 # Install deps at root
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy the full project (after deps)
 COPY . .

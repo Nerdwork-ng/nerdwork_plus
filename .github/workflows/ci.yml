@@ -48,7 +48,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Run ${{ matrix.test-type.name }}
-        if: needs('changed-files').outputs.${{ matrix.test-type.name }} > 0
+        if: needs.changed-files.outputs[matrix.test-type.name] > 0
         run: |
           if [ -f "tsconfig.${{ matrix.test-type.name }}.json" ]; then
             pnpm ${{ matrix.test-type.command }} --config tsconfig.${{ matrix.test-type.name }}.json
@@ -56,24 +56,24 @@ jobs:
             pnpm ${{ matrix.test-type.command }}
           fi
       - name: Upload test coverage (optional - for analytics)
-        if: always() && needs('changed-files').outputs.${{ matrix.test-type.name }} > 0
+        if: always() && needs.changed-files.outputs[matrix.test-type.name] > 0
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}  # Add in repo secrets
           files: ./coverage/lcov.info  # Adjust if path differs
       - name: Dependency vulnerability scanning (optional - for security)
-        if: always() && needs('changed-files').outputs.${{ matrix.test-type.name }} > 0
+        if: always() && needs.changed-files.outputs[matrix.test-type.name] > 0
         uses: aquasecurity/trivy-action@0.18.0  # Use stable version
         with:
           scan-type: 'fs'
           format: 'sarif'
           output: 'trivy-results-${{ matrix.test-type.name }}.sarif'
       - name: Debug - Verify SARIF file
-        if: always() && needs('changed-files').outputs.${{ matrix.test-type.name }} > 0
+        if: always() && needs.changed-files.outputs[matrix.test-type.name] > 0
         run: |
           ls -la trivy-results-${{ matrix.test-type.name }}.sarif || echo "SARIF file not found for ${{ matrix.test-type.name }}"
       - name: Upload scan results to GitHub
-        if: always() && needs('changed-files').outputs.${{ matrix.test-type.name }} > 0
+        if: always() && needs.changed-files.outputs[matrix.test-type.name] > 0
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results-${{ matrix.test-type.name }}.sarif
