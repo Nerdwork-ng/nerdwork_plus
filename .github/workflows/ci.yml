@@ -413,7 +413,7 @@ jobs:
 
       - name: Deploy to production environment
         run: |
-          echo "Deploying to production environment..."
+          echo "Deploying to production environment.."
           # Pull the latest Docker images from GitHub Container Registry
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
