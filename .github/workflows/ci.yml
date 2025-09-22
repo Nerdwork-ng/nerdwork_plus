@@ -81,7 +81,6 @@ jobs:
           sarif_file: trivy-results-${{ matrix.test-type.name }}.sarif
       - name: Build Docker image (only on main - dry run for readiness)
         if: github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-
         run: |
           built_services=0
           for service in docker/*; do
@@ -119,10 +118,22 @@ jobs:
           BUILD_DATE=$(date +'%Y%m%d')
           echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
 
+      - name: Create ECR repositories (only on main)
+        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        run: |
+          for service in docker/*; do
+            if [ -f "$service/Dockerfile" ]; then
+              service_name=$(basename $service)
+              echo "Creating ECR repository for $service_name"
+              aws ecr describe-repositories --repository-names nerdwork-$service_name --region eu-west-1 || \
+              aws ecr create-repository --repository-name nerdwork-$service_name --region eu-west-1
+              echo "✅ ECR repository created or verified for $service_name"
+            fi
+          done
+
       - name: Publish Docker images (only on main)
         if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
         run: |
-          # echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
 
           for service in docker/*; do
@@ -130,13 +141,18 @@ jobs:
               service_name=$(basename $service)
               echo "Publishing $service_name to GitHub Container Registry"
 
+              # Build the image
+              docker build --no-cache -t nerdwork-$service_name:test $service
+
               # Tag with version info
               docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
-          docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
-          docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
+              docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
+              docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
+
+              # Push to ECR
+              docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
+              docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
+              docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
 
               echo "✅ Published $service_name with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
             fi
@@ -269,7 +285,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Replace with your AWS region
+          aws-region: eu-west-1  # Replace with your AWS region
 
       - name: Create staging environment file
         run: |
@@ -396,7 +412,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Replace with your AWS region
+          aws-region: eu-west-1  # Replace with your AWS region
       - name: Create production environment file
         run: |
           echo "Creating .env file for production deployment..."
