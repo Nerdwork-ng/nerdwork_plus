@@ -40,12 +40,12 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10.15.1
           cache: 'pnpm'
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
@@ -82,19 +82,15 @@ jobs:
       - name: Build Docker image (only on main - dry run for readiness)
         if: github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
         run: |
-          built_services=0
-          for service in docker/*; do
-            if [ -f "$service/Dockerfile" ]; then
-              docker build --no-cache -t nerdwork-$(basename $service):test $service
-              ((built_services++))
-              echo "✅ Built $service_name"
-            fi
-          done
-          if [ "$built_services" -eq 0 ]; then
-            echo "❌ No services built. Check Dockerfile paths."
+          echo "Building nerdwork-frontend Docker image..."
+          if [ -f "apps/web/nerdwork-plus/Dockerfile" ]; then
+            docker build --no-cache -f apps/web/nerdwork-plus/Dockerfile -t nerdwork-frontend:test .
+            echo "✅ Built nerdwork-frontend successfully"
+          else
+            echo "❌ Dockerfile not found at apps/web/nerdwork-plus/Dockerfile"
             exit 1
           fi
-          echo "✅ Build successful - $built_services services ready for deployment"
+          echo "✅ Build successful - nerdwork-frontend ready for deployment"
 
       - name: Set version variables
         if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
@@ -118,46 +114,111 @@ jobs:
           BUILD_DATE=$(date +'%Y%m%d')
           echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
 
-      - name: Create ECR repositories (only on main)
+      - name: Configure AWS credentials
+        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Create ECR repository (only on main)
         if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
         run: |
-          for service in docker/*; do
-            if [ -f "$service/Dockerfile" ]; then
-              service_name=$(basename $service)
-              echo "Creating ECR repository for $service_name"
-              aws ecr describe-repositories --repository-names nerdwork-$service_name --region eu-west-1 || \
-              aws ecr create-repository --repository-name nerdwork-$service_name --region eu-west-1
-              echo "✅ ECR repository created or verified for $service_name"
-            fi
-          done
+          echo "Creating ECR repository for nerdwork-frontend"
+          aws ecr describe-repositories --repository-names nerdwork-frontend --region eu-west-1 || \
+          aws ecr create-repository --repository-name nerdwork-frontend --region eu-west-1
+          echo "✅ ECR repository created or verified for nerdwork-frontend"
 
       - name: Publish Docker images (only on main)
         if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
         run: |
+          echo "Logging into AWS ECR..."
           aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
 
-          for service in docker/*; do
-            if [ -f "$service/Dockerfile" ]; then
-              service_name=$(basename $service)
-              echo "Publishing $service_name to GitHub Container Registry"
+          echo "Building and publishing nerdwork-frontend to AWS ECR"
+          
+          # Build the image
+          docker build --no-cache -f apps/web/nerdwork-plus/Dockerfile -t nerdwork-frontend:${{ steps.version.outputs.version }} .
 
-              # Build the image
-              docker build --no-cache -t nerdwork-$service_name:test $service
+          # Tag with version info
+          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}
+          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}
+          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest
 
-              # Tag with version info
-              docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
-              docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
-              docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
+          # Push to ECR
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest
 
-              # Push to ECR
-              docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
-              docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
-              docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
+          echo "✅ Published nerdwork-frontend with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
+          echo "✅ Docker image published successfully to AWS ECR"
+          
+          # Store image URLs for email notification
+          echo "IMAGE_URL_LATEST=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest" >> $GITHUB_ENV
+          echo "IMAGE_URL_VERSION=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "IMAGE_URL_DATE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}" >> $GITHUB_ENV
 
-              echo "✅ Published $service_name with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
-            fi
-          done
-          echo "✅ All Docker images published successfully"
+      - name: Create Docker image notification issue
+        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Create a formatted issue with Docker image URLs
+            const issueBody = `# 🚀 Docker Image Built Successfully!
+            
+            ## 📦 Image Details
+            - **Repository:** AWS ECR (eu-west-1)
+            - **Build Date:** ${{ steps.version.outputs.build_date }}
+            - **Version:** ${{ steps.version.outputs.version }}
+            - **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+            - **Build:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ## 🔗 Docker Image URLs
+            
+            **Latest Tag:**
+            ```
+            ${{ env.IMAGE_URL_LATEST }}
+            ```
+            
+            **Version Tag:**
+            ```
+            ${{ env.IMAGE_URL_VERSION }}
+            ```
+            
+            **Date Tag:**
+            ```
+            ${{ env.IMAGE_URL_DATE }}
+            ```
+            
+            ## 🛠️ Docker Pull Commands
+            
+            ```bash
+            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+            docker pull ${{ env.IMAGE_URL_LATEST }}
+            ```
+            
+            > **Note:** The CI/CD pipeline will continue with the deployment process automatically.
+            
+            `;
+            
+            // Create the issue
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🐳 Docker Image Ready - nerdwork-frontend v${{ steps.version.outputs.version }}',
+              body: issueBody,
+              labels: ['docker-image', 'notification', 'frontend']
+            });
+            
+            // Create a comment mentioning you
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.data.number,
+              body: `@${{ github.repository_owner }} Docker image is now available in ECR! ✅`
+            });
 
       - name: Create artifact summary
         if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
@@ -166,13 +227,7 @@ jobs:
           echo "## 🚀 Docker Images Created" > artifact_summary.md
           echo "| Service | Tags | Repository |" >> artifact_summary.md
           echo "| ------- | ---- | ---------- |" >> artifact_summary.md
-
-          for service in docker/*; do
-            if [ -f "$service/Dockerfile" ]; then
-              service_name=$(basename $service)
-              echo "| $service_name | latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date }} | ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name |" >> artifact_summary.md
-            fi
-          done
+          echo "| nerdwork-frontend | latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date }} | ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend |" >> artifact_summary.md
 
           cat artifact_summary.md
 
