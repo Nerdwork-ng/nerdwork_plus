@@ -412,7 +412,9 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1  # Replace with your AWS region
+          aws-region: eu-west-1
+
+           # Replace with your AWS region
       - name: Create production environment file
         run: |
           echo "Creating .env file for production deployment..."
@@ -481,8 +483,8 @@ jobs:
           set +a
 
           # Update ECS services or other deployment steps
-          # Example:
-          aws ecs update-service --cluster prod-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
+          aws ecs update-service --cluster prod-cluster --service nerdwork-api --task-definition nerdwork-api:$(aws ecs describe-task-definition --task-definition nerdwork-api --region eu-west-1 --query 'taskDefinition.revision' --output text) --force-new-deployment --region eu-west-1 || exit 1
+          aws ecs wait services-stable --cluster prod-cluster --services nerdwork-api --region eu-west-1
 
           echo "✅ Deployment to production environment completed"
 
