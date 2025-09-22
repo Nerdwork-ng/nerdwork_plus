@@ -6,7 +6,6 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-
 # Copy only package manager files first
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 

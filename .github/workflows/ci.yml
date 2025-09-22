@@ -79,14 +79,16 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results-${{ matrix.test-type.name }}.sarif
-      - name: Build (only on main - dry run for readiness)
+      - name: Build Docker image (only on main - dry run for readiness)
         if: github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+
         run: |
           built_services=0
           for service in docker/*; do
             if [ -f "$service/Dockerfile" ]; then
               docker build --no-cache -t nerdwork-$(basename $service):test $service
               ((built_services++))
+              echo "✅ Built $service_name"
             fi
           done
           if [ "$built_services" -eq 0 ]; then
@@ -120,23 +122,23 @@ jobs:
       - name: Publish Docker images (only on main)
         if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          # echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+
           for service in docker/*; do
             if [ -f "$service/Dockerfile" ]; then
               service_name=$(basename $service)
               echo "Publishing $service_name to GitHub Container Registry"
 
               # Tag with version info
-              docker tag nerdwork-$service_name:test ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.version }}
-              docker tag nerdwork-$service_name:test ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
-              docker tag nerdwork-$service_name:test ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:latest
+              docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
+          docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
+          docker tag nerdwork-$service_name:test ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.version }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-$service_name:latest
 
-              # Push all tags
-              docker push ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.version }}
-              docker push ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:${{ steps.version.outputs.build_date }}
-              docker push ghcr.io/${{ github.repository_owner }}/nerdwork-$service_name:latest
-
-              echo "✅ Published $service_name with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date }}"
+              echo "✅ Published $service_name with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
             fi
           done
           echo "✅ All Docker images published successfully"
@@ -410,6 +412,46 @@ jobs:
           # Log non-sensitive environment variables
           echo "Environment file created with the following variables:"
           cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
+      - name: Register Task Definition
+        run: |
+          # Generate task definition with latest image
+          cat > task-def.json <<EOF
+          {
+            "family": "nerdwork-api",
+            "networkMode": "awsvpc",
+            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
+            "taskRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskRole",
+            "cpu": "256",
+            "memory": "512",
+            "requiresCompatibilities": ["FARGATE"],
+            "containerDefinitions": [
+              {
+                "name": "nerdwork-api",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-api:${{ steps.version.outputs.version }}",
+                "essential": true,
+                "portMappings": [
+                  {
+                    "containerPort": 3000,
+                    "hostPort": 3000
+                  }
+                ],
+                "logConfiguration": {
+                  "logDriver": "awslogs",
+                  "options": {
+                    "awslogs-group": "/ecs/nerdwork-api",
+                    "awslogs-region": "eu-west-1",
+                    "awslogs-stream-prefix": "ecs"
+                  }
+                },
+                "environment": [
+                  { "name": "NODE_ENV", "value": "production" }
+                ]
+              }
+            ]
+          }
+          EOF
+          aws ecs register-task-definition --cli-input-json file://task-def.json --region eu-west-1
+          echo "✅ Task definition registered with revision: $(aws ecs describe-task-definition --task-definition nerdwork-api --region eu-west-1 --query 'taskDefinition.revision' --output text)"
 
       - name: Deploy to production environment
         run: |
