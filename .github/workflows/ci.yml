@@ -2,7 +2,7 @@ name: CI/CD - Build, Test and Deploy
 
 # 🔄 WORKFLOW FLOW:
 # 1️⃣ changed-files        -> Detects what files changed
-# 2️⃣ build-and-test      -> Runs tests for changed components  
+# 2️⃣ build-and-test      -> Runs tests for changed components
 # 3️⃣ docker-build-and-push -> Builds & pushes frontend Docker image (main branch)
 # 3️⃣ lambda-deploy       -> Deploys backend to AWS Lambda (parallel to Docker)
 # 4️⃣ deploy-to-staging   -> Deploys both frontend (ECS) & backend (Lambda) to staging
@@ -35,13 +35,13 @@ jobs:
           # More inclusive patterns to catch all relevant changes
           FRONTEND_CHANGES=$(git diff --name-only HEAD^ HEAD | grep -E '(apps/|apps/web/|Dockerfile|package\.json|pnpm-).*' | wc -l | xargs)
           BACKEND_CHANGES=$(git diff --name-only HEAD^ HEAD | grep -E '(backend/|package\.json|pnpm-).*' | wc -l | xargs)
-          
+
           echo "Files changed:"
           git diff --name-only HEAD^ HEAD || echo "No files changed"
-          
+
           echo "frontend=${FRONTEND_CHANGES}" >> $GITHUB_OUTPUT
           echo "backend=${BACKEND_CHANGES}" >> $GITHUB_OUTPUT
-          
+
           echo "Frontend changes detected: ${FRONTEND_CHANGES}"
           echo "Backend changes detected: ${BACKEND_CHANGES}"
 
@@ -148,7 +148,7 @@ jobs:
       image-build-date: ${{ steps.version.outputs.build_date }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Debug - Show change detection results
         run: |
           echo "Frontend tests detected: ${{ needs.changed-files.outputs.frontend-tests }}"
@@ -156,7 +156,7 @@ jobs:
           echo "Build and test job status: ${{ needs.build-and-test.result }}"
           echo "Current branch: ${{ github.ref }}"
           echo "Proceeding with Docker build..."
-      
+
       - name: Set version variables
         id: version
         run: |
@@ -279,13 +279,13 @@ jobs:
   lambda-deploy:
     name: "🎆 Deploy Backend to Lambda"
     needs: [build-and-test, changed-files]  # ⬅️ Runs parallel to Docker build
-    if: success() && github.ref == 'refs/heads/main' && needs.changed-files.outputs.backend-tests > 0
+    if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       lambda-endpoint: ${{ steps.deploy.outputs.api_endpoint }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js for Backend
         uses: actions/setup-node@v4
         with:
@@ -337,15 +337,15 @@ jobs:
         run: |
           cd backend
           echo "Deploying backend services to Lambda..."
-          
+
           # Deploy to staging environment
           serverless deploy --stage staging --region eu-west-1 --verbose
-          
+
           # Get the API Gateway endpoint
           API_ENDPOINT=$(serverless info --stage staging --region eu-west-1 | grep -o 'https://[^[:space:]]*')
           echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
           echo "Lambda API deployed at: $API_ENDPOINT"
-          
+
           echo "✅ Backend services deployed to AWS Lambda successfully"
 
       - name: Run Lambda health check
@@ -361,7 +361,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issueBody = `# 🎆 Backend Deployed to Lambda Successfully!
-            
+
             ## 🚀 Lambda Deployment Details
             - **Service:** nerdwork-backend
             - **Stage:** staging
@@ -369,24 +369,24 @@ jobs:
             - **API Gateway Endpoint:** ${{ steps.deploy.outputs.api_endpoint }}
             - **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             - **Build:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            
+
             ## 🔗 API Endpoint
             \`\`\`
             ${{ steps.deploy.outputs.api_endpoint }}
             \`\`\`
-            
+
             ## 🛠️ Test Commands
             \`\`\`bash
             # Health check
             curl ${{ steps.deploy.outputs.api_endpoint }}/health
-            
+
             # API documentation
             curl ${{ steps.deploy.outputs.api_endpoint }}/docs
             \`\`\`
-            
+
             > **Note:** Frontend deployment will use this API endpoint for backend communication.
             `;
-            
+
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -394,7 +394,7 @@ jobs:
               body: issueBody,
               labels: ['lambda', 'backend', 'staging', 'deployment']
             });
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -481,13 +481,13 @@ jobs:
           # Deploy frontend and connect to backend
           echo "Frontend image version: ${{ needs.docker-build-and-push.outputs.image-version || 'N/A' }}"
           echo "Backend API endpoint: ${{ needs.lambda-deploy.outputs.lambda-endpoint || 'N/A' }}"
-          
+
           # Update ECS service with new image (if Docker build succeeded)
           if [ "${{ needs.docker-build-and-push.result }}" == "success" ]; then
             echo "Deploying frontend to ECS..."
             # aws ecs update-service --cluster staging-cluster --service nerdwork-frontend --force-new-deployment --region eu-west-1
           fi
-          
+
           # Verify Lambda deployment (if Lambda deploy succeeded)
           if [ "${{ needs.lambda-deploy.result }}" == "success" ] && [ ! -z "${{ needs.lambda-deploy.outputs.lambda-endpoint }}" ]; then
             echo "Backend Lambda API is available at: ${{ needs.lambda-deploy.outputs.lambda-endpoint }}"
@@ -608,22 +608,44 @@ jobs:
         run: |
           cd backend
           echo "Deploying backend to production Lambda..."
-          
+
           # Create production environment file
           echo "DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" > .env
           echo "JWT_SECRET=${{ secrets.PRODUCTION_JWT_SECRET }}" >> .env
           echo "S3_BUCKET_NAME=${{ secrets.PRODUCTION_S3_BUCKET }}" >> .env
           # ... add other production environment variables
-          
+
           # Deploy to production
           npm install -g serverless@3
           serverless deploy --stage production --region eu-west-1 --verbose
-          
+
           echo "✅ Backend deployed to production Lambda"
 
           # Log non-sensitive environment variables
           echo "Environment file created with the following variables:"
           cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
+      - name: Setup ECS Infrastructure
+        run: |
+          echo "Setting up ECS infrastructure if needed..."
+
+          # Check and create ECS cluster if it doesn't exist
+          if ! aws ecs describe-clusters --clusters prod-cluster --region eu-west-1 >/dev/null 2>&1; then
+            echo "Creating ECS cluster 'prod-cluster'..."
+            aws ecs create-cluster --cluster-name prod-cluster --region eu-west-1
+            echo "✅ ECS cluster created"
+          else
+            echo "✅ ECS cluster 'prod-cluster' already exists"
+          fi
+
+          # Check and create CloudWatch log group if it doesn't exist
+          if ! aws logs describe-log-groups --log-group-name-prefix "/ecs/nerdwork-frontend" --region eu-west-1 | grep -q "/ecs/nerdwork-frontend"; then
+            echo "Creating CloudWatch log group..."
+            aws logs create-log-group --log-group-name "/ecs/nerdwork-frontend" --region eu-west-1
+            echo "✅ CloudWatch log group created"
+          else
+            echo "✅ CloudWatch log group already exists"
+          fi
+
       - name: Register Task Definition
         run: |
           # Generate task definition with latest image
@@ -667,18 +689,128 @@ jobs:
 
       - name: Deploy to production environment
         run: |
-          echo "Deploying to production environment.."
-          # Pull the latest Docker images from GitHub Container Registry
-          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+          echo "Deploying to production environment..."
 
-          # Load environment variables from .env.production
+          # Check if ECS cluster and service exist
+          echo "Verifying ECS cluster and service..."
+          aws ecs describe-clusters --clusters prod-cluster --region eu-west-1 || {
+            echo "❌ ECS cluster 'prod-cluster' not found. Please create it first."
+            exit 1
+          }
+
+          # Check and create ECS service if it doesn't exist
+          if ! aws ecs describe-services --cluster prod-cluster --services nerdwork-frontend --region eu-west-1 >/dev/null 2>&1; then
+            echo "Creating ECS service 'nerdwork-frontend'..."
+
+            # Get the latest task definition ARN
+            TASK_DEF_ARN=$(aws ecs describe-task-definition --task-definition nerdwork-frontend --region eu-west-1 --query 'taskDefinition.taskDefinitionArn' --output text)
+
+            # Create the service (you may need to adjust VPC settings)
+            aws ecs create-service \
+              --cluster prod-cluster \
+              --service-name nerdwork-frontend \
+              --task-definition "$TASK_DEF_ARN" \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --platform-version LATEST \
+              --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_IDS }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+              --region eu-west-1
+
+            echo "✅ ECS service created"
+          else
+            echo "✅ ECS service 'nerdwork-frontend' already exists"
+          fi
+
+          # Get current task definition revision
+          TASK_DEF_REVISION=$(aws ecs describe-task-definition --task-definition nerdwork-frontend --region eu-west-1 --query 'taskDefinition.revision' --output text)
+          echo "Using task definition revision: $TASK_DEF_REVISION"
+
+          # Load environment variables
           set -a
           source .env
           set +a
 
-          # Update ECS services or other deployment steps
-          aws ecs update-service --cluster prod-cluster --service nerdwork-frontend --task-definition nerdwork-frontend:$(aws ecs describe-task-definition --task-definition nerdwork-frontend --region eu-west-1 --query 'taskDefinition.revision' --output text) --force-new-deployment --region eu-west-1 || exit 1
-          aws ecs wait services-stable --cluster prod-cluster --services nerdwork-frontend --region eu-west-1
+          # Update ECS service with better error handling
+          echo "Updating ECS service..."
+          aws ecs update-service \
+            --cluster prod-cluster \
+            --service nerdwork-frontend \
+            --task-definition nerdwork-frontend:$TASK_DEF_REVISION \
+            --force-new-deployment \
+            --region eu-west-1
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Failed to update ECS service"
+            exit 1
+          fi
+
+          echo "Waiting for service to stabilize (this may take several minutes)..."
+          echo "Checking service status every 30 seconds for up to 15 minutes..."
+
+          # Custom wait logic with better timeout and error reporting
+          MAX_ATTEMPTS=30  # 15 minutes (30 * 30 seconds)
+          ATTEMPT=0
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Attempt $ATTEMPT of $MAX_ATTEMPTS - Checking service status..."
+
+            # Get service status
+            SERVICE_STATUS=$(aws ecs describe-services \
+              --cluster prod-cluster \
+              --services nerdwork-frontend \
+              --region eu-west-1 \
+              --query 'services[0].deployments[?status==`PRIMARY`].rolloutState' \
+              --output text)
+
+            RUNNING_COUNT=$(aws ecs describe-services \
+              --cluster prod-cluster \
+              --services nerdwork-frontend \
+              --region eu-west-1 \
+              --query 'services[0].runningCount' \
+              --output text)
+
+            DESIRED_COUNT=$(aws ecs describe-services \
+              --cluster prod-cluster \
+              --services nerdwork-frontend \
+              --region eu-west-1 \
+              --query 'services[0].desiredCount' \
+              --output text)
+
+            echo "Service Status: $SERVICE_STATUS, Running: $RUNNING_COUNT, Desired: $DESIRED_COUNT"
+
+            if [ "$SERVICE_STATUS" = "COMPLETED" ] && [ "$RUNNING_COUNT" = "$DESIRED_COUNT" ]; then
+              echo "✅ Service deployment completed successfully!"
+              break
+            fi
+
+            if [ "$SERVICE_STATUS" = "FAILED" ]; then
+              echo "❌ Service deployment failed!"
+              # Get failure details
+              aws ecs describe-services \
+                --cluster prod-cluster \
+                --services nerdwork-frontend \
+                --region eu-west-1 \
+                --query 'services[0].events[0:5].[createdAt,message]' \
+                --output table
+              exit 1
+            fi
+
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "❌ Timeout: Service did not stabilize within 15 minutes"
+              echo "Final service status: $SERVICE_STATUS"
+              echo "Recent service events:"
+              aws ecs describe-services \
+                --cluster prod-cluster \
+                --services nerdwork-frontend \
+                --region eu-west-1 \
+                --query 'services[0].events[0:10].[createdAt,message]' \
+                --output table
+              exit 1
+            fi
+
+            sleep 30
+          done
 
           echo "✅ Deployment to production environment completed"
 
