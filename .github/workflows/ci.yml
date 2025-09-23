@@ -578,7 +578,7 @@ jobs:
 
   deploy-to-staging:
     name: "🚀 Deploy to Staging Environment"
-    needs: [docker-build-and-push, lambda-deploy, changed-files]  # ⬅️ Waits for both builds
+    needs: [docker-build-and-push, lambda-deploy, detect-changes]
     if: |
       always() && github.ref == 'refs/heads/main' && (
         (needs.docker-build-and-push.result == 'success') ||
@@ -596,8 +596,8 @@ jobs:
           echo "Deployment Status Summary:"
           echo "Docker build result: ${{ needs.docker-build-and-push.result }}"
           echo "Lambda deploy result: ${{ needs.lambda-deploy.result }}"
-          echo "Frontend changes: ${{ needs.changed-files.outputs.frontend-tests }}"
-          echo "Backend changes: ${{ needs.changed-files.outputs.backend-tests }}"
+          echo "Frontend changes: ${{ needs.detect-changes.outputs.frontend-changed }}"
+          echo "Backend changes: ${{ needs.detect-changes.outputs.backend-changed }}"
           echo "Current branch: ${{ github.ref }}"
           echo "Proceeding with staging deployment..."
 
@@ -727,9 +727,9 @@ jobs:
             });
 
   deploy-to-production:
-    name: "🏭 Deploy to Production"
-    needs: [deploy-to-staging]  # ⬅️ Waits for staging deployment success
-    if: success() && github.ref == 'refs/heads/main'
+    name: "🏦 Deploy to Production"
+    needs: [docker-build-and-push, lambda-deploy]
+    if: success() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: production
