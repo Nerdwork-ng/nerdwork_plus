@@ -1,12 +1,5 @@
 name: CI/CD - Build, Test and Deploy
 
-# 🔄 WORKFLOW FLOW:
-# 1️⃣ changed-files     -> Detects what files changed
-# 2️⃣ build-and-test   -> Runs tests for changed components
-# 3️⃣ docker-build-and-push -> Builds & pushes Docker image (main branch only)
-# 4️⃣ deploy-to-staging    -> Deploys to staging environment
-# 5️⃣ deploy-to-production -> Deploys to production (requires approval)
-
 permissions:
   contents: write
   issues: write
@@ -31,8 +24,18 @@ jobs:
       - name: Check changed files
         id: check-files
         run: |
-          echo "frontend=$(git diff --name-only HEAD^ HEAD | grep -E 'apps/.*\.(ts|tsx)$' | wc -l | xargs)" >> $GITHUB_OUTPUT
-          echo "backend=$(git diff --name-only HEAD^ HEAD | grep -E 'backend/.*\.(ts|js)$' | wc -l | xargs)" >> $GITHUB_OUTPUT
+          # More inclusive patterns to catch all relevant changes
+          FRONTEND_CHANGES=$(git diff --name-only HEAD^ HEAD | grep -E '(apps/|apps/web/|Dockerfile|package\.json|pnpm-).*' | wc -l | xargs)
+          BACKEND_CHANGES=$(git diff --name-only HEAD^ HEAD | grep -E '(backend/|package\.json|pnpm-).*' | wc -l | xargs)
+          
+          echo "Files changed:"
+          git diff --name-only HEAD^ HEAD || echo "No files changed"
+          
+          echo "frontend=${FRONTEND_CHANGES}" >> $GITHUB_OUTPUT
+          echo "backend=${BACKEND_CHANGES}" >> $GITHUB_OUTPUT
+          
+          echo "Frontend changes detected: ${FRONTEND_CHANGES}"
+          echo "Backend changes detected: ${BACKEND_CHANGES}"
 
   build-and-test:
     name: "🧪 Build and Test"
@@ -129,15 +132,23 @@ jobs:
 
   docker-build-and-push:
     name: "🐳 Build and Push Docker Image"
-    needs: [build-and-test]  # ⬅️ Waits for tests to pass
-    if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+    needs: [build-and-test, changed-files]  # ⬅️ Waits for tests to pass and needs change detection
+    if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       image-version: ${{ steps.version.outputs.version }}
       image-build-date: ${{ steps.version.outputs.build_date }}
     steps:
       - uses: actions/checkout@v4
-
+      
+      - name: Debug - Show change detection results
+        run: |
+          echo "Frontend tests detected: ${{ needs.changed-files.outputs.frontend-tests }}"
+          echo "Backend tests detected: ${{ needs.changed-files.outputs.backend-tests }}"
+          echo "Build and test job status: ${{ needs.build-and-test.result }}"
+          echo "Current branch: ${{ github.ref }}"
+          echo "Proceeding with Docker build..."
+      
       - name: Set version variables
         id: version
         run: |
@@ -333,9 +344,7 @@ jobs:
           set +a
 
           # Update ECS services or other deployment steps
-          # Example: Deploy using the newly built image
-          echo "Deploying image version: ${{ needs.docker-build-and-push.outputs.image-version }}"
-          # aws ecs update-service --cluster staging-cluster --service nerdwork-frontend --force-new-deployment --region eu-west-1
+          # Example: aws ecs update-service --cluster staging-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
 
           echo "✅ Deployment to staging environment completed"
 
