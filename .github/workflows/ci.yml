@@ -32,18 +32,41 @@ jobs:
       - name: Check changed files
         id: check-files
         run: |
-          # More inclusive patterns to catch all relevant changes
-          FRONTEND_CHANGES=$(git diff --name-only HEAD^ HEAD | grep -E '(apps/|apps/web/|Dockerfile|package\.json|pnpm-).*' | wc -l | xargs)
-          BACKEND_CHANGES=$(git diff --name-only HEAD^ HEAD | grep -E '(backend/|package\.json|pnpm-).*' | wc -l | xargs)
-
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
           echo "Files changed:"
-          git diff --name-only HEAD^ HEAD || echo "No files changed"
+          echo "$CHANGED_FILES"
+          
+          # Count frontend changes (more explicit patterns)
+          FRONTEND_CHANGES=0
+          if echo "$CHANGED_FILES" | grep -E '^apps/' > /dev/null; then
+            FRONTEND_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^apps/' | wc -l)
+          fi
+          
+          # Count backend changes
+          BACKEND_CHANGES=0
+          if echo "$CHANGED_FILES" | grep -E '^backend/' > /dev/null; then
+            BACKEND_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^backend/' | wc -l)
+          fi
+          
+          # Also check for package.json changes (affects both)
+          if echo "$CHANGED_FILES" | grep -E '(package\.json|pnpm-lock\.yaml)$' > /dev/null; then
+            echo "Package files changed - triggering both frontend and backend"
+            FRONTEND_CHANGES=$((FRONTEND_CHANGES + 1))
+            BACKEND_CHANGES=$((BACKEND_CHANGES + 1))
+          fi
 
           echo "frontend=${FRONTEND_CHANGES}" >> $GITHUB_OUTPUT
           echo "backend=${BACKEND_CHANGES}" >> $GITHUB_OUTPUT
 
           echo "Frontend changes detected: ${FRONTEND_CHANGES}"
           echo "Backend changes detected: ${BACKEND_CHANGES}"
+          
+          # Debug: Show which files matched which patterns
+          echo "Frontend files:"
+          echo "$CHANGED_FILES" | grep -E '^apps/' || echo "None"
+          echo "Backend files:"
+          echo "$CHANGED_FILES" | grep -E '^backend/' || echo "None"
 
   build-and-test:
     name: "🧪 Build and Test"
