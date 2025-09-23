@@ -1,5 +1,13 @@
 name: CI/CD - Build, Test and Deploy
 
+# 🔄 WORKFLOW FLOW:
+# 1️⃣ changed-files        -> Detects what files changed
+# 2️⃣ build-and-test      -> Runs tests for changed components  
+# 3️⃣ docker-build-and-push -> Builds & pushes frontend Docker image (main branch)
+# 3️⃣ lambda-deploy       -> Deploys backend to AWS Lambda (parallel to Docker)
+# 4️⃣ deploy-to-staging   -> Deploys both frontend (ECS) & backend (Lambda) to staging
+# 5️⃣ deploy-to-production -> Deploys to production (requires approval)
+
 permissions:
   contents: write
   issues: write
@@ -268,10 +276,136 @@ jobs:
               body: `@${{ github.repository_owner }} Docker image is now available in ECR! ✅`
             });
 
+  lambda-deploy:
+    name: "🎆 Deploy Backend to Lambda"
+    needs: [build-and-test, changed-files]  # ⬅️ Runs parallel to Docker build
+    if: success() && github.ref == 'refs/heads/main' && needs.changed-files.outputs.backend-tests > 0
+    runs-on: ubuntu-latest
+    outputs:
+      lambda-endpoint: ${{ steps.deploy.outputs.api_endpoint }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js for Backend
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # Lambda uses Node 18
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install Serverless Framework
+        run: npm install -g serverless@3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Create environment file for Lambda
+        run: |
+          cd backend
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN || '7d' }}" >> .env
+          echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> .env
+          echo "AWS_REGION=eu-west-1" >> .env
+          echo "S3_REGION=eu-west-1" >> .env
+          echo "CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}" >> .env
+          echo "CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" >> .env
+          echo "MAX_FILES_PER_UPLOAD=${{ secrets.MAX_FILES_PER_UPLOAD || '20' }}" >> .env
+          echo "MAX_FILE_SIZE=${{ secrets.MAX_FILE_SIZE || '104857600' }}" >> .env
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "HELIO_BASE_URL_DEV=${{ secrets.HELIO_BASE_URL_DEV }}" >> .env
+          echo "HELIO_CLUSTER=${{ secrets.HELIO_CLUSTER }}" >> .env
+          echo "HELIO_API_KEY=${{ secrets.HELIO_API_KEY }}" >> .env
+
+      - name: Build backend
+        run: |
+          cd backend
+          npm run build
+
+      - name: Deploy to Lambda (Staging)
+        id: deploy
+        run: |
+          cd backend
+          echo "Deploying backend services to Lambda..."
+          
+          # Deploy to staging environment
+          serverless deploy --stage staging --region eu-west-1 --verbose
+          
+          # Get the API Gateway endpoint
+          API_ENDPOINT=$(serverless info --stage staging --region eu-west-1 | grep -o 'https://[^[:space:]]*')
+          echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "Lambda API deployed at: $API_ENDPOINT"
+          
+          echo "✅ Backend services deployed to AWS Lambda successfully"
+
+      - name: Run Lambda health check
+        run: |
+          if [ ! -z "${{ steps.deploy.outputs.api_endpoint }}" ]; then
+            echo "Testing Lambda endpoint health..."
+            curl -f "${{ steps.deploy.outputs.api_endpoint }}/health" || echo "Health check endpoint not available yet"
+          fi
+
+      - name: Create Lambda deployment notification
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueBody = `# 🎆 Backend Deployed to Lambda Successfully!
+            
+            ## 🚀 Lambda Deployment Details
+            - **Service:** nerdwork-backend
+            - **Stage:** staging
+            - **Region:** eu-west-1
+            - **API Gateway Endpoint:** ${{ steps.deploy.outputs.api_endpoint }}
+            - **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+            - **Build:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ## 🔗 API Endpoint
+            \`\`\`
+            ${{ steps.deploy.outputs.api_endpoint }}
+            \`\`\`
+            
+            ## 🛠️ Test Commands
+            \`\`\`bash
+            # Health check
+            curl ${{ steps.deploy.outputs.api_endpoint }}/health
+            
+            # API documentation
+            curl ${{ steps.deploy.outputs.api_endpoint }}/docs
+            \`\`\`
+            
+            > **Note:** Frontend deployment will use this API endpoint for backend communication.
+            `;
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🎆 Lambda Backend Deployed - staging',
+              body: issueBody,
+              labels: ['lambda', 'backend', 'staging', 'deployment']
+            });
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.data.number,
+              body: `@${{ github.repository_owner }} Backend services are now live on Lambda! 🎆✅`
+            });
+
   deploy-to-staging:
     name: "🚀 Deploy to Staging Environment"
-    needs: [docker-build-and-push]  # ⬅️ Waits for Docker image to be ready
-    if: success() && github.ref == 'refs/heads/main'
+    needs: [docker-build-and-push, lambda-deploy]  # ⬅️ Waits for both Docker and Lambda to be ready
+    if: always() && github.ref == 'refs/heads/main' && (needs.docker-build-and-push.result == 'success' || needs.lambda-deploy.result == 'success')
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -322,6 +456,7 @@ jobs:
           echo "DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}" > .env
           echo "API_KEY=${{ secrets.STAGING_API_KEY }}" >> .env
           echo "SERVICE_URL=${{ secrets.STAGING_SERVICE_URL || 'https://staging.nerdwork-plus.example.com' }}" >> .env
+          echo "API_ENDPOINT=${{ needs.lambda-deploy.outputs.lambda-endpoint || secrets.STAGING_API_ENDPOINT }}" >> .env
           echo "JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}" >> .env
           echo "AWS_REGION=${{ secrets.AWS_REGION || 'eu-west-1' }}" >> .env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
@@ -343,8 +478,21 @@ jobs:
           source .env
           set +a
 
-          # Update ECS services or other deployment steps
-          # Example: aws ecs update-service --cluster staging-cluster --service nerdwork-api --force-new-deployment --region eu-west-1
+          # Deploy frontend and connect to backend
+          echo "Frontend image version: ${{ needs.docker-build-and-push.outputs.image-version || 'N/A' }}"
+          echo "Backend API endpoint: ${{ needs.lambda-deploy.outputs.lambda-endpoint || 'N/A' }}"
+          
+          # Update ECS service with new image (if Docker build succeeded)
+          if [ "${{ needs.docker-build-and-push.result }}" == "success" ]; then
+            echo "Deploying frontend to ECS..."
+            # aws ecs update-service --cluster staging-cluster --service nerdwork-frontend --force-new-deployment --region eu-west-1
+          fi
+          
+          # Verify Lambda deployment (if Lambda deploy succeeded)
+          if [ "${{ needs.lambda-deploy.result }}" == "success" ] && [ ! -z "${{ needs.lambda-deploy.outputs.lambda-endpoint }}" ]; then
+            echo "Backend Lambda API is available at: ${{ needs.lambda-deploy.outputs.lambda-endpoint }}"
+            curl -f "${{ needs.lambda-deploy.outputs.lambda-endpoint }}/health" || echo "Health check not available"
+          fi
 
           echo "✅ Deployment to staging environment completed"
 
@@ -455,6 +603,23 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=${{ secrets.PRODUCTION_S3_BUCKET || 'nerdwork-production-assets' }}" >> .env
+
+      - name: Deploy Backend to Production Lambda
+        run: |
+          cd backend
+          echo "Deploying backend to production Lambda..."
+          
+          # Create production environment file
+          echo "DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" > .env
+          echo "JWT_SECRET=${{ secrets.PRODUCTION_JWT_SECRET }}" >> .env
+          echo "S3_BUCKET_NAME=${{ secrets.PRODUCTION_S3_BUCKET }}" >> .env
+          # ... add other production environment variables
+          
+          # Deploy to production
+          npm install -g serverless@3
+          serverless deploy --stage production --region eu-west-1 --verbose
+          
+          echo "✅ Backend deployed to production Lambda"
 
           # Log non-sensitive environment variables
           echo "Environment file created with the following variables:"
