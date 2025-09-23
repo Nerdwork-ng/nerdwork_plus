@@ -1,7 +1,7 @@
 import serverless from 'serverless-http';
 import { app } from './index';
 
-// Test deployment trigger - enhanced CI/CD pipeline
+
 
 // Export the serverless handler
 export const handler = serverless(app, {
