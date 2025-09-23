@@ -2,7 +2,7 @@ name: CI/CD - Build, Test and Deploy
 
 # 🔄 WORKFLOW FLOW:
 # 1️⃣ changed-files     -> Detects what files changed
-# 2️⃣ build-and-test   -> Runs tests for changed components  
+# 2️⃣ build-and-test   -> Runs tests for changed components
 # 3️⃣ docker-build-and-push -> Builds & pushes Docker image (main branch only)
 # 4️⃣ deploy-to-staging    -> Deploys to staging environment
 # 5️⃣ deploy-to-production -> Deploys to production (requires approval)
@@ -129,7 +129,7 @@ jobs:
 
   docker-build-and-push:
     name: "🐳 Build and Push Docker Image"
-    needs: [build-and-test, changed-files]  # ⬅️ Waits for tests to pass
+    needs: [build-and-test]  # ⬅️ Waits for tests to pass
     if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
     runs-on: ubuntu-latest
     outputs:
@@ -137,7 +137,7 @@ jobs:
       image-build-date: ${{ steps.version.outputs.build_date }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set version variables
         id: version
         run: |
@@ -179,7 +179,7 @@ jobs:
           aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
 
           echo "Building and publishing nerdwork-frontend to AWS ECR"
-          
+
           # Build the image
           docker build --no-cache -f apps/web/nerdwork-plus/Dockerfile -t nerdwork-frontend:${{ steps.version.outputs.version }} .
 
@@ -195,7 +195,7 @@ jobs:
 
           echo "✅ Published nerdwork-frontend with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
           echo "✅ Docker image published successfully to AWS ECR"
-          
+
           # Store image URLs for notification
           echo "IMAGE_URL_LATEST=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest" >> $GITHUB_ENV
           echo "IMAGE_URL_VERSION=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
@@ -207,41 +207,41 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issueBody = `# 🚀 Docker Image Built Successfully!
-            
+
             ## 📦 Image Details
             - **Repository:** AWS ECR (eu-west-1)
             - **Build Date:** ${{ steps.version.outputs.build_date }}
             - **Version:** ${{ steps.version.outputs.version }}
             - **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             - **Build:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            
+
             ## 🔗 Docker Image URLs
-            
+
             **Latest Tag:**
             \`\`\`
             ${{ env.IMAGE_URL_LATEST }}
             \`\`\`
-            
+
             **Version Tag:**
             \`\`\`
             ${{ env.IMAGE_URL_VERSION }}
             \`\`\`
-            
+
             **Date Tag:**
             \`\`\`
             ${{ env.IMAGE_URL_DATE }}
             \`\`\`
-            
+
             ## 🛠️ Docker Pull Commands
-            
+
             \`\`\`bash
             aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
             docker pull ${{ env.IMAGE_URL_LATEST }}
             \`\`\`
-            
+
             > **Note:** The CI/CD pipeline will continue with the deployment process automatically.
             `;
-            
+
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -249,7 +249,7 @@ jobs:
               body: issueBody,
               labels: ['docker-image', 'notification', 'frontend']
             });
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
