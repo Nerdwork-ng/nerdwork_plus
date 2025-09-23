@@ -478,26 +478,26 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=${{ secrets.PRODUCTION_S3_BUCKET || 'nerdwork-production-assets' }}" >> .env
 
-      - name: Deploy Backend to Production Lambda
-        run: |
-          cd backend
-          echo "Deploying backend to production Lambda..."
+      # - name: Deploy Backend to Production Lambda
+      #   run: |
+      #     cd backend
+      #     echo "Deploying backend to production Lambda..."
 
-          # Create production environment file
-          echo "DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" > .env
-          echo "JWT_SECRET=${{ secrets.PRODUCTION_JWT_SECRET }}" >> .env
-          echo "S3_BUCKET_NAME=${{ secrets.PRODUCTION_S3_BUCKET }}" >> .env
-          # ... add other production environment variables
+      #     # Create production environment file
+      #     echo "DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}" > .env
+      #     echo "JWT_SECRET=${{ secrets.PRODUCTION_JWT_SECRET }}" >> .env
+      #     echo "S3_BUCKET_NAME=${{ secrets.PRODUCTION_S3_BUCKET }}" >> .env
+      #     # ... add other production environment variables
 
-          # Deploy to production
-          npm install -g serverless@3
-          serverless deploy --stage production --region eu-west-1 --verbose
+      #     # Deploy to production
+      #     npm install -g serverless@3
+      #     serverless deploy --stage production --region eu-west-1 --verbose
 
-          echo "✅ Backend deployed to production Lambda"
+      #     echo "✅ Backend deployed to production Lambda"
 
-          # Log non-sensitive environment variables
-          echo "Environment file created with the following variables:"
-          cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
+      #     # Log non-sensitive environment variables
+      #     echo "Environment file created with the following variables:"
+      #     cat .env | grep -v "SECRET\|KEY\|PASSWORD" || true
       - name: Setup ECS Infrastructure
         run: |
           echo "Setting up ECS infrastructure if needed..."
