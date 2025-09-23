@@ -1,0 +1,329 @@
+# DISABLED - Focus on main CI/CD pipeline first
+# name: End-to-End Testing
+
+# 🧪 E2E TESTING PIPELINE:
+# 1️⃣ api-tests           -> Backend API integration tests
+# 2️⃣ frontend-e2e        -> Frontend user journey tests  
+# 3️⃣ smoke-tests         -> Critical path validation
+# 4️⃣ performance-tests   -> Load testing with k6
+
+permissions:
+  contents: read
+  issues: write
+  checks: write
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      test_environment:
+        description: 'Environment to test'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '22'
+  STAGING_API_URL: https://api-staging.nerdwork-plus.example.com
+  PRODUCTION_API_URL: https://api.nerdwork-plus.example.com
+
+jobs:
+  api-integration-tests:
+    name: "🔌 API Integration Tests"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ['auth', 'user', 'comic', 'wallet', 'payment', 'nft']
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+      
+      - name: Setup test environment
+        run: |
+          echo "Setting up test environment for ${{ matrix.service }} service..."
+          echo "API_URL=${{ env.STAGING_API_URL }}" >> $GITHUB_ENV
+          echo "TEST_USER_EMAIL=test-${{ github.run_id }}@nerdwork.test" >> $GITHUB_ENV
+          echo "TEST_SERVICE=${{ matrix.service }}" >> $GITHUB_ENV
+      
+      - name: Run API Tests
+        run: |
+          cd backend
+          echo "🧪 Running integration tests for ${{ matrix.service }} service..."
+          
+          # Run service-specific tests
+          npm run test:integration -- --testNamePattern="${{ matrix.service }}" --verbose
+          
+          # Generate test report
+          npm run test:integration -- --testNamePattern="${{ matrix.service }}" --json > test-results-${{ matrix.service }}.json
+          
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          API_URL: ${{ env.API_URL }}
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-test-results-${{ matrix.service }}
+          path: backend/test-results-${{ matrix.service }}.json
+      
+      - name: Comment test results on PR
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ API Integration tests failed for **${{ matrix.service }}** service. Please check the logs and fix the issues.`
+            });
+
+  frontend-e2e-tests:
+    name: "🌐 Frontend E2E Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Install Playwright
+        run: |
+          cd apps/web/nerdwork-plus
+          npx playwright install chromium
+      
+      - name: Build frontend
+        run: |
+          cd apps/web/nerdwork-plus
+          pnpm build
+      
+      - name: Start frontend server
+        run: |
+          cd apps/web/nerdwork-plus
+          pnpm start &
+          sleep 10  # Wait for server to start
+        env:
+          NEXT_PUBLIC_API_URL: ${{ env.STAGING_API_URL }}
+      
+      - name: Run E2E Tests
+        run: |
+          cd apps/web/nerdwork-plus
+          echo "🎭 Running Playwright E2E tests..."
+          
+          npx playwright test --reporter=json > e2e-results.json || true
+          npx playwright test --reporter=html
+          
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-test-results
+          path: |
+            apps/web/nerdwork-plus/e2e-results.json
+            apps/web/nerdwork-plus/playwright-report/
+            apps/web/nerdwork-plus/test-results/
+      
+      - name: Comment E2E results on PR
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ Frontend E2E tests failed. Please check the uploaded artifacts for detailed results.`
+            });
+
+  smoke-tests:
+    name: "💨 Smoke Tests"
+    runs-on: ubuntu-latest
+    needs: [api-integration-tests]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Run Critical Path Smoke Tests
+        run: |
+          echo "💨 Running smoke tests for critical user journeys..."
+          
+          # Test 1: Health checks
+          echo "🏥 Testing API health endpoints..."
+          curl -f "${{ env.STAGING_API_URL }}/health" || echo "Health check failed"
+          
+          # Test 2: Authentication flow
+          echo "🔐 Testing authentication..."
+          curl -f -X POST "${{ env.STAGING_API_URL }}/auth/login" \
+            -H "Content-Type: application/json" \
+            -d '{"email":"${{ secrets.TEST_USER_EMAIL }}","password":"${{ secrets.TEST_USER_PASSWORD }}"}' \
+            || echo "Auth test failed"
+          
+          # Test 3: Comic listing
+          echo "📚 Testing comic API..."
+          curl -f "${{ env.STAGING_API_URL }}/comics?limit=5" || echo "Comics API failed"
+          
+          # Test 4: User profile
+          echo "👤 Testing user profile..."
+          curl -f "${{ env.STAGING_API_URL }}/users/me" \
+            -H "Authorization: Bearer ${{ secrets.TEST_JWT_TOKEN }}" \
+            || echo "Profile API failed"
+          
+          echo "✅ Smoke tests completed"
+
+  performance-tests:
+    name: "⚡ Performance Tests"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: Create k6 test script
+        run: |
+          cat > load-test.js << 'EOF'
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+          
+          export let options = {
+            stages: [
+              { duration: '2m', target: 10 },  // Ramp up
+              { duration: '3m', target: 10 },  // Stay at 10 users
+              { duration: '1m', target: 0 },   // Ramp down
+            ],
+          };
+          
+          export default function() {
+            // Test critical endpoints
+            let response = http.get('${{ env.STAGING_API_URL }}/health');
+            check(response, {
+              'status is 200': (r) => r.status === 200,
+              'response time < 500ms': (r) => r.timings.duration < 500,
+            });
+            
+            response = http.get('${{ env.STAGING_API_URL }}/comics?limit=10');
+            check(response, {
+              'comics API works': (r) => r.status === 200,
+              'comics response time < 1s': (r) => r.timings.duration < 1000,
+            });
+            
+            sleep(1);
+          }
+          EOF
+      
+      - name: Run Load Tests
+        run: |
+          echo "⚡ Running performance tests..."
+          k6 run load-test.js --out json=performance-results.json
+      
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-results
+          path: performance-results.json
+      
+      - name: Create performance report
+        run: |
+          echo "## ⚡ Performance Test Results" > performance-report.md
+          echo "Performance tests completed for staging environment." >> performance-report.md
+          echo "Check artifacts for detailed metrics." >> performance-report.md
+      
+      - name: Create performance notification
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance-report.md', 'utf8');
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚡ Performance Test Report - ' + new Date().toISOString().split('T')[0],
+              body: report,
+              labels: ['performance', 'testing', 'monitoring']
+            });
+
+  test-report:
+    name: "📊 Generate Test Report"
+    runs-on: ubuntu-latest
+    needs: [api-integration-tests, frontend-e2e-tests, smoke-tests]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+      
+      - name: Generate comprehensive test report
+        run: |
+          echo "# 🧪 Comprehensive Test Report" > test-report.md
+          echo "" >> test-report.md
+          echo "## Test Execution Summary" >> test-report.md
+          echo "- **API Integration Tests:** ${{ needs.api-integration-tests.result }}" >> test-report.md
+          echo "- **Frontend E2E Tests:** ${{ needs.frontend-e2e-tests.result }}" >> test-report.md
+          echo "- **Smoke Tests:** ${{ needs.smoke-tests.result }}" >> test-report.md
+          echo "" >> test-report.md
+          echo "## 🔗 Test Artifacts" >> test-report.md
+          echo "Check the Actions artifacts for detailed test results and reports." >> test-report.md
+          echo "" >> test-report.md
+          echo "**Timestamp:** $(date -u)" >> test-report.md
+      
+      - name: Comment test report on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('test-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });

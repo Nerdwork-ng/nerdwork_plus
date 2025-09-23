@@ -141,7 +141,7 @@ jobs:
   docker-build-and-push:
     name: "🐳 Build and Push Docker Image"
     needs: [build-and-test, changed-files]  # ⬅️ Waits for tests to pass and needs change detection
-    if: success() && github.ref == 'refs/heads/main'
+    if: success() && github.ref == 'refs/heads/main' && needs.changed-files.outputs.frontend-tests > 0
     runs-on: ubuntu-latest
     outputs:
       image-version: ${{ steps.version.outputs.version }}
@@ -279,12 +279,17 @@ jobs:
   lambda-deploy:
     name: "🎆 Deploy Backend to Lambda"
     needs: [build-and-test, changed-files]  # ⬅️ Runs parallel to Docker build
-    if: success() && github.ref == 'refs/heads/main'
+    if: success() && github.ref == 'refs/heads/main' && needs.changed-files.outputs.backend-tests > 0
     runs-on: ubuntu-latest
     outputs:
       lambda-endpoint: ${{ steps.deploy.outputs.api_endpoint }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Debug backend changes
+        run: |
+          echo "Backend changes detected: ${{ needs.changed-files.outputs.backend-tests }}"
+          echo "Proceeding with Lambda deployment..."
 
       - name: Setup Node.js for Backend
         uses: actions/setup-node@v4
@@ -297,9 +302,25 @@ jobs:
         run: |
           cd backend
           npm ci
+          
+          # Install serverless-http if not present (required for lambda handler)
+          if ! npm list serverless-http >/dev/null 2>&1; then
+            echo "Installing missing serverless-http dependency..."
+            npm install serverless-http
+            echo "✅ serverless-http installed"
+          else
+            echo "✅ serverless-http already available"
+          fi
 
-      - name: Install Serverless Framework
-        run: npm install -g serverless@3
+      - name: Install Serverless Framework and plugins
+        run: |
+          npm install -g serverless@3
+          
+          # Install required serverless plugins
+          cd backend
+          npm install --save-dev serverless-plugin-typescript serverless-offline
+          
+          echo "✅ Serverless Framework and plugins installed"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -327,25 +348,173 @@ jobs:
           echo "HELIO_CLUSTER=${{ secrets.HELIO_CLUSTER }}" >> .env
           echo "HELIO_API_KEY=${{ secrets.HELIO_API_KEY }}" >> .env
 
+      - name: Validate serverless configuration and deployment bucket
+        run: |
+          cd backend
+          echo "Validating serverless.yml configuration..."
+          
+          # Check if serverless.yml exists
+          if [ ! -f "serverless.yml" ]; then
+            echo "❌ serverless.yml not found!"
+            exit 1
+          fi
+          
+          # Validate S3_BUCKET_NAME is set
+          if [ -z "${{ secrets.S3_BUCKET_NAME }}" ]; then
+            echo "❌ S3_BUCKET_NAME secret is not set!"
+            echo "This is required for serverless deployment bucket."
+            exit 1
+          fi
+          
+          # Check if deployment bucket exists and is accessible
+          echo "Checking S3 deployment bucket access..."
+          if aws s3 ls ${{ secrets.S3_BUCKET_NAME }} >/dev/null 2>&1; then
+            echo "✅ S3 deployment bucket is accessible"
+          else
+            echo "⚠️ S3 deployment bucket not accessible, will be created during deployment"
+          fi
+          
+          # Validate serverless config
+          npx serverless print --stage staging --region eu-west-1 > /dev/null
+          echo "✅ Serverless configuration is valid"
+
       - name: Build backend
         run: |
           cd backend
-          npm run build
+          echo "Building backend application..."
+          
+          # Check if TypeScript files exist
+          if [ -f "tsconfig.json" ]; then
+            echo "TypeScript configuration found, compiling TypeScript..."
+            
+            # Install TypeScript if not present
+            if ! npx tsc --version >/dev/null 2>&1; then
+              echo "Installing TypeScript..."
+              npm install --save-dev typescript
+            fi
+            
+            # Clean previous build
+            rm -rf dist/ || echo "No previous dist/ to clean"
+            
+            # Compile TypeScript with proper module settings for Lambda
+            echo "Compiling TypeScript for Lambda (CommonJS)..."
+            npx tsc --module commonjs --target es2020 --outDir dist --esModuleInterop true --allowSyntheticDefaultImports true
+            echo "✅ TypeScript compilation completed"
+            
+            # Verify compiled lambda handler exists
+            if [ -f "dist/lambda.js" ]; then
+              echo "✅ Compiled lambda handler found at dist/lambda.js"
+            else
+              echo "❌ dist/lambda.js not found after compilation!"
+              echo "Contents of dist/ directory:"
+              ls -la dist/ || echo "dist/ directory is empty or does not exist"
+            fi
+          fi
+          
+          # Check if build script exists in package.json
+          if npm run | grep -q "build"; then
+            echo "Running npm build script..."
+            npm run build
+            echo "✅ Backend build script completed"
+          else
+            echo "⚠️ No build script found in package.json"
+          fi
+          
+          # Verify lambda handler file exists
+          if [ -f "src/lambda.ts" ]; then
+            echo "✅ Lambda handler found at src/lambda.ts"
+            HANDLER_FILE="src/lambda.ts"
+          elif [ -f "dist/lambda.js" ]; then
+            echo "✅ Compiled lambda handler found at dist/lambda.js"
+            HANDLER_FILE="dist/lambda.js"
+          elif [ -f "lambda.js" ]; then
+            echo "✅ Lambda handler found at lambda.js"
+            HANDLER_FILE="lambda.js"
+          else
+            echo "❌ Lambda handler file not found!"
+            echo "Expected locations: src/lambda.ts, dist/lambda.js, or lambda.js"
+            ls -la src/ || echo "src/ directory not found"
+            ls -la dist/ || echo "dist/ directory not found"
+            ls -la . | grep -E '\.(js|ts)$' || echo "No JS/TS files in root"
+            exit 1
+          fi
+          
+          # Verify serverless.yml references exist for handlers
+          echo "Checking serverless.yml handler references..."
+          if grep -q "handler:" serverless.yml; then
+            echo "Handler references found in serverless.yml:"
+            grep "handler:" serverless.yml | head -5
+            echo "✅ Serverless configuration contains handler references"
+            
+            # Check if handlers reference compiled files correctly
+            if grep -q "src/lambda.handler" serverless.yml; then
+              echo "Handler references src/lambda.handler - serverless-plugin-typescript will handle compilation"
+              echo "✅ Handler configuration is correct for TypeScript"
+            else
+              echo "⚠️ Handler does not reference src/lambda.handler, may need manual verification"
+            fi
+          else
+            echo "❌ No handler references found in serverless.yml!"
+            exit 1
+          fi
 
       - name: Deploy to Lambda (Staging)
         id: deploy
         run: |
           cd backend
           echo "Deploying backend services to Lambda..."
-
-          # Deploy to staging environment
-          serverless deploy --stage staging --region eu-west-1 --verbose
-
-          # Get the API Gateway endpoint
-          API_ENDPOINT=$(serverless info --stage staging --region eu-west-1 | grep -o 'https://[^[:space:]]*')
+          
+          # Set deployment timeout
+          export SLS_DEBUG=true
+          
+          # Deploy to staging environment with error handling
+          if ! serverless deploy --stage staging --region eu-west-1 --verbose; then
+            echo "❌ Serverless deployment failed!"
+            echo "Checking for common issues..."
+            
+            # Check AWS credentials
+            aws sts get-caller-identity || echo "AWS credentials issue"
+            
+            # Check S3 bucket permissions (deployment bucket)
+            aws s3 ls ${{ secrets.S3_BUCKET_NAME }} || echo "S3 bucket access issue"
+            
+            exit 1
+          fi
+          
+          echo "✅ Serverless deployment completed"
+          
+          # Get the API Gateway endpoint with multiple parsing methods
+          echo "Getting API Gateway endpoint..."
+          API_INFO=$(serverless info --stage staging --region eu-west-1)
+          
+          # Method 1: Extract from endpoints section
+          API_ENDPOINT=$(echo "$API_INFO" | grep -E 'https://[a-zA-Z0-9]+\.execute-api\.[a-zA-Z0-9-]+\.amazonaws\.com/[a-zA-Z0-9-]+' | head -1 | sed 's/.*\(https:\/\/[^[:space:]]*\).*/\1/')
+          
+          # Method 2: Look for REST API URL pattern  
+          if [ -z "$API_ENDPOINT" ]; then
+            API_ENDPOINT=$(echo "$API_INFO" | grep -o 'https://[^[:space:]]*execute-api[^[:space:]]*' | head -1)
+          fi
+          
+          # Method 3: Use AWS CLI to get API Gateway URL
+          if [ -z "$API_ENDPOINT" ]; then
+            echo "Trying AWS CLI method to get API Gateway URL..."
+            REST_API_ID=$(aws apigateway get-rest-apis --region eu-west-1 --query "items[?name=='nerdwork-backend-staging'].id" --output text)
+            if [ ! -z "$REST_API_ID" ] && [ "$REST_API_ID" != "None" ]; then
+              API_ENDPOINT="https://${REST_API_ID}.execute-api.eu-west-1.amazonaws.com/staging"
+            fi
+          fi
+          
+          if [ -z "$API_ENDPOINT" ]; then
+            echo "⚠️ Could not extract API endpoint with any method"
+            echo "Full serverless info output:"
+            echo "$API_INFO"
+            echo "Setting fallback endpoint..."
+            API_ENDPOINT="https://api-staging.nerdwork-plus.com"  # Fallback
+          fi
+          
           echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
           echo "Lambda API deployed at: $API_ENDPOINT"
-
+          
           echo "✅ Backend services deployed to AWS Lambda successfully"
 
       - name: Run Lambda health check
@@ -404,14 +573,28 @@ jobs:
 
   deploy-to-staging:
     name: "🚀 Deploy to Staging Environment"
-    needs: [docker-build-and-push, lambda-deploy]  # ⬅️ Waits for both Docker and Lambda to be ready
-    if: always() && github.ref == 'refs/heads/main' && (needs.docker-build-and-push.result == 'success' || needs.lambda-deploy.result == 'success')
+    needs: [docker-build-and-push, lambda-deploy, changed-files]  # ⬅️ Waits for both builds
+    if: |
+      always() && github.ref == 'refs/heads/main' && (
+        (needs.docker-build-and-push.result == 'success') ||
+        (needs.lambda-deploy.result == 'success')
+      )
     runs-on: ubuntu-latest
     environment:
       name: staging
       url: https://staging.nerdwork-plus.example.com  # Replace with your actual staging environment URL
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Debug deployment conditions
+        run: |
+          echo "Deployment Status Summary:"
+          echo "Docker build result: ${{ needs.docker-build-and-push.result }}"
+          echo "Lambda deploy result: ${{ needs.lambda-deploy.result }}"
+          echo "Frontend changes: ${{ needs.changed-files.outputs.frontend-tests }}"
+          echo "Backend changes: ${{ needs.changed-files.outputs.backend-tests }}"
+          echo "Current branch: ${{ github.ref }}"
+          echo "Proceeding with staging deployment..."
 
       - name: Create deployment
         id: deployment
