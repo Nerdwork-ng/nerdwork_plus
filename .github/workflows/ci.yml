@@ -618,75 +618,59 @@ jobs:
             exit 1
           fi
 
-          echo "Waiting for service to stabilize (this may take several minutes)..."
-          echo "Checking service status every 30 seconds for up to 15 minutes..."
-
-          # Custom wait logic with better timeout and error reporting
-          MAX_ATTEMPTS=30  # 15 minutes (30 * 30 seconds)
-          ATTEMPT=0
-
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            ATTEMPT=$((ATTEMPT + 1))
-            echo "Attempt $ATTEMPT of $MAX_ATTEMPTS - Checking service status..."
-
-            # Get service status
-            SERVICE_STATUS=$(aws ecs describe-services \
-              --cluster prod-cluster \
-              --services nerdwork-frontend \
-              --region eu-west-1 \
-              --query 'services[0].deployments[?status==`PRIMARY`].rolloutState' \
-              --output text)
-
+          echo "Waiting for ECS service deployment to stabilize..."
+          echo "This may take up to 10 minutes for the deployment to complete."
+          
+          # Use AWS CLI built-in wait command (much more reliable)
+          echo "Running: aws ecs wait services-stable --cluster prod-cluster --services nerdwork-frontend --region eu-west-1"
+          
+          if aws ecs wait services-stable \
+            --cluster prod-cluster \
+            --services nerdwork-frontend \
+            --region eu-west-1; then
+            echo "✅ ECS service deployment completed successfully!"
+            
+            # Verify final status
             RUNNING_COUNT=$(aws ecs describe-services \
               --cluster prod-cluster \
               --services nerdwork-frontend \
               --region eu-west-1 \
               --query 'services[0].runningCount' \
               --output text)
-
+            
             DESIRED_COUNT=$(aws ecs describe-services \
               --cluster prod-cluster \
               --services nerdwork-frontend \
               --region eu-west-1 \
               --query 'services[0].desiredCount' \
               --output text)
+            
+            echo "Final status: Running tasks: $RUNNING_COUNT, Desired tasks: $DESIRED_COUNT"
+            
+          else
+            echo "❌ ECS service deployment failed or timed out"
+            echo "Checking current service status for troubleshooting..."
+            
+            # Get current service details
+            aws ecs describe-services \
+              --cluster prod-cluster \
+              --services nerdwork-frontend \
+              --region eu-west-1 \
+              --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount,TaskDef:taskDefinition}' \
+              --output table
+            
+            echo "Recent service events:"
+            aws ecs describe-services \
+              --cluster prod-cluster \
+              --services nerdwork-frontend \
+              --region eu-west-1 \
+              --query 'services[0].events[0:5].[createdAt,message]' \
+              --output table
+            
+            exit 1
+          fi
 
-            echo "Service Status: $SERVICE_STATUS, Running: $RUNNING_COUNT, Desired: $DESIRED_COUNT"
-
-            if [ "$SERVICE_STATUS" = "COMPLETED" ] && [ "$RUNNING_COUNT" = "$DESIRED_COUNT" ]; then
-              echo "✅ Service deployment completed successfully!"
-              break
-            fi
-
-            if [ "$SERVICE_STATUS" = "FAILED" ]; then
-              echo "❌ Service deployment failed!"
-              # Get failure details
-              aws ecs describe-services \
-                --cluster prod-cluster \
-                --services nerdwork-frontend \
-                --region eu-west-1 \
-                --query 'services[0].events[0:5].[createdAt,message]' \
-                --output table
-              exit 1
-            fi
-
-            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-              echo "❌ Timeout: Service did not stabilize within 15 minutes"
-              echo "Final service status: $SERVICE_STATUS"
-              echo "Recent service events:"
-              aws ecs describe-services \
-                --cluster prod-cluster \
-                --services nerdwork-frontend \
-                --region eu-west-1 \
-                --query 'services[0].events[0:10].[createdAt,message]' \
-                --output table
-              exit 1
-            fi
-
-            sleep 30
-          done
-
-          echo "✅ Deployment to production environment completed"
+          echo "✅ Production ECS deployment completed successfully!"
 
       - name: Set deployment status to success
         if: success()
