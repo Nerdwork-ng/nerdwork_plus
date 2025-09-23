@@ -151,8 +151,8 @@ jobs:
 
       - name: Debug - Show change detection results
         run: |
-          echo "Frontend tests detected: ${{ needs.changed-files.outputs.frontend-tests }}"
-          echo "Backend tests detected: ${{ needs.changed-files.outputs.backend-tests }}"
+          echo "Frontend changes detected: ${{ needs.changed-files.outputs.frontend-tests }}"
+          echo "Backend changes detected: ${{ needs.changed-files.outputs.backend-tests }}"
           echo "Build and test job status: ${{ needs.build-and-test.result }}"
           echo "Current branch: ${{ github.ref }}"
           echo "Proceeding with Docker build..."
