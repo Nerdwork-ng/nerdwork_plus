@@ -48,7 +48,7 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Run ${{ matrix.test-type.name }}
         if: needs.changed-files.outputs[matrix.test-type.name] > 0
         run: |
@@ -79,182 +79,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results-${{ matrix.test-type.name }}.sarif
-      - name: Build Docker image (only on main - dry run for readiness)
-        if: github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        run: |
-          echo "Building nerdwork-frontend Docker image..."
-          if [ -f "apps/web/nerdwork-plus/Dockerfile" ]; then
-            docker build --no-cache -f apps/web/nerdwork-plus/Dockerfile -t nerdwork-frontend:test .
-            echo "✅ Built nerdwork-frontend successfully"
-          else
-            echo "❌ Dockerfile not found at apps/web/nerdwork-plus/Dockerfile"
-            exit 1
-          fi
-          echo "✅ Build successful - nerdwork-frontend ready for deployment"
 
-      - name: Set version variables
-        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        id: version
-        run: |
-          # Get short SHA for the commit
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-
-          # Check if this commit has a tag
-          GIT_TAG=$(git tag --points-at HEAD | head -n 1)
-          if [ -n "$GIT_TAG" ]; then
-            echo "version=$GIT_TAG" >> $GITHUB_OUTPUT
-            echo "Using git tag: $GIT_TAG"
-          else
-            echo "version=$SHORT_SHA" >> $GITHUB_OUTPUT
-            echo "No git tag found, using commit SHA: $SHORT_SHA"
-          fi
-
-          # Get current date in YYYYMMDD format
-          BUILD_DATE=$(date +'%Y%m%d')
-          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
-
-      - name: Configure AWS credentials
-        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-
-      - name: Create ECR repository (only on main)
-        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        run: |
-          echo "Creating ECR repository for nerdwork-frontend"
-          aws ecr describe-repositories --repository-names nerdwork-frontend --region eu-west-1 || \
-          aws ecr create-repository --repository-name nerdwork-frontend --region eu-west-1
-          echo "✅ ECR repository created or verified for nerdwork-frontend"
-
-      - name: Publish Docker images (only on main)
-        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        run: |
-          echo "Logging into AWS ECR..."
-          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
-
-          echo "Building and publishing nerdwork-frontend to AWS ECR"
-          
-          # Build the image
-          docker build --no-cache -f apps/web/nerdwork-plus/Dockerfile -t nerdwork-frontend:${{ steps.version.outputs.version }} .
-
-          # Tag with version info
-          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}
-          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}
-          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest
-
-          # Push to ECR
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest
-
-          echo "✅ Published nerdwork-frontend with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
-          echo "✅ Docker image published successfully to AWS ECR"
-          
-          # Store image URLs for email notification
-          echo "IMAGE_URL_LATEST=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest" >> $GITHUB_ENV
-          echo "IMAGE_URL_VERSION=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
-          echo "IMAGE_URL_DATE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}" >> $GITHUB_ENV
-
-      - name: Create Docker image notification issue
-        if: github.ref == 'refs/heads/main' && success() && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // Create a formatted issue with Docker image URLs
-            const issueBody = `# 🚀 Docker Image Built Successfully!
-            
-            ## 📦 Image Details
-            - **Repository:** AWS ECR (eu-west-1)
-            - **Build Date:** ${{ steps.version.outputs.build_date }}
-            - **Version:** ${{ steps.version.outputs.version }}
-            - **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
-            - **Build:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            
-            ## 🔗 Docker Image URLs
-            
-            **Latest Tag:**
-            ```
-            ${{ env.IMAGE_URL_LATEST }}
-            ```
-            
-            **Version Tag:**
-            ```
-            ${{ env.IMAGE_URL_VERSION }}
-            ```
-            
-            **Date Tag:**
-            ```
-            ${{ env.IMAGE_URL_DATE }}
-            ```
-            
-            ## 🛠️ Docker Pull Commands
-            
-            ```bash
-            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
-            docker pull ${{ env.IMAGE_URL_LATEST }}
-            ```
-            
-            > **Note:** The CI/CD pipeline will continue with the deployment process automatically.
-            
-            `;
-            
-            // Create the issue
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🐳 Docker Image Ready - nerdwork-frontend v${{ steps.version.outputs.version }}',
-              body: issueBody,
-              labels: ['docker-image', 'notification', 'frontend']
-            });
-            
-            // Create a comment mentioning you
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue.data.number,
-              body: `@${{ github.repository_owner }} Docker image is now available in ECR! ✅`
-            });
-
-      - name: Create artifact summary
-        if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        id: artifact-summary
-        run: |
-          echo "## 🚀 Docker Images Created" > artifact_summary.md
-          echo "| Service | Tags | Repository |" >> artifact_summary.md
-          echo "| ------- | ---- | ---------- |" >> artifact_summary.md
-          echo "| nerdwork-frontend | latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date }} | ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend |" >> artifact_summary.md
-
-          cat artifact_summary.md
-
-      - name: Notify about artifacts
-        if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const artifactSummary = fs.readFileSync('artifact_summary.md', 'utf8');
-
-            const issueBody = `# 📦 New Artifacts Available
-
-            ${artifactSummary}
-
-            These artifacts are ready for deployment to staging environment.
-            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            `;
-
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '📦 New artifacts available for testing - ${{ steps.version.outputs.version }}',
-              body: issueBody,
-              labels: ['artifacts', 'ready-for-testing']
-            });
 
       - name: Notify failure on PR (GitHub comment)
         if: failure() && github.event_name == 'pull_request'
@@ -294,9 +119,139 @@ jobs:
               body: `@${{ github.actor }} CI failed on this commit (${{ matrix.test-type.name }}). Please check the logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             })
 
+  docker-build-and-push:
+    name: Build and Push Docker Image
+    needs: [build-and-test, changed-files]
+    if: success() && github.ref == 'refs/heads/main' && (needs.changed-files.outputs.frontend-tests > 0 || needs.changed-files.outputs.backend-tests > 0)
+    runs-on: ubuntu-latest
+    outputs:
+      image-version: ${{ steps.version.outputs.version }}
+      image-build-date: ${{ steps.version.outputs.build_date }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set version variables
+        id: version
+        run: |
+          # Get short SHA for the commit
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+
+          # Check if this commit has a tag
+          GIT_TAG=$(git tag --points-at HEAD | head -n 1)
+          if [ -n "$GIT_TAG" ]; then
+            echo "version=$GIT_TAG" >> $GITHUB_OUTPUT
+            echo "Using git tag: $GIT_TAG"
+          else
+            echo "version=$SHORT_SHA" >> $GITHUB_OUTPUT
+            echo "No git tag found, using commit SHA: $SHORT_SHA"
+          fi
+
+          # Get current date in YYYYMMDD format
+          BUILD_DATE=$(date +'%Y%m%d')
+          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Create ECR repository
+        run: |
+          echo "Creating ECR repository for nerdwork-frontend"
+          aws ecr describe-repositories --repository-names nerdwork-frontend --region eu-west-1 || \
+          aws ecr create-repository --repository-name nerdwork-frontend --region eu-west-1
+          echo "✅ ECR repository created or verified for nerdwork-frontend"
+
+      - name: Build and push Docker image
+        run: |
+          echo "Logging into AWS ECR..."
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+
+          echo "Building and publishing nerdwork-frontend to AWS ECR"
+          
+          # Build the image
+          docker build --no-cache -f apps/web/nerdwork-plus/Dockerfile -t nerdwork-frontend:${{ steps.version.outputs.version }} .
+
+          # Tag with version info
+          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}
+          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}
+          docker tag nerdwork-frontend:${{ steps.version.outputs.version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest
+
+          # Push to ECR
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest
+
+          echo "✅ Published nerdwork-frontend with tags: latest, ${{ steps.version.outputs.version }}, ${{ steps.version.outputs.build_date}}"
+          echo "✅ Docker image published successfully to AWS ECR"
+          
+          # Store image URLs for notification
+          echo "IMAGE_URL_LATEST=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:latest" >> $GITHUB_ENV
+          echo "IMAGE_URL_VERSION=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "IMAGE_URL_DATE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ steps.version.outputs.build_date }}" >> $GITHUB_ENV
+
+      - name: Create Docker image notification issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueBody = `# 🚀 Docker Image Built Successfully!
+            
+            ## 📦 Image Details
+            - **Repository:** AWS ECR (eu-west-1)
+            - **Build Date:** ${{ steps.version.outputs.build_date }}
+            - **Version:** ${{ steps.version.outputs.version }}
+            - **Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+            - **Build:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ## 🔗 Docker Image URLs
+            
+            **Latest Tag:**
+            \`\`\`
+            ${{ env.IMAGE_URL_LATEST }}
+            \`\`\`
+            
+            **Version Tag:**
+            \`\`\`
+            ${{ env.IMAGE_URL_VERSION }}
+            \`\`\`
+            
+            **Date Tag:**
+            \`\`\`
+            ${{ env.IMAGE_URL_DATE }}
+            \`\`\`
+            
+            ## 🛠️ Docker Pull Commands
+            
+            \`\`\`bash
+            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+            docker pull ${{ env.IMAGE_URL_LATEST }}
+            \`\`\`
+            
+            > **Note:** The CI/CD pipeline will continue with the deployment process automatically.
+            `;
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🐳 Docker Image Ready - nerdwork-frontend v${{ steps.version.outputs.version }}',
+              body: issueBody,
+              labels: ['docker-image', 'notification', 'frontend']
+            });
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.data.number,
+              body: `@${{ github.repository_owner }} Docker image is now available in ECR! ✅`
+            });
+
   deploy-to-staging:
     name: Deploy to Staging Environment
-    needs: [build-and-test]
+    needs: [docker-build-and-push]
     if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
@@ -349,7 +304,7 @@ jobs:
           echo "API_KEY=${{ secrets.STAGING_API_KEY }}" >> .env
           echo "SERVICE_URL=${{ secrets.STAGING_SERVICE_URL || 'https://staging.nerdwork-plus.example.com' }}" >> .env
           echo "JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}" >> .env
-          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION || 'eu-west-1' }}" >> .env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=${{ secrets.STAGING_S3_BUCKET || 'nerdwork-staging-assets' }}" >> .env
@@ -477,7 +432,7 @@ jobs:
           echo "API_KEY=${{ secrets.PRODUCTION_API_KEY }}" >> .env
           echo "SERVICE_URL=${{ secrets.PRODUCTION_SERVICE_URL || 'https://nerdwork-plus.example.com' }}" >> .env
           echo "JWT_SECRET=${{ secrets.PRODUCTION_JWT_SECRET }}" >> .env
-          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION || 'eu-west-1' }}" >> .env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "S3_BUCKET=${{ secrets.PRODUCTION_S3_BUCKET || 'nerdwork-production-assets' }}" >> .env
@@ -490,7 +445,7 @@ jobs:
           # Generate task definition with latest image
           cat > task-def.json <<EOF
           {
-            "family": "nerdwork-api",
+            "family": "nerdwork-frontend",
             "networkMode": "awsvpc",
             "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
             "taskRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskRole",
@@ -499,8 +454,8 @@ jobs:
             "requiresCompatibilities": ["FARGATE"],
             "containerDefinitions": [
               {
-                "name": "nerdwork-api",
-                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-api:${{ steps.version.outputs.version }}",
+                "name": "nerdwork-frontend",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/nerdwork-frontend:${{ needs.docker-build-and-push.outputs.image-version }}",
                 "essential": true,
                 "portMappings": [
                   {
@@ -511,7 +466,7 @@ jobs:
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
-                    "awslogs-group": "/ecs/nerdwork-api",
+                    "awslogs-group": "/ecs/nerdwork-frontend",
                     "awslogs-region": "eu-west-1",
                     "awslogs-stream-prefix": "ecs"
                   }
@@ -524,7 +479,7 @@ jobs:
           }
           EOF
           aws ecs register-task-definition --cli-input-json file://task-def.json --region eu-west-1
-          echo "✅ Task definition registered with revision: $(aws ecs describe-task-definition --task-definition nerdwork-api --region eu-west-1 --query 'taskDefinition.revision' --output text)"
+          echo "✅ Task definition registered with revision: $(aws ecs describe-task-definition --task-definition nerdwork-frontend --region eu-west-1 --query 'taskDefinition.revision' --output text)"
 
       - name: Deploy to production environment
         run: |
@@ -538,8 +493,8 @@ jobs:
           set +a
 
           # Update ECS services or other deployment steps
-          aws ecs update-service --cluster prod-cluster --service nerdwork-api --task-definition nerdwork-api:$(aws ecs describe-task-definition --task-definition nerdwork-api --region eu-west-1 --query 'taskDefinition.revision' --output text) --force-new-deployment --region eu-west-1 || exit 1
-          aws ecs wait services-stable --cluster prod-cluster --services nerdwork-api --region eu-west-1
+          aws ecs update-service --cluster prod-cluster --service nerdwork-frontend --task-definition nerdwork-frontend:$(aws ecs describe-task-definition --task-definition nerdwork-frontend --region eu-west-1 --query 'taskDefinition.revision' --output text) --force-new-deployment --region eu-west-1 || exit 1
+          aws ecs wait services-stable --cluster prod-cluster --services nerdwork-frontend --region eu-west-1
 
           echo "✅ Deployment to production environment completed"
 
