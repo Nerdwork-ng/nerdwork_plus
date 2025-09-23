@@ -140,8 +140,8 @@ jobs:
 
   docker-build-and-push:
     name: "🐳 Build and Push Docker Image"
-    needs: [build-and-test, changed-files]  # ⬅️ Waits for tests to pass and needs change detection
-    if: success() && github.ref == 'refs/heads/main' && needs.changed-files.outputs.frontend-tests > 0
+    needs: [build-and-test]  # ⬅️ Waits for tests to pass
+    if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       image-version: ${{ steps.version.outputs.version }}
@@ -149,10 +149,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug - Show change detection results
+      - name: Debug - Show build status
         run: |
-          echo "Frontend changes detected: ${{ needs.changed-files.outputs.frontend-tests }}"
-          echo "Backend changes detected: ${{ needs.changed-files.outputs.backend-tests }}"
           echo "Build and test job status: ${{ needs.build-and-test.result }}"
           echo "Current branch: ${{ github.ref }}"
           echo "Proceeding with Docker build..."
@@ -278,17 +276,17 @@ jobs:
 
   lambda-deploy:
     name: "🎆 Deploy Backend to Lambda"
-    needs: [build-and-test, changed-files]  # ⬅️ Runs parallel to Docker build
-    if: success() && github.ref == 'refs/heads/main' && needs.changed-files.outputs.backend-tests > 0
+    needs: [build-and-test]  # ⬅️ Runs parallel to Docker build
+    if: success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       lambda-endpoint: ${{ steps.deploy.outputs.api_endpoint }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug backend changes
+      - name: Debug deployment status
         run: |
-          echo "Backend changes detected: ${{ needs.changed-files.outputs.backend-tests }}"
+          echo "Build and test job status: ${{ needs.build-and-test.result }}"
           echo "Proceeding with Lambda deployment..."
 
       - name: Setup Node.js for Backend
