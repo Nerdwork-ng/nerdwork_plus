@@ -1,15 +1,4 @@
 import { Router } from "express";
-import { 
-  upload,
-  uploadComicFile,
-  uploadMultipleComicFiles,
-  getComicFile,
-  updateComicFile,
-  deleteComicFile,
-  listUserComicFiles,
-  getComicFileInfo,
-  uploadToS3
-} from "../controller/file.controller";
 
 const router = Router();
 
@@ -80,7 +69,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/FileUploadResponse'
  */
-router.post("/upload/single", upload.single("file"), uploadComicFile);
+// router.post("/upload/single", upload.single("file"), uploadComicFile);
 
 /**
  * @swagger
@@ -121,7 +110,7 @@ router.post("/upload/single", upload.single("file"), uploadComicFile);
  *       200:
  *         description: Files uploaded successfully
  */
-router.post("/upload/multiple", upload.array("files", 20), uploadMultipleComicFiles);
+// router.post("/upload/multiple", upload.array("files", 20), uploadMultipleComicFiles);
 
 /**
  * @swagger
@@ -145,7 +134,7 @@ router.post("/upload/multiple", upload.array("files", 20), uploadMultipleComicFi
  *       200:
  *         description: File uploaded successfully
  */
-router.post("/upload/s3", upload.single("file"), uploadToS3);
+// router.post("/upload/s3", upload.single("file"), uploadToS3);
 
 /**
  * @swagger
@@ -172,7 +161,7 @@ router.post("/upload/s3", upload.single("file"), uploadToS3);
  *       200:
  *         description: File URL retrieved successfully
  */
-router.get("/get/:s3Key", getComicFile);
+// router.get("/get/:s3Key", getComicFile);
 
 /**
  * @swagger
@@ -190,7 +179,7 @@ router.get("/get/:s3Key", getComicFile);
  *       200:
  *         description: File information retrieved successfully
  */
-router.get("/info/:s3Key", getComicFileInfo);
+// router.get("/info/:s3Key", getComicFileInfo);
 
 /**
  * @swagger
@@ -217,7 +206,7 @@ router.get("/info/:s3Key", getComicFileInfo);
  *       200:
  *         description: Files listed successfully
  */
-router.get("/list/:userId", listUserComicFiles);
+// router.get("/list/:userId", listUserComicFiles);
 
 /**
  * @swagger
@@ -257,7 +246,7 @@ router.get("/list/:userId", listUserComicFiles);
  *       200:
  *         description: File updated successfully
  */
-router.put("/update/:s3Key", upload.single("file"), updateComicFile);
+// router.put("/update/:s3Key", upload.single("file"), updateComicFile);
 
 /**
  * @swagger
@@ -275,6 +264,6 @@ router.put("/update/:s3Key", upload.single("file"), updateComicFile);
  *       200:
  *         description: File deleted successfully
  */
-router.delete("/delete/:s3Key", deleteComicFile);
+// router.delete("/delete/:s3Key", deleteComicFile);
 
 export default router;

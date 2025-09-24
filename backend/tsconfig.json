@@ -4,14 +4,12 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "outDir": "./dist",
+    "rootDir": "./",
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    // "strict": true,
-    "outDir": "./dist"
-  }
+    "skipLibCheck": true
+  },
+  "include": ["src", "lambda.ts"]
 }
 
 // {

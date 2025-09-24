@@ -1,6 +1,6 @@
 import { globalErrorHandler, globalNotFoundHandler } from "./middleware/common";
 import type { Request, Response } from "express";
-import { app } from "./server";
+import app from "./server";
 import authRoutes from "./routes/auth.routes";
 import paymentRoutes from "./routes/payment.routes";
 import { authenticate } from "./middleware/common/auth";
@@ -47,4 +47,4 @@ app.listen(PORT, () => {
   console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
 
-export { app };
+export default app;

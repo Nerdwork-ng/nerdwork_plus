@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../config/db";
-import { events } from "../model/schema";
+import { events } from "../model/events";
 
 export const getEvent = async (_req: Request, res: Response) => {
   try {

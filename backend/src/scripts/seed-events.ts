@@ -1,5 +1,5 @@
 import { db } from "../config/db";
-import { events } from "../model/schema";
+import { events } from "../model/event";
 
 async function seedEvents() {
   await db.insert(events).values([

@@ -9,7 +9,7 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swaggerConfig";
 
 const app = express();
-
+console.log("server.ts: created express app");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,4 +19,4 @@ app.use(compression());
 app.use(morgan("dev"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-export { app };
+export default app;
