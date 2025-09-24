@@ -1,0 +1,7 @@
+{
+  "buildCommand": "pnpm build --filter=nerdwork-plus",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "rootDirectory": "apps/web/nerdwork-plus",
+  "framework": "nextjs",
+  "nodeVersion": "18.x"
+}
