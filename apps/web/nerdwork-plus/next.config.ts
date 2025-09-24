@@ -45,6 +45,33 @@ const nextConfig: NextConfig = {
       : false,
   },
 
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Provide polyfills for Node.js modules in the browser
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        http: false,
+        https: false,
+        stream: false,
+        crypto: false,
+        url: false,
+        zlib: false,
+        querystring: false,
+        path: false,
+        os: false,
+        buffer: false,
+        util: false,
+        assert: false,
+        process: false
+      };
+    }
+    return config;
+  },
+
   staticPageGenerationTimeout: 300,
 };
 
