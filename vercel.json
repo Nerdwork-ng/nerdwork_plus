@@ -1,6 +1,13 @@
 {
-  "buildCommand": "cd apps/web/nerdwork-plus && npm run build",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "framework": "nextjs",
-  "nodeVersion": "18.x"
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/web/nerdwork-plus/next.config.ts",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "apps/web/nerdwork-plus/$1" }
+  ]
 }
