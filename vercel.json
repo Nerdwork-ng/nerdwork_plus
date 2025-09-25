@@ -2,12 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "apps/web/nerdwork-plus/next.config.ts",
+      "src": "apps/web/nerdwork-plus/package.json",
       "use": "@vercel/next"
     }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "apps/web/nerdwork-plus/$1" }
   ]
 }
