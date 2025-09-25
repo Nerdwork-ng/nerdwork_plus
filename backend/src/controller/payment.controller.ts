@@ -14,8 +14,8 @@ import {
   CreatePaylinkWithApiDto,
 } from "@heliofi/common";
 
-const HELIO_API_BASE = "https://api.dev.hel.io/v1";
-// const HELIO_API_BASE = "https://api.hel.io/v1"; // For production
+// const HELIO_API_BASE = "https://api.dev.hel.io/v1";
+const HELIO_API_BASE = "https://api.hel.io/v1"; // For production
 const HELIO_PUBLIC_KEY = process.env.HELIO_PUBLIC_KEY;
 const HELIO_PRIVATE_KEY = process.env.HELIO_PRIVATE_KEY;
 const WEBHOOK_REDIRECT_URL = process.env.WEBHOOK_REDIRECT_URL;
@@ -60,7 +60,7 @@ export const createPaymentLink = async (req: any, res: any) => {
     // Prepare DTO for Helio
     const createPaylinkDto: CreatePaylinkWithApiDto = {
       name: "NWT_PURCHASE", // Unique name for each payment link
-      price: (Number(amount) * 1000000).toString(), // Ensure amount is a number
+      price: (Number(amount) * 100000).toString(), // Ensure amount is a number
       pricingCurrency: HELIO_PCURRENCY,
       description: `Payment for Nerd Work Token by ${userId} on ${new Date().toISOString()} amount: ${amount} `,
       features: {},
