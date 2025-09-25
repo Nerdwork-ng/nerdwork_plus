@@ -2,8 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "tsc",
@@ -53,7 +52,8 @@
     "multer": "^2.0.1",
     "pg": "^8.16.3",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "tsx": "^4.20.5"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",
@@ -72,8 +72,7 @@
     "drizzle-kit": "^0.31.1",
     "jest": "^30.0.2",
     "supertest": "^7.1.1",
-    "ts-jest": "^29.4.0",
-    "tsx": "^4.20.5"
+    "ts-jest": "^29.4.0"
   },
   "transform": {
     "\\.[jt]sx?$": [
