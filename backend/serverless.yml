@@ -70,6 +70,7 @@ plugins:
   - serverless-offline
 
 functions:
+  # Main API Gateway handler (for backwards compatibility)
   api:
     handler: lambda.handler
     events:
@@ -79,6 +80,114 @@ functions:
           cors: true
     environment:
       STAGE: ${self:provider.stage}
+
+  # Auth Service
+  auth-service:
+    handler: services/auth-service/lambda.handler
+    events:
+      - http:
+          path: /auth/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: auth-service
+
+  # User Service  
+  user-service:
+    handler: services/user-service/lambda.handler
+    events:
+      - http:
+          path: /users/{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /profile/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: user-service
+
+  # Comic Service
+  comic-service:
+    handler: services/comic-service/lambda.handler
+    events:
+      - http:
+          path: /comics/{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /chapters/{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /library/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: comic-service
+
+  # File Service
+  file-service:
+    handler: services/file-service/lambda.handler
+    events:
+      - http:
+          path: /file-upload/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: file-service
+
+  # Wallet Service
+  wallet-service:
+    handler: services/wallet-service/lambda.handler
+    events:
+      - http:
+          path: /wallet/{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /transactions/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: wallet-service
+
+  # Ledger Service
+  ledger-service:
+    handler: services/ledger-service/lambda.handler
+    events:
+      - http:
+          path: /nft/{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /payment/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: ledger-service
+
+  # Event Service
+  event-service:
+    handler: services/event-service/lambda.handler
+    events:
+      - http:
+          path: /events/{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /tickets/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      STAGE: ${self:provider.stage}
+      SERVICE_NAME: event-service
 
 custom:
   serverless-offline:
