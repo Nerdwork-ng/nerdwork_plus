@@ -3,31 +3,118 @@
 > next build
 
    ▲ Next.js 15.3.3
+   - Environments: .env
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 2000ms
+ ⚠ Compiled with warnings in 75s
+
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/utils.js
+A Node.js API is used (setImmediate at line: 693) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/utils.js
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/axios.js
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/index.js
+./actions/auth.actions.ts
+./auth.ts
+
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/utils.js
+A Node.js API is used (setImmediate at line: 709) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/utils.js
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/axios.js
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/index.js
+./actions/auth.actions.ts
+./auth.ts
+
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/utils.js
+A Node.js API is used (process.nextTick at line: 714) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/utils.js
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/lib/axios.js
+../../../node_modules/.pnpm/axios@1.11.0/node_modules/axios/index.js
+./actions/auth.actions.ts
+./auth.ts
+
    Linting and checking validity of types ...
+
+./app/(protected)/(creator)/creator/wallet/page.tsx
+50:9  Warning: The 'transactionData' logical expression could make the dependencies of useMemo Hook (at line 86) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'transactionData' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./app/(protected)/(creator)/_components/comics/MultiFileUpload.tsx
+110:9  Warning: The 'initialPages' logical expression could make the dependencies of useEffect Hook (at line 133) change on every render. To fix this, wrap the initialization of 'initialPages' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+182:6  Warning: React Hook useEffect has a missing dependency: 'pagesData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(protected)/(reader)/r/comics/[slug]/chapter/[chapterId]/page.tsx
+175:6  Warning: React Hook useEffect has a missing dependency: 'queryClient'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(protected)/(reader)/r/library/page.tsx
+54:9  Warning: The 'comics' logical expression could make the dependencies of useMemo Hook (at line 114) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'comics' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./app/(protected)/(reader)/r/search/page.tsx
+96:6  Warning: React Hook React.useMemo has a missing dependency: 'data'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(protected)/(reader)/r/wallet/page.tsx
+47:9  Warning: The 'transactionData' logical expression could make the dependencies of useMemo Hook (at line 83) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'transactionData' in its own useMemo() Hook.  react-hooks/exhaustive-deps
+
+./app/(protected)/(reader)/_components/SearchResultsPanel.tsx
+63:6  Warning: React Hook useEffect has a missing dependency: 'comics'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
    Collecting page data ...
-   Generating static pages (0/8) ...
-   Generating static pages (2/8) 
-   Generating static pages (4/8) 
-   Generating static pages (6/8) 
- ✓ Generating static pages (8/8)
+   Generating static pages (0/27) ...
+   Generating static pages (6/27) 
+   Generating static pages (13/27) 
+   Generating static pages (20/27) 
+ ✓ Generating static pages (27/27)
    Finalizing page optimization ...
    Collecting build traces ...
 
-Route (app)                                 Size  First Load JS
-┌ ○ /                                    5.91 kB         130 kB
-├ ○ /_not-found                            977 B         103 kB
-├ ○ /communities                         3.57 kB         128 kB
-├ ○ /events                              7.56 kB         132 kB
-├ ƒ /events/[eventId]                     6.5 kB         131 kB
-└ ○ /nerdwork+                           3.72 kB         128 kB
-+ First Load JS shared by all             102 kB
-  ├ chunks/620-eabf33edb837b7aa.js       46.5 kB
-  ├ chunks/69c23a04-e03072e0b6b476eb.js  53.2 kB
-  └ other shared chunks (total)          1.98 kB
+Route (app)                                      Size  First Load JS
+┌ ○ /                                         5.94 kB         135 kB
+├ ○ /_not-found                                 153 B         102 kB
+├ ƒ /api/auth/[...nextauth]                     153 B         102 kB
+├ ○ /communities                              3.59 kB         132 kB
+├ ○ /creator/analytics                          153 B         102 kB
+├ ○ /creator/comics                           2.96 kB         184 kB
+├ ƒ /creator/comics/[slug]                    4.94 kB         182 kB
+├ ƒ /creator/comics/[slug]/add                  22 kB         215 kB
+├ ƒ /creator/comics/[slug]/view/[uniqueCode]  3.96 kB         154 kB
+├ ○ /creator/comics/new                       4.54 kB         194 kB
+├ ○ /creator/nfts                             1.01 kB         114 kB
+├ ○ /creator/nfts/new                         7.12 kB         166 kB
+├ ○ /creator/profile                          4.58 kB         132 kB
+├ ○ /creator/wallet                           4.47 kB         265 kB
+├ ○ /error                                    2.37 kB         118 kB
+├ ○ /events                                   7.64 kB         137 kB
+├ ƒ /events/[eventId]                          7.4 kB         136 kB
+├ ○ /nerdwork+                                3.77 kB         133 kB
+├ ○ /onboarding                               1.97 kB         122 kB
+├ ƒ /onboarding/[userRole]                    8.85 kB         250 kB
+├ ○ /opengraph-image.jpg                          0 B            0 B
+├ ○ /r/comics                                 6.85 kB         141 kB
+├ ƒ /r/comics/[slug]                             7 kB         233 kB
+├ ƒ /r/comics/[slug]/chapter/[chapterId]      8.13 kB         208 kB
+├ ○ /r/library                                7.36 kB         178 kB
+├ ○ /r/marketplace                              153 B         102 kB
+├ ○ /r/profile                                4.56 kB         132 kB
+├ ○ /r/search                                 5.58 kB         166 kB
+├ ○ /r/wallet                                 15.9 kB         205 kB
+├ ○ /role                                     2.69 kB         131 kB
+├ ○ /signin                                    3.7 kB         126 kB
+└ ○ /twitter-image.jpg                            0 B            0 B
++ First Load JS shared by all                  102 kB
+  ├ chunks/2620-d73c7fc2542593d3.js           46.5 kB
+  ├ chunks/69c23a04-09ff5aeeb948830b.js       53.2 kB
+  └ other shared chunks (total)               2.06 kB
 
+
+ƒ Middleware                                   102 kB
 
 ○  (Static)   prerendered as static content
 ƒ  (Dynamic)  server-rendered on demand
