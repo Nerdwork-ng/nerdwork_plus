@@ -71,7 +71,7 @@ plugins:
 
 functions:
   api:
-    handler: src/lambda.handler
+    handler: lambda.handler
     events:
       - http:
           path: /{proxy+}
