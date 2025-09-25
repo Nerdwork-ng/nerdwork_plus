@@ -1,0 +1,8 @@
+[start]
+cmd = "npm start"
+
+[build]
+cmds = ["npm install"]
+
+[variables]
+NODE_ENV = "production"
