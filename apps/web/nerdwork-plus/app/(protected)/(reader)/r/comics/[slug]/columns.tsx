@@ -4,6 +4,7 @@ import { Chapter } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import ComicPaymentFlow from "../../../_components/ComicPaymentFlow";
 import ReadButton from "../../../_components/ReadButton";
+import LikeChapter from "../../../_components/LikeChapter";
 
 export const columns: ColumnDef<Chapter>[] = [
   {
@@ -51,11 +52,23 @@ export const columns: ColumnDef<Chapter>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-center">
-          {row.original.chapterType == "free" ? (
+          {row.original.chapterType == "free" ||
+          row.original.hasPaid == true ? (
             <ReadButton chapterCode={row.original.uniqueCode ?? ""} />
           ) : (
-            <ComicPaymentFlow chapter={row.original} />
+            <ComicPaymentFlow chapter={row.original} internal={false} />
           )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "likes",
+    header: () => <div className="text-left text-nerd-muted hidden">Likes</div>,
+    cell: ({ row }) => {
+      return (
+        <div className="text-center">
+          <LikeChapter chapter={row.original} />
         </div>
       );
     },

@@ -13,8 +13,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Chapter } from "@/lib/types";
-import { Calendar, EllipsisVertical, Send, Trash } from "lucide-react";
+import { Calendar, EllipsisVertical, Send } from "lucide-react";
 import React from "react";
+import DeleteResource from "./DeleteResource";
+import PublishDraft from "./PublishDraft";
 
 const ChapterActions = ({ chapter }: { chapter: Chapter }) => {
   return (
@@ -27,18 +29,19 @@ const ChapterActions = ({ chapter }: { chapter: Chapter }) => {
           <MenubarContent className="max-md:hidden bg-[#1D1E21] text-white border-0 absolute -right-[30px]">
             {chapter.chapterStatus != "published" && (
               <>
-                <MenubarItem>
+                {/* <MenubarItem>
                   <Calendar />
                   Schedule Chapter
-                </MenubarItem>
-                <MenubarItem>
-                  <Send /> Publish Chapter
+                </MenubarItem> */}
+                <MenubarItem asChild>
+                  <PublishDraft data={chapter} />
                 </MenubarItem>
               </>
             )}
-            <MenubarItem>
+            {/* <MenubarItem>
               <Trash /> Delete Chapter
-            </MenubarItem>
+            </MenubarItem> */}
+            <DeleteResource resource="chapter" data={chapter} />
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -64,9 +67,7 @@ const ChapterActions = ({ chapter }: { chapter: Chapter }) => {
               </button>
             </div>
           )}
-          <button className="flex items-center gap-2 cursor-pointer hover:bg-[#25262A] p-4 rounded-[8px]">
-            <Trash size={16} /> Delete Chapter
-          </button>
+          <DeleteResource resource="chapter" data={chapter} />
         </SheetContent>
       </Sheet>
     </>

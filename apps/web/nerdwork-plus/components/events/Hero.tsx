@@ -15,8 +15,8 @@ export default function EventsHero() {
       id: 1,
       src: ComicCon,
       alt: "Comic con",
-      link: "https://www.straqa.events/nerdworkcomiccon",
-      title: "Comic Con 2025",
+      link: "",
+      title: "Comic Con 2026",
       subtitle:
         "Discover one of the biggest comic conventions in Nigeria, where all geek culture collide.",
     },
@@ -25,7 +25,7 @@ export default function EventsHero() {
       src: TechSummit,
       alt: "tech summit",
       link: "",
-      title: "Tech Innovation Summit 2025",
+      title: "Tech Innovation Summit 2026",
       subtitle:
         "Join industry leaders to explore the latest in technology and innovation.",
     },
@@ -34,7 +34,7 @@ export default function EventsHero() {
       src: ArtsFair,
       alt: "arts fair",
       link: "",
-      title: "Arts & Crafts Fair 2025",
+      title: "Arts & Crafts Fair 2026",
       subtitle:
         "Showcase your talents and discover new art at our annual fair!",
     },
@@ -133,7 +133,7 @@ export default function EventsHero() {
             <div className="container mx-auto flex flex-col items-center text-white md:text-center px-4 sm:px-6 lg:px-8">
               <div className="max-w-3xl flex flex-col gap-6 md:items-center max-md:items-start px-7">
                 <p className="bg-nerd-blue text-white text-center max-md:text-[13px] rounded-[20px] px-5 py-1.5 font-medium">
-                  {slides[currentSlide].title} is here, Register now
+                  {slides[currentSlide].title} is coming soon, Watch out!
                 </p>
                 <h1
                   className="md:text-[52px] max-md:text-[32px] font-obostar tracking-tight text-white animate-fade-in"

@@ -11,6 +11,7 @@ import React from "react";
 const NFTsPage = () => {
   // const NFTs = nftData ?? [];
   const { profile } = useUserSession();
+  const creatorProfile = profile?.creatorProfile;
 
   return (
     <main className="font-inter text-white">
@@ -18,7 +19,8 @@ const NFTsPage = () => {
         <div>
           <h3 className="font-semibold text-[28px]">My NFTs</h3>
           <p className="text-sm text-nerd-muted">
-            Welcome back, {profile?.createdName}! Manage your comic series
+            Welcome back, {creatorProfile?.creatorName}! Manage your comic
+            series
           </p>
         </div>
         {/* <Link href={"/creator/nfts/new"} className="max-md:w-full">

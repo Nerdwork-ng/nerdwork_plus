@@ -5,7 +5,6 @@ import Logo from "@/assets/nerdwork.png";
 import Facebook from "@/assets/socials/facebook.svg";
 import Instagram from "@/assets/socials/instagram.svg";
 import Twitter from "@/assets/socials/twitter.svg";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import Link from "next/link";
 
@@ -15,18 +14,11 @@ export default function Footer() {
       <section className="flex lg:w-[28%] flex-col gap-6">
         <Image src={Logo} width={175} height={48} alt="nerdwork logo" />
         <p>Join to stay up to date</p>
-        <form className="flex gap-3 justify-center items-stretch">
-          <Input
-            type="email"
-            className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4 w-"
-            placeholder="Email address"
-          />
-          <Link href={"/signin"}>
-            <Button variant={"primary"} className="h-full font-inter">
-              Sign Up
-            </Button>
-          </Link>
-        </form>
+        <Link href={"/signin"}>
+          <Button variant={"primary"} className="h-full w-40 font-inter">
+            Sign Up
+          </Button>
+        </Link>
       </section>
       <Image
         src={FooterImage}

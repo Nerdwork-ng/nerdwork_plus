@@ -88,11 +88,12 @@ const ComicReader = ({
   }, [readingMode]);
 
   const { data: pagesData, isLoading } = useQuery({
-    queryKey: ["pages"],
+    queryKey: ["pages", uniqueCode],
     queryFn: () => getChapterPages(uniqueCode),
     placeholderData: keepPreviousData,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
+    enabled: !!uniqueCode,
   });
 
   if (isLoading) return <LoaderScreen />;

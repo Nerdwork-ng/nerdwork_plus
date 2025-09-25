@@ -5,6 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { Comic } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { Eye } from "lucide-react";
 
 const RComics = ({ data }: { data: Comic[] }) => {
   const router = useRouter();
@@ -57,8 +58,11 @@ const RComics = ({ data }: { data: Comic[] }) => {
               >
                 <p className="mb-2 font-semibold">{comic.title}</p>
               </Link>
-              <p className="flex items-center text-sm text-nerd-muted gap-3">
-                {comic.noOfChapters ?? 0} Chapters
+              <p className="flex justify-between items-center text-sm text-nerd-muted gap-3">
+                <span>{comic.noOfChapters + comic?.noOfDrafts} Chapters</span>
+                <span className="flex items-center gap-1">
+                  <Eye size={16} /> {comic?.viewsCount}
+                </span>
               </p>
             </div>
           </div>
