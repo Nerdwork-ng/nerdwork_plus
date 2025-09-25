@@ -1,0 +1,17 @@
+Dockerfile
+.dockerignore
+docker-compose.yml
+.git
+.gitignore
+README.md
+.env.example
+*.log
+coverage/
+.nyc_output/
+.serverless/
+.build/
+dist/
+node_modules/
+*.tgz
+.npm
+.eslintcache
