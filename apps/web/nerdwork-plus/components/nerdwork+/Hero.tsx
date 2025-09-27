@@ -1,6 +1,5 @@
 import React from "react";
 import Navbar from "../homepage/Navbar";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import Link from "next/link";
 
@@ -16,7 +15,7 @@ export default function ProductHero() {
           className="flex flex-col max-w-[600px] w-full md:ml-24 font-inter -mb-px max-md:gap-6 md:gap-8 items-start justify-center max-md:justify-end h-screen pb-10 px-7"
         >
           <p className="bg-[#0856D3] text-sm max-md:text-[13px] rounded-[8px] px-5 py-1.5 font-medium">
-            Coming Soon
+            We're Live!
           </p>
           <h1 className="font-obostar text-[52px] max-md:text-[32px]">
             African
@@ -28,18 +27,15 @@ export default function ProductHero() {
             Discover comics rooted in Africa’s past, present, and future—all
             created by African storytellers.
           </p>
-          <form className="max-w-[704px] w-full flex gap-3 justify-center items-stretch">
-            <Input
-              type="email"
-              className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4 w-"
-              placeholder="Email address"
-            />
-            <Link href={"/signin"}>
-              <Button variant={"primary"} className="h-full font-inter">
-                Join Waitlist
-              </Button>
-            </Link>
-          </form>
+
+          <Link href={"/signin"} className="w-full">
+            <Button
+              variant={"primary"}
+              className="h-full font-inter max-w-[200px] w-full"
+            >
+              Sign Up
+            </Button>
+          </Link>
         </section>
       </div>
     </header>
