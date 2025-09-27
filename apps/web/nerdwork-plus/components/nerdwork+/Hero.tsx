@@ -25,7 +25,7 @@ export default function ProductHero() {
             <br /> Redefined
           </h1>
           <p className="font-semibold max-md:text-sm">
-            Discover comics rooted in Africa’s past, present, and future—all
+            Discover comics rooted in Africa&apos;s past, present, and future—all
             created by African storytellers.
           </p>
           <form className="max-w-[704px] w-full flex gap-3 justify-center items-stretch">
