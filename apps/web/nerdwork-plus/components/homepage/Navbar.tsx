@@ -45,7 +45,9 @@ export default function Navbar() {
               </Button>
             ) : (
               <Button asChild variant={"primary"}>
-                <Link href={"/signin"}>Sign In</Link>
+                <Link className="w-[120px]" href={"/signin"}>
+                  Sign In
+                </Link>
               </Button>
             )}
           </div>

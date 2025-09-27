@@ -19,8 +19,8 @@ export const GENRES = [
 
 export const LANGUAGES = [
   { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
+  // { value: "es", label: "Spanish" },
+  // { value: "fr", label: "French" },
 ] as const;
 
 export const CONTENT_RATINGS = [

@@ -1,8 +1,8 @@
 import React from "react";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import ComicGallery from "@/assets/nerdwork+/comis.png";
+import Link from "next/link";
 
 export default function Waitlist() {
   return (
@@ -12,16 +12,14 @@ export default function Waitlist() {
       </h2>
       <p className="px-7">Free to join, pay as you go</p>
 
-      <form className="max-w-[600px] px-7 mb-12 w-full flex gap-3 justify-center items-stretch">
-        <Input
-          type="email"
-          className="bg-[#17171A] outline-none border-none w-full rounded-[8px] py-2.5 pl-4 w-"
-          placeholder="Email address"
-        />
-        <Button variant={"primary"} className="h-full font-inter">
-          Join Waitlist
+      <Link href={"/signin"} className="w-full">
+        <Button
+          variant={"primary"}
+          className="h-full font-inter max-w-[200px] w-full"
+        >
+          Sign Up
         </Button>
-      </form>
+      </Link>
 
       <figure className="relative">
         <Image

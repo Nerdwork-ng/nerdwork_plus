@@ -23,7 +23,7 @@ export default function Hero() {
 
           <Link href={"/signin"}>
             <Button variant={"primary"} className="h-full w-40 font-inter">
-              Sign In
+              Sign Up
             </Button>
           </Link>
           <p className="text-[#FFFFFFB2] max-md:text-[13px]">

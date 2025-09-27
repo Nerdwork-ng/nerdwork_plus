@@ -6,6 +6,7 @@ import LoadingProvider from "@/components/LoadingProvider";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
 import { SessionProvider } from "next-auth/react";
+import { headers } from "next/headers";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -27,54 +28,61 @@ const obostar = localFont({
   variable: "--font-obostar",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://www.nerdworkng.com/"),
-  title: {
-    default: "Nerdwork - Where Passion meets Community",
-    template: "%s | Nerdwork",
-  },
-  description:
-    "Nerdwork is a creative entertainment studio and thriving fan community, best known for its annual Nerdwork Comic-Con. Nerdwork is an intersection of storytelling, tech, culture and fandom. Nerdwork celebrates creativity in all forms. We are not just an event, we're the home for fans.",
-  // keywords: [],
-  authors: [{ name: "Nerdwork Team" }],
-  creator: "Nerdwork",
-  publisher: "Nerdwork",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_NG",
-    url: "https://www.nerdworkng.com/",
-    siteName: "Nerdwork",
-    title: "Nerdwork - Where Passion meets Community",
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
+
+  return {
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: "Nerdwork - Where Passion meets Community",
+      template: "%s | Nerdwork",
+    },
     description:
       "Nerdwork is a creative entertainment studio and thriving fan community, best known for its annual Nerdwork Comic-Con. Nerdwork is an intersection of storytelling, tech, culture and fandom. Nerdwork celebrates creativity in all forms. We are not just an event, we're the home for fans.",
-    images: [
-      {
-        url: "https://www.nerdworkng.com/opengraph-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Nerdwork",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Nerdwork - Where Passion meets Community",
-    description:
-      "Nerdwork is a creative entertainment studio and thriving fan community, best known for its annual Nerdwork Comic-Con. Nerdwork is an intersection of storytelling, tech, culture and fandom. Nerdwork celebrates creativity in all forms. We are not just an event, we're the home for fans.",
+    // keywords: [],
+    authors: [{ name: "Nerdwork Team" }],
     creator: "Nerdwork",
-    images: ["https://www.nerdworkng.com/twitter-image.jpg"],
-  },
-  icons: {
-    icon: [{ url: "/favicon.ico" }],
-  },
-  applicationName: "Nerdwork",
-  category: "Comic Community",
-};
+    publisher: "Nerdwork",
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_NG",
+      url: baseUrl,
+      siteName: "Nerdwork",
+      title: "Nerdwork - Where Passion meets Community",
+      description:
+        "Nerdwork is a creative entertainment studio and thriving fan community, best known for its annual Nerdwork Comic-Con. Nerdwork is an intersection of storytelling, tech, culture and fandom. Nerdwork celebrates creativity in all forms. We are not just an event, we're the home for fans.",
+      images: [
+        {
+          url: "/opengraph-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Nerdwork",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Nerdwork - Where Passion meets Community",
+      description:
+        "Nerdwork is a creative entertainment studio and thriving fan community, best known for its annual Nerdwork Comic-Con. Nerdwork is an intersection of storytelling, tech, culture and fandom. Nerdwork celebrates creativity in all forms. We are not just an event, we're the home for fans.",
+      creator: "Nerdwork",
+      images: ["/twitter-image.jpg"],
+    },
+    icons: {
+      icon: [{ url: "/favicon.ico" }],
+    },
+    applicationName: "Nerdwork",
+    category: "Comic Community",
+  };
+}
 
 export default function RootLayout({
   children,
