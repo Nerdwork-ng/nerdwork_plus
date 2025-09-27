@@ -24,7 +24,7 @@ const inter = Inter({
 });
 
 const obostar = localFont({
-  src: "../public/obostartest-regular.otf",
+  src: "./obostartest-regular.otf",
   variable: "--font-obostar",
 });
 
