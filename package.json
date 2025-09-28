@@ -2,6 +2,7 @@
   "name": "nerdwork-platform",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.17.1",
   "workspaces": [
     "apps/web/*",
     "services/*",
