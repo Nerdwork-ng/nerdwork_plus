@@ -1,4 +1,0 @@
-{
-  "buildCommand": "cd apps/web/nerdwork-plus && pnpm run build",
-  "outputDirectory": "apps/web/nerdwork-plus/.next"
-}
