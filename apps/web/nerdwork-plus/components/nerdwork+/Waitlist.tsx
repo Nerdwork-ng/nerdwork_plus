@@ -12,7 +12,7 @@ export default function Waitlist() {
       </h2>
       <p className="px-7">Free to join, pay as you go</p>
 
-      <Link href={"/signin"} className="w-full">
+      <Link href={"/signin"} className="w-full px-7">
         <Button
           variant={"primary"}
           className="h-full font-inter max-w-[200px] w-full"
