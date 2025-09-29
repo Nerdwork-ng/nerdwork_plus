@@ -1,9 +1,10 @@
-// middleware.ts
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
 
 const PROTECTED_PAGES = ["/r", "/creator"];
 const ONBOARDING_PREFIX = "/onboarding";
+
+const PUBLIC_PAGES = ["/", "/communities", "/nerdwork+", "/events"];
 
 export default auth((req) => {
   const { pathname, origin, search } = req.nextUrl;
@@ -31,7 +32,9 @@ export default auth((req) => {
 
   // 2. Authenticated but no profile → force onboarding
   if (!hasCompletedOnboarding && !isOnboardingPage) {
-    return NextResponse.redirect(new URL(ONBOARDING_PREFIX, origin));
+    if (!PUBLIC_PAGES.includes(pathname)) {
+      return NextResponse.redirect(new URL(ONBOARDING_PREFIX, origin));
+    }
   }
 
   // 3. Prevent accessing signin when already authenticated

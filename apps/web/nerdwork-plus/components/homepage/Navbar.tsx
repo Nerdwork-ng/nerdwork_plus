@@ -96,7 +96,9 @@ export default function Navbar() {
                   </Button>
                 ) : (
                   <Button asChild variant={"primary"}>
-                    <Link href={"/signin"}>Sign In</Link>
+                    <Link href={"/signin"} className="w-[120px]">
+                      Sign In
+                    </Link>
                   </Button>
                 )}
               </div>
